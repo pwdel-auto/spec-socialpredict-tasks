@@ -1,0 +1,388 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOOTSTRAP_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+DEFAULTS_FILE="$BOOTSTRAP_ROOT/defaults.env"
+
+if [[ -f "$DEFAULTS_FILE" ]]; then
+  set -a
+  source "$DEFAULTS_FILE"
+  set +a
+fi
+
+OWNER="${GITHUB_OWNER:-}"
+VISIBILITY="${VISIBILITY:-public}"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+INIT_BRANCH="${INIT_BRANCH:-init}"
+REMOTE_NAME="${REMOTE_NAME:-origin}"
+CREATE_PR="${CREATE_PR:-true}"
+APPLY_PROTECTION="${APPLY_PROTECTION:-true}"
+ADD_TO_LIST="${ADD_TO_LIST:-true}"
+GITHUB_LIST_NAME="${GITHUB_LIST_NAME:-}"
+GITHUB_LIST_DESCRIPTION="${GITHUB_LIST_DESCRIPTION:-Repositories created with github-bootstrap}"
+TRACK_CLAUDE_PLACEHOLDER="${TRACK_CLAUDE_PLACEHOLDER:-false}"
+EMPTY_MAIN_COMMIT_MESSAGE="${EMPTY_MAIN_COMMIT_MESSAGE:-Initialize repository}"
+INIT_COMMIT_MESSAGE="${INIT_COMMIT_MESSAGE:-Add initial project files}"
+
+TARGET_PATH="."
+REPO_NAME=""
+DESCRIPTION=""
+PR_TITLE=""
+PR_BODY=""
+
+usage() {
+  cat <<'EOF'
+Usage: publish-repo [options]
+
+Publish the current local git repository to GitHub with:
+- default branch `main`
+- working branch `init`
+- an `init -> main` PR
+- branch protection on `main`
+- optional GitHub list assignment
+
+Options:
+  --path PATH              Repository path to publish (default: current directory)
+  --name NAME              GitHub repository name (default: local directory name)
+  --description TEXT       GitHub repository description
+  --owner LOGIN            GitHub owner/login (default from defaults.env or gh auth)
+  --public                 Create a public repository
+  --private                Create a private repository
+  --default-branch NAME    Default branch name (default: main)
+  --init-branch NAME       Working branch name (default: init)
+  --remote NAME            Git remote name (default: origin)
+  --list-name NAME         GitHub list name or slug
+  --skip-list              Do not add the repository to a GitHub list
+  --skip-pr                Do not open a pull request
+  --skip-protection        Do not apply branch protection to the default branch
+  --track-claude           Add a tracked `.claude/README.md` placeholder if missing
+  --commit-message TEXT    Commit message for the init branch commit
+  --pr-title TEXT          Pull request title
+  --pr-body TEXT           Pull request body
+  --help                   Show this help
+EOF
+}
+
+require_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+bool_is_true() {
+  [[ "${1:-false}" == "true" ]]
+}
+
+ensure_owner() {
+  if [[ -n "$OWNER" ]]; then
+    return
+  fi
+  OWNER="$(gh api user --jq '.login')"
+}
+
+ensure_repo() {
+  if ! git -C "$TARGET_PATH" rev-parse --show-toplevel >/dev/null 2>&1; then
+    echo "Target path is not inside a git repository: $TARGET_PATH" >&2
+    exit 1
+  fi
+  TARGET_PATH="$(git -C "$TARGET_PATH" rev-parse --show-toplevel)"
+  if [[ -z "$REPO_NAME" ]]; then
+    REPO_NAME="$(basename "$TARGET_PATH")"
+  fi
+}
+
+ensure_default_branch_commit() {
+  local current_branch
+  current_branch="$(git -C "$TARGET_PATH" branch --show-current)"
+
+  if ! git -C "$TARGET_PATH" rev-parse --verify "$DEFAULT_BRANCH" >/dev/null 2>&1; then
+    if [[ "$current_branch" != "$DEFAULT_BRANCH" && -n "$current_branch" ]]; then
+      git -C "$TARGET_PATH" branch -M "$DEFAULT_BRANCH"
+    fi
+    git -C "$TARGET_PATH" commit --allow-empty -m "$EMPTY_MAIN_COMMIT_MESSAGE"
+  fi
+}
+
+ensure_init_branch() {
+  if git -C "$TARGET_PATH" rev-parse --verify "$INIT_BRANCH" >/dev/null 2>&1; then
+    git -C "$TARGET_PATH" switch "$INIT_BRANCH"
+  else
+    git -C "$TARGET_PATH" switch -c "$INIT_BRANCH"
+  fi
+}
+
+ensure_claude_placeholder() {
+  if ! bool_is_true "$TRACK_CLAUDE_PLACEHOLDER"; then
+    return
+  fi
+
+  local claude_readme="$TARGET_PATH/.claude/README.md"
+  if [[ ! -f "$claude_readme" ]]; then
+    mkdir -p "$TARGET_PATH/.claude"
+    cp "$BOOTSTRAP_ROOT/templates/claude/README.md" "$claude_readme"
+  fi
+}
+
+commit_init_branch_if_needed() {
+  git -C "$TARGET_PATH" add -A
+  if git -C "$TARGET_PATH" diff --cached --quiet; then
+    return
+  fi
+  git -C "$TARGET_PATH" commit -m "$INIT_COMMIT_MESSAGE"
+}
+
+create_remote_repo_if_needed() {
+  if ! gh repo view "$OWNER/$REPO_NAME" >/dev/null 2>&1; then
+    local create_args=(
+      repo create "$OWNER/$REPO_NAME"
+      --source "$TARGET_PATH"
+      --remote "$REMOTE_NAME"
+    )
+    if [[ -n "$DESCRIPTION" ]]; then
+      create_args+=(--description "$DESCRIPTION")
+    fi
+    case "$VISIBILITY" in
+      public)
+        gh "${create_args[@]}" --public
+        ;;
+      private)
+        gh "${create_args[@]}" --private
+        ;;
+      *)
+        echo "Unsupported visibility: $VISIBILITY" >&2
+        exit 1
+        ;;
+    esac
+  elif ! git -C "$TARGET_PATH" remote get-url "$REMOTE_NAME" >/dev/null 2>&1; then
+    git -C "$TARGET_PATH" remote add "$REMOTE_NAME" "https://github.com/$OWNER/$REPO_NAME.git"
+  fi
+}
+
+push_branches() {
+  git -C "$TARGET_PATH" push -u "$REMOTE_NAME" "$DEFAULT_BRANCH"
+  git -C "$TARGET_PATH" push -u "$REMOTE_NAME" "$INIT_BRANCH"
+}
+
+create_pr_if_needed() {
+  if ! bool_is_true "$CREATE_PR" || [[ "$INIT_BRANCH" == "$DEFAULT_BRANCH" ]]; then
+    return
+  fi
+
+  local existing_pr
+  existing_pr="$(gh pr list --repo "$OWNER/$REPO_NAME" --state open --head "$INIT_BRANCH" --base "$DEFAULT_BRANCH" --json url --jq '.[0].url' 2>/dev/null || true)"
+  if [[ -n "$existing_pr" && "$existing_pr" != "null" ]]; then
+    echo "$existing_pr"
+    return
+  fi
+
+  local title="${PR_TITLE:-Bootstrap $REPO_NAME}"
+  local body
+  if [[ -n "$PR_BODY" ]]; then
+    body="$PR_BODY"
+  else
+    body=$'## Summary\n'
+    body+=$'- publish the local repository\n'
+    body+=$"- push $INIT_BRANCH and open the initial PR\n"
+    body+=$'- apply the default GitHub protections'
+  fi
+  gh pr create --repo "$OWNER/$REPO_NAME" --base "$DEFAULT_BRANCH" --head "$INIT_BRANCH" --title "$title" --body "$body"
+}
+
+apply_protection_if_needed() {
+  if ! bool_is_true "$APPLY_PROTECTION"; then
+    return
+  fi
+
+  local protection_json
+  protection_json="$(mktemp)"
+  cat > "$protection_json" <<'JSON'
+{
+  "required_status_checks": null,
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": false,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0,
+    "require_last_push_approval": false
+  },
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creations": false,
+  "required_conversation_resolution": true,
+  "lock_branch": false,
+  "allow_fork_syncing": true
+}
+JSON
+
+  gh api \
+    --method PUT \
+    -H 'Accept: application/vnd.github+json' \
+    "repos/$OWNER/$REPO_NAME/branches/$DEFAULT_BRANCH/protection" \
+    --input "$protection_json" >/dev/null
+
+  rm -f "$protection_json"
+}
+
+lookup_list_id() {
+  local list_name="$1"
+  if [[ -z "$list_name" ]]; then
+    return
+  fi
+
+  gh api graphql -f query='query { viewer { lists(first: 100) { nodes { id name slug } } } }' \
+    | jq -r --arg value "$list_name" '.data.viewer.lists.nodes[] | select(.name == $value or .slug == $value) | .id' \
+    | head -n 1
+}
+
+ensure_list_id() {
+  local list_id
+  list_id="$(lookup_list_id "$GITHUB_LIST_NAME")"
+  if [[ -n "$list_id" ]]; then
+    printf '%s\n' "$list_id"
+    return
+  fi
+
+  gh api graphql \
+    -f query='mutation($name:String!,$description:String!){ createUserList(input:{name:$name,description:$description,isPrivate:false}) { list { id } } }' \
+    -f name="$GITHUB_LIST_NAME" \
+    -f description="$GITHUB_LIST_DESCRIPTION" \
+    --jq '.data.createUserList.list.id'
+}
+
+add_repo_to_list_if_needed() {
+  if ! bool_is_true "$ADD_TO_LIST" || [[ -z "$GITHUB_LIST_NAME" ]]; then
+    return
+  fi
+
+  local list_id repo_id
+  list_id="$(ensure_list_id)"
+  repo_id="$(gh api graphql -f query="query { repository(owner:\"$OWNER\", name:\"$REPO_NAME\") { id } }" --jq '.data.repository.id')"
+
+  gh api --method PUT "/user/starred/$OWNER/$REPO_NAME" >/dev/null
+  gh api graphql \
+    -f query='mutation($itemId:ID!,$listId:ID!){ updateUserListsForItem(input:{itemId:$itemId,listIds:[$listId]}) { item { ... on Repository { nameWithOwner } } } }' \
+    -f itemId="$repo_id" \
+    -f listId="$list_id" >/dev/null
+}
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --path)
+        TARGET_PATH="$2"
+        shift 2
+        ;;
+      --name)
+        REPO_NAME="$2"
+        shift 2
+        ;;
+      --description)
+        DESCRIPTION="$2"
+        shift 2
+        ;;
+      --owner)
+        OWNER="$2"
+        shift 2
+        ;;
+      --public)
+        VISIBILITY="public"
+        shift
+        ;;
+      --private)
+        VISIBILITY="private"
+        shift
+        ;;
+      --default-branch)
+        DEFAULT_BRANCH="$2"
+        shift 2
+        ;;
+      --init-branch)
+        INIT_BRANCH="$2"
+        shift 2
+        ;;
+      --remote)
+        REMOTE_NAME="$2"
+        shift 2
+        ;;
+      --list-name)
+        GITHUB_LIST_NAME="$2"
+        shift 2
+        ;;
+      --skip-list)
+        ADD_TO_LIST="false"
+        shift
+        ;;
+      --skip-pr)
+        CREATE_PR="false"
+        shift
+        ;;
+      --skip-protection)
+        APPLY_PROTECTION="false"
+        shift
+        ;;
+      --track-claude)
+        TRACK_CLAUDE_PLACEHOLDER="true"
+        shift
+        ;;
+      --commit-message)
+        INIT_COMMIT_MESSAGE="$2"
+        shift 2
+        ;;
+      --pr-title)
+        PR_TITLE="$2"
+        shift 2
+        ;;
+      --pr-body)
+        PR_BODY="$2"
+        shift 2
+        ;;
+      --help|-h)
+        usage
+        exit 0
+        ;;
+      *)
+        echo "Unknown option: $1" >&2
+        usage >&2
+        exit 1
+        ;;
+    esac
+  done
+}
+
+main() {
+  require_command git
+  require_command gh
+  require_command jq
+
+  parse_args "$@"
+  ensure_owner
+  ensure_repo
+  ensure_default_branch_commit
+  ensure_init_branch
+  ensure_claude_placeholder
+  commit_init_branch_if_needed
+  create_remote_repo_if_needed
+  push_branches
+
+  local pr_url=""
+  if bool_is_true "$CREATE_PR"; then
+    pr_url="$(create_pr_if_needed || true)"
+  fi
+
+  apply_protection_if_needed
+  add_repo_to_list_if_needed
+
+  printf 'Repository: https://github.com/%s/%s\n' "$OWNER" "$REPO_NAME"
+  printf 'Default branch: %s\n' "$DEFAULT_BRANCH"
+  printf 'Init branch: %s\n' "$INIT_BRANCH"
+  if [[ -n "$pr_url" ]]; then
+    printf 'Pull request: %s\n' "$pr_url"
+  fi
+}
+
+main "$@"
