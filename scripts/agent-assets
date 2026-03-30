@@ -405,10 +405,14 @@ build_update_entries_from_manifest() {
 
     case "$kind" in
     codex)
-      if [[ "$source" != .codex/skills/* ]]; then
+      case "$source" in
+      .codex/skills/* | .codex/agents/*)
+        ;;
+      *)
         add_conflict "manifest-invalid" "$target" "unexpected codex source path '${source}'"
         continue
-      fi
+        ;;
+      esac
       if [[ ! -f "${REPO_ROOT}/${source}" ]]; then
         add_conflict "source-missing" "$target" "source path missing in repo: ${source}"
         continue
@@ -438,6 +442,7 @@ collect_managed_directories() {
 
   {
     printf '.codex/skills\n'
+    printf '.codex/agents\n'
     printf '.codex/.managed/%s\n' "$INSTALLER_ID"
     printf '.codex/.managed/%s/backups\n' "$INSTALLER_ID"
     printf '.git-hooks\n'
