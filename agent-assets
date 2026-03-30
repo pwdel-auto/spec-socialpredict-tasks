@@ -13,6 +13,8 @@ Purpose:
   Codex assets defined in this control repo.
 
 What this wrapper manages:
+  - Repo-root Codex guidance:
+    - AGENTS.md
   - Repo-local Codex payload:
     - .codex/skills/**
     - .codex/agents/**
@@ -105,6 +107,7 @@ Typical workflows:
     ./agent-assets uninstall --tool codex --yes
 
 Where files go:
+  - Repo AGENTS.md            -> ~/.codex/AGENTS.md
   - Repo .codex/skills/**  -> ~/.codex/skills/**
   - Repo .codex/agents/**  -> ~/.codex/agents/**
   - Manifest + backups     -> ~/.codex/.managed/spec-socialpredict-tasks/**
