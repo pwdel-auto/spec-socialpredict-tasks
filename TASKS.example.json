@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend",
+  "tasks": [
+    {
+      "id": "SP-001",
+      "title": "Refactor create-market validation into testable helpers",
+      "status": "pending",
+      "prompt": "Move the validation logic in market creation into focused, testable helpers while preserving existing behavior. Keep HTTP concerns thin and add or update tests.",
+      "working_dir": ".",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer selective dependency injection only where the repo already uses it.",
+        "Use existing modelstesting helpers where applicable."
+      ]
+    },
+    {
+      "id": "SP-002",
+      "title": "Check OpenAPI drift for market endpoints",
+      "status": "pending",
+      "prompt": "Verify that the OpenAPI specification matches the implemented market endpoints and response shapes. Update the spec or code as needed and run contract checks.",
+      "working_dir": ".",
+      "depends_on": [
+        "SP-001"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "read-only",
+      "approval": "never",
+      "profile": "",
+      "notes": []
+    }
+  ]
+}

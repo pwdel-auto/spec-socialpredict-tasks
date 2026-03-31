@@ -1,0 +1,4 @@
+interface:
+  display_name: "Staticcheck"
+  short_description: "Run staticcheck for SocialPredict Go code"
+  default_prompt: "Use $socialpredict-go-staticcheck to run staticcheck against the backend and summarize the highest-value findings."

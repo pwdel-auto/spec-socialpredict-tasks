@@ -1,75 +1,36 @@
-# github-bootstrap
+# SocialPredict PR #581 Operator Workspace
 
-`github-bootstrap` is a small local repo that automates the GitHub workflow you just used:
+This workspace is the control repo for SocialPredict PR #581 governance and verification.
+As of 2026-03-29, PR #581 head is `94231f1d5f49c564d1a99c0135456d92101ed8f0`
+and local target-repo work tracks `../socialpredict` branch `pilot/pr581-backend-api-20260329`.
 
-- publish a local repo to GitHub
-- keep `main` as the protected branch
-- push work on `init`
-- open the initial `init -> main` PR
-- apply the same `main` protections
-- add the repo to your GitHub list
+## Repo Topology
 
-## What it solves
+- control repo: `spec-socialpredict-tasks` (this workspace) for orchestration notes, docs, and `.codex` assets.
+- target repo: `../socialpredict` for PR #581 code, branch lineage checks, and backend guardrails.
 
-GitHub template repositories are good for carrying files and starter structure, but they do not replace repo-by-repo settings like:
+## Documentation Map
 
-- branch protection
-- initial branch push/PR flow
-- GitHub list assignment
+- [Workspace Purpose and Layout](README/WORKSPACE.md)
+- [Manual Verification Playbook](README/VERIFICATION.md)
+- [Agent Customization Guide](README/AGENTS.md)
+- [Codex Skills and Hook Customization Guide](README/SKILLS-HOOKS.md)
 
-This repo gives you a repeatable script for those settings.
+## Current Scope
 
-## Files
+- In scope: operator documentation, branch/scope verification workflow, and governance guidance for agents/skills/hooks.
+- Out of scope for this docs PR: application/business logic changes under `../socialpredict/backend` and any frontend/infrastructure implementation.
 
-- `defaults.env` holds your personal defaults
-- `bin/publish-repo` bootstraps the current local git repo
-- `templates/claude/README.md` is the tracked `.claude` placeholder used when you opt in with `--track-claude`
+## Quick Start
 
-## Current defaults
-
-The shipped defaults match your current setup:
-
-- owner: `pwdel`
-- visibility: `public`
-- default branch: `main`
-- working branch: `init`
-- list: `Automated Coding`
-- branch protection:
-  - PR-based changes
-  - no force-push
-  - no delete
-  - conversation resolution required
-
-## Usage
-
-Run the script from any local git repo you want to publish:
+Run from workspace root:
 
 ```bash
-cd ~/Projects/some-repo
-~/Projects/github-bootstrap/bin/publish-repo \
-  --description "Short repository description"
+git -C ../socialpredict branch --show-current
+git -C ../socialpredict merge-base --is-ancestor 94231f1d5f49c564d1a99c0135456d92101ed8f0 HEAD && echo "lineage-ok"
+bash ../socialpredict/backend/scripts/guardrails.sh pre-commit
 ```
 
-Useful flags:
+Then use the playbook:
 
-```bash
-~/Projects/github-bootstrap/bin/publish-repo --help
-~/Projects/github-bootstrap/bin/publish-repo --private
-~/Projects/github-bootstrap/bin/publish-repo --skip-list
-~/Projects/github-bootstrap/bin/publish-repo --skip-protection
-~/Projects/github-bootstrap/bin/publish-repo --track-claude
-~/Projects/github-bootstrap/bin/publish-repo --list-name automated-coding
-```
-
-## Notes
-
-- The script stages the current working tree on the `init` branch and commits it if needed
-- If the repo has no commit yet, it creates an empty `main` commit first so the `init -> main` PR has a real base branch
-- It uses your authenticated `gh` session and expects `git`, `gh`, and `jq` to be installed
-
-## Recommended next step
-
-If you want this repo to act as an actual GitHub template too, publish `github-bootstrap` and mark it as a template repository on GitHub. That gives you:
-
-- reusable starter files from the repo itself
-- plus the `publish-repo` script for per-repo settings GitHub templates do not handle
+- [Manual Verification Playbook](README/VERIFICATION.md)

@@ -1,0 +1,4 @@
+interface:
+  display_name: "golangci-lint"
+  short_description: "Run golangci-lint for SocialPredict Go code"
+  default_prompt: "Use $socialpredict-go-golangci-lint to run golangci-lint against the backend and summarize blocking lint findings."

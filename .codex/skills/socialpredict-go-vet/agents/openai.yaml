@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go vet"
+  short_description: "Run go vet for SocialPredict backend code"
+  default_prompt: "Use $socialpredict-go-vet to run go vet against the backend and summarize any findings."

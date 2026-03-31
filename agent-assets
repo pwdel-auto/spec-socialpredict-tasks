@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INNER_SCRIPT="${SCRIPT_DIR}/scripts/agent-assets"
+
+usage() {
+  cat <<'EOF'
+SocialPredict agent asset installer wrapper
+
+Purpose:
+  Provide a repo-root entrypoint for installing and inspecting the managed
+  Codex assets defined in this control repo.
+
+What this wrapper manages:
+  - Repo-root Codex guidance:
+    - AGENTS.md
+  - Repo-local Codex payload:
+    - .codex/skills/**
+    - .codex/agents/**
+  - Repo-local hook payload:
+    - .git-hooks/pre-commit
+    - .git-hooks/pre-push
+    - .git-hooks/.managed/spec-socialpredict-tasks/bin/socialpredict-guardrails
+  - Managed Git hooks:
+    - ~/.git-hooks/pre-commit
+    - ~/.git-hooks/pre-push
+    - ~/.git-hooks/.managed/spec-socialpredict-tasks/bin/socialpredict-guardrails
+
+What it does not do:
+  - It does not blindly mirror the entire .codex directory.
+  - It does not copy user-local Codex state such as auth/session data.
+  - It does not modify application code in ../socialpredict.
+  - It does not invent hook content at install time anymore; the repo-local
+    .git-hooks/** payload is now the source of truth.
+
+Usage:
+  ./agent-assets <command> [options]
+
+Commands:
+  install
+    Copy the managed repo-local payload into user scope and set up managed hooks.
+    Creates a manifest in ~/.codex/.managed/spec-socialpredict-tasks/manifest.json
+    so future update/status/uninstall operations know exactly what this installer owns.
+
+  update
+    Refresh files already tracked by the manifest from the current repo state.
+    Restores missing managed files and replaces changed managed files.
+    Blocks on unmanaged conflicts unless --overwrite-unmanaged is explicitly passed.
+
+  uninstall
+    Remove only files tracked by this installer's manifest.
+    Also restores git core.hooksPath if this installer set it previously.
+    Does not remove unrelated files in ~/.codex or ~/.git-hooks.
+
+  status
+    Report whether the managed installation is healthy or drifted.
+    Checks for:
+      - missing managed files
+      - modified managed files
+      - source drift between this repo and the installed payload
+      - unmanaged conflicts
+      - git core.hooksPath drift
+
+Options:
+  --tool <name>
+    Payload family to manage. Current value: codex
+
+  --mode <name>
+    Install mode. Current value: copy
+
+  --home <path>
+    Alternate home directory for dry-run or isolated verification.
+    Example:
+      ./agent-assets status --tool codex --home /tmp/test-home
+
+  --git-config-file <path>
+    Alternate global git config file when testing hook installation.
+
+  --dry-run
+    Print planned mutations without writing files.
+
+  --yes
+    Required for mutating commands unless --dry-run is used.
+
+  --overwrite-unmanaged
+    Dangerous override that allows install/update to replace an existing target
+    file that is not currently owned by this installer's manifest.
+
+  -h, --help
+    Show this help.
+
+Typical workflows:
+  Inspect what would happen:
+    ./agent-assets install --tool codex --dry-run
+
+  Install managed payload into your user scope:
+    ./agent-assets install --tool codex --yes
+
+  Check whether your installed payload still matches this repo:
+    ./agent-assets status --tool codex
+
+  Refresh an existing installation after repo changes:
+    ./agent-assets update --tool codex --yes
+
+  Remove only this repo's managed payload:
+    ./agent-assets uninstall --tool codex --yes
+
+Where files go:
+  - Repo AGENTS.md            -> ~/.codex/AGENTS.md
+  - Repo .codex/skills/**  -> ~/.codex/skills/**
+  - Repo .codex/agents/**  -> ~/.codex/agents/**
+  - Manifest + backups     -> ~/.codex/.managed/spec-socialpredict-tasks/**
+  - Managed hooks          -> ~/.git-hooks/**
+
+Implementation note:
+  This is a documentation-oriented wrapper around scripts/agent-assets.
+  The underlying script still performs the actual install/update/status/uninstall logic.
+EOF
+}
+
+if [[ ! -x "${INNER_SCRIPT}" ]]; then
+  printf 'agent-assets wrapper error: expected executable script at %s\n' "${INNER_SCRIPT}" >&2
+  exit 2
+fi
+
+case "${1:-}" in
+"" | help | --help | -h)
+  usage
+  exit 0
+  ;;
+esac
+
+exec "${INNER_SCRIPT}" "$@"

@@ -22,15 +22,20 @@ APPLY_PROTECTION="${APPLY_PROTECTION:-true}"
 ADD_TO_LIST="${ADD_TO_LIST:-true}"
 GITHUB_LIST_NAME="${GITHUB_LIST_NAME:-}"
 GITHUB_LIST_DESCRIPTION="${GITHUB_LIST_DESCRIPTION:-Repositories created with github-bootstrap}"
+CREATE_RELEASE="${CREATE_RELEASE:-false}"
 TRACK_CLAUDE_PLACEHOLDER="${TRACK_CLAUDE_PLACEHOLDER:-false}"
 EMPTY_MAIN_COMMIT_MESSAGE="${EMPTY_MAIN_COMMIT_MESSAGE:-Initialize repository}"
 INIT_COMMIT_MESSAGE="${INIT_COMMIT_MESSAGE:-Add initial project files}"
 
 TARGET_PATH="."
 REPO_NAME=""
-DESCRIPTION=""
-PR_TITLE=""
-PR_BODY=""
+DESCRIPTION="${REPO_DESCRIPTION:-}"
+PR_TITLE="${PR_TITLE:-}"
+PR_BODY="${PR_BODY:-}"
+RELEASE_TAG="${RELEASE_TAG:-}"
+RELEASE_TITLE="${RELEASE_TITLE:-}"
+RELEASE_NOTES="${RELEASE_NOTES:-}"
+RELEASE_TARGET="${RELEASE_TARGET:-}"
 
 usage() {
   cat <<'EOF'
@@ -57,6 +62,11 @@ Options:
   --skip-list              Do not add the repository to a GitHub list
   --skip-pr                Do not open a pull request
   --skip-protection        Do not apply branch protection to the default branch
+  --release-tag TAG        Create or reuse a GitHub release for TAG
+  --release-title TEXT     GitHub release title
+  --release-notes TEXT     GitHub release notes
+  --release-target REF     Git ref to tag for release creation (default: init branch)
+  --skip-release           Do not create a GitHub release
   --track-claude           Add a tracked `.claude/README.md` placeholder if missing
   --commit-message TEXT    Commit message for the init branch commit
   --pr-title TEXT          Pull request title
@@ -270,6 +280,38 @@ add_repo_to_list_if_needed() {
     -f listId="$list_id" >/dev/null
 }
 
+create_release_if_needed() {
+  if ! bool_is_true "$CREATE_RELEASE"; then
+    return
+  fi
+
+  if [[ -z "$RELEASE_TAG" ]]; then
+    echo "CREATE_RELEASE is true but RELEASE_TAG is empty" >&2
+    exit 1
+  fi
+
+  local existing_release
+  existing_release="$(gh release view "$RELEASE_TAG" --repo "$OWNER/$REPO_NAME" --json url --jq '.url' 2>/dev/null || true)"
+  if [[ -n "$existing_release" && "$existing_release" != "null" ]]; then
+    printf '%s\n' "$existing_release"
+    return
+  fi
+
+  local release_title release_notes release_target
+  release_title="${RELEASE_TITLE:-$RELEASE_TAG}"
+  release_notes="${RELEASE_NOTES:-Initial release for $REPO_NAME.}"
+  release_target="${RELEASE_TARGET:-$INIT_BRANCH}"
+  if [[ -z "$release_target" ]]; then
+    release_target="$DEFAULT_BRANCH"
+  fi
+
+  gh release create "$RELEASE_TAG" \
+    --repo "$OWNER/$REPO_NAME" \
+    --target "$release_target" \
+    --title "$release_title" \
+    --notes "$release_notes"
+}
+
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -325,6 +367,30 @@ parse_args() {
         APPLY_PROTECTION="false"
         shift
         ;;
+      --release-tag)
+        RELEASE_TAG="$2"
+        CREATE_RELEASE="true"
+        shift 2
+        ;;
+      --release-title)
+        RELEASE_TITLE="$2"
+        CREATE_RELEASE="true"
+        shift 2
+        ;;
+      --release-notes)
+        RELEASE_NOTES="$2"
+        CREATE_RELEASE="true"
+        shift 2
+        ;;
+      --release-target)
+        RELEASE_TARGET="$2"
+        CREATE_RELEASE="true"
+        shift 2
+        ;;
+      --skip-release)
+        CREATE_RELEASE="false"
+        shift
+        ;;
       --track-claude)
         TRACK_CLAUDE_PLACEHOLDER="true"
         shift
@@ -370,18 +436,25 @@ main() {
   push_branches
 
   local pr_url=""
+  local release_url=""
   if bool_is_true "$CREATE_PR"; then
     pr_url="$(create_pr_if_needed || true)"
   fi
 
   apply_protection_if_needed
   add_repo_to_list_if_needed
+  if bool_is_true "$CREATE_RELEASE"; then
+    release_url="$(create_release_if_needed)"
+  fi
 
   printf 'Repository: https://github.com/%s/%s\n' "$OWNER" "$REPO_NAME"
   printf 'Default branch: %s\n' "$DEFAULT_BRANCH"
   printf 'Init branch: %s\n' "$INIT_BRANCH"
   if [[ -n "$pr_url" ]]; then
     printf 'Pull request: %s\n' "$pr_url"
+  fi
+  if [[ -n "$release_url" ]]; then
+    printf 'Release: %s\n' "$release_url"
   fi
 }
 

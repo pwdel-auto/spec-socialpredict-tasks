@@ -1,0 +1,4 @@
+interface:
+  display_name: "Google Go Style"
+  short_description: "Search the Google Go Style Guide locally"
+  default_prompt: "Use $socialpredict-google-go-style-guide to look up targeted Google Go Style Guide guidance and quote the relevant nearby lines instead of loading the full guide into context."
