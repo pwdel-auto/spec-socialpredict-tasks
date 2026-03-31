@@ -1,6 +1,6 @@
 ---
 name: socialpredict-go-architecture-governance
-description: Enforce SocialPredict Go service-boundary governance for PR #581 backend/API work. Use when implementing or reviewing changes in backend handlers, domain services, repositories, auth service, or route wiring to prevent layer violations, direct DB leakage, and cross-domain coupling.
+description: Enforce SocialPredict Go service-boundary governance for backend/API work. Use when implementing or reviewing changes in backend handlers, domain services, repositories, auth service, or route wiring to prevent layer violations, direct DB leakage, and cross-domain coupling.
 ---
 
 # SocialPredict Go Architecture Governance

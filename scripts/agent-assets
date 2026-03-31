@@ -254,7 +254,7 @@ load_manifest_entries() {
 collect_install_entries() {
   : >"${DESIRED_INSTALL_TSV}"
   aa_codex_collect_entries "$REPO_ROOT" "$DESIRED_INSTALL_TSV"
-  aa_hooks_collect_entries "$HOME_DIR" "$INSTALLER_ID" "$DESIRED_INSTALL_TSV"
+  aa_hooks_collect_entries "$REPO_ROOT" "$HOME_DIR" "$INSTALLER_ID" "$DESIRED_INSTALL_TSV"
 }
 
 lookup_entry_by_target() {
@@ -278,7 +278,7 @@ entry_write_target() {
     aa_codex_write_target "$REPO_ROOT" "$source" "$target_abs"
     ;;
   hook)
-    aa_hooks_write_target "$HOME_DIR" "$INSTALLER_ID" "$source" "$target_abs"
+  aa_hooks_write_target "$REPO_ROOT" "$HOME_DIR" "$INSTALLER_ID" "$source" "$target_abs"
     ;;
   *)
     die "Unknown managed entry kind: ${kind}"
@@ -395,7 +395,7 @@ build_update_entries_from_manifest() {
 
   local latest_hooks_tsv="${WORK_DIR}/latest-hooks.tsv"
   : >"${latest_hooks_tsv}"
-  aa_hooks_collect_entries "$HOME_DIR" "$INSTALLER_ID" "$latest_hooks_tsv"
+  aa_hooks_collect_entries "$REPO_ROOT" "$HOME_DIR" "$INSTALLER_ID" "$latest_hooks_tsv"
 
   local line kind source target _old_digest
   local desired_line desired_source desired_digest
@@ -406,7 +406,7 @@ build_update_entries_from_manifest() {
     case "$kind" in
     codex)
       case "$source" in
-      .codex/skills/* | .codex/agents/*)
+      .codex/skills/* | .codex/agents/* | AGENTS.md)
         ;;
       *)
         add_conflict "manifest-invalid" "$target" "unexpected codex source path '${source}'"

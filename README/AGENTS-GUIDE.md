@@ -7,6 +7,14 @@ Topology reminder:
 - control repo: this workspace for spec/task orchestration and `.codex` assets.
 - target repo: `../socialpredict` for backend/API code changes and branch checks.
 
+Concrete repo-local team definitions now live under `.codex/agents/`:
+
+- `.codex/agents/architecture-agent/openai.yaml`
+- `.codex/agents/api-contract-agent/openai.yaml`
+- `.codex/agents/test-reliability-agent/openai.yaml`
+- `.codex/agents/coding-best-practices-agent/openai.yaml`
+- `.codex/agents/verifier-agent/openai.yaml`
+
 ## Customization Surfaces
 
 1. Spec note role charter sections (`spec` note):

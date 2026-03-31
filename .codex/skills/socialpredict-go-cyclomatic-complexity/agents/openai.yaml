@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Cyclomatic Complexity"
+  short_description: "Run gocyclo checks for SocialPredict Go code"
+  default_prompt: "Use $socialpredict-go-cyclomatic-complexity to run gocyclo against the backend and summarize the highest-complexity functions."

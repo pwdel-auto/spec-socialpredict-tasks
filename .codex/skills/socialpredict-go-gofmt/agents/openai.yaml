@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go fmt"
+  short_description: "Run gofmt checks for SocialPredict Go code"
+  default_prompt: "Use $socialpredict-go-gofmt to check backend formatting drift and summarize any files that need gofmt."

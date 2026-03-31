@@ -1,6 +1,6 @@
 ---
 name: socialpredict-go-testing-reliability
-description: Run deterministic Go reliability checks for SocialPredict PR #581 backend/API changes. Use when implementing or reviewing backend domain/service/repository/handler changes, diagnosing flaky test behavior, or preparing verification evidence.
+description: Run deterministic Go reliability checks for SocialPredict backend/API changes. Use when implementing or reviewing backend domain/service/repository/handler changes, diagnosing flaky test behavior, or preparing verification evidence.
 ---
 
 # SocialPredict Go Testing Reliability

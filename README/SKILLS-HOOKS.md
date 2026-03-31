@@ -4,17 +4,24 @@ This document covers safe customization points for local skills and guardrail ho
 
 Topology reminder:
 
-- control repo: this workspace, including `.codex/skills`.
+- control repo: this workspace, including `.codex/skills` and `.codex/agents`.
 - target repo: `../socialpredict`, including backend guardrail scripts.
 
 ## Paths
 
 - Skills root: `.codex/skills/`
+- Agents root: `.codex/agents/`
 - Skill examples:
   - `socialpredict-go-architecture-governance`
   - `socialpredict-go-testing-reliability`
   - `socialpredict-go-code-quality-guardrails`
   - `socialpredict-api-contract-drift-control`
+- Agent examples:
+  - `architecture-agent`
+  - `api-contract-agent`
+  - `test-reliability-agent`
+  - `coding-best-practices-agent`
+  - `verifier-agent`
 - Hook scripts:
   - `../socialpredict/backend/scripts/guardrails.sh`
   - `../socialpredict/backend/scripts/install-guardrail-hooks.sh`

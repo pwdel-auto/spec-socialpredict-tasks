@@ -1,6 +1,6 @@
 ---
 name: socialpredict-go-code-quality-guardrails
-description: Apply Go quality guardrails for SocialPredict PR #581 backend/API work. Use when touching backend Go files to enforce formatting, vet hygiene, and backend boundary-safe coding practices before review or verifier handoff.
+description: Apply Go quality guardrails for SocialPredict backend/API work. Use when touching backend Go files to enforce formatting, vet hygiene, and backend boundary-safe coding practices before review or verifier handoff.
 ---
 
 # SocialPredict Go Code Quality Guardrails
@@ -29,3 +29,9 @@ description: Apply Go quality guardrails for SocialPredict PR #581 backend/API w
 
 - `references/code-quality-checklist.md`: required gates and escalation criteria.
 - `scripts/run_quality_guardrails.sh`: changed-file gofmt, go vet, and boundary hygiene checks.
+- Companion tool skills for deeper or tool-specific passes:
+  - `socialpredict-go-gofmt`
+  - `socialpredict-go-vet`
+  - `socialpredict-go-staticcheck`
+  - `socialpredict-go-golangci-lint`
+  - `socialpredict-go-cyclomatic-complexity`

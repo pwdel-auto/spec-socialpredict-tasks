@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Managed by spec-socialpredict-tasks. Source of truth lives in this repo.
+"$(cd "$(dirname "${BASH_SOURCE[0]}")/.managed/spec-socialpredict-tasks/bin" && pwd)/socialpredict-guardrails" pre-commit
