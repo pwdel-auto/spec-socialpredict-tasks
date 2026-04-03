@@ -27,6 +27,11 @@ Options:
                          TASKS.json checkpointing, and resume prompts in
                          long-running dispatcher sessions.
   --context-poll SECONDS Poll interval for context telemetry. Default: 15
+  --context-soft-threshold PCT
+                         Ask for a clean handoff once context usage reaches
+                         this percent of the model window. Use 0 to disable.
+                         Default: 60
+  --quiet                Do not mirror live Codex stdout/stderr to the terminal
   --once                 Run at most one ready task, then exit
   --codex-bin PATH       Codex executable. Default: codex
   --dispatcher NAME      Custom dispatcher agent name. Default: dispatcher_agent
@@ -41,7 +46,10 @@ Task file:
 
 Logs:
   The runner writes logs under --runs-dir (default: <repo>/.codex-runs)
-  instead of streaming the full Codex JSON output to your terminal.
+  and, by default, also mirrors live Codex stdout/stderr to your terminal.
+  Use --quiet to keep the previous fully silent terminal behavior.
+  It also bootstraps canonical curated task reports under
+  <target-repo>/.codex-reports/tasks/<task-id>/ for dispatcher/agent use.
   Per task segment it creates:
     events/<task>_<timestamp>_partNN.ndjson
       Raw `codex exec --json` event stream for that run segment.
@@ -68,7 +76,9 @@ SLEEP_SECONDS="30"
 # Default to 70% used so long-running coordinator/dispatcher sessions keep
 # roughly 30% headroom for final summaries, checkpoint writes, and resumption.
 CONTEXT_THRESHOLD_PCT="${CONTEXT_THRESHOLD_PCT:-70}"
+CONTEXT_SOFT_THRESHOLD_PCT="${CONTEXT_SOFT_THRESHOLD_PCT:-60}"
 CONTEXT_POLL_SECONDS="${CONTEXT_POLL_SECONDS:-15}"
+VERBOSE_TERMINAL_OUTPUT="${VERBOSE_TERMINAL_OUTPUT:-1}"
 RUN_ONCE="0"
 CODEX_BIN="${CODEX_BIN:-codex}"
 DISPATCHER_AGENT="${DISPATCHER_AGENT:-dispatcher_agent}"
@@ -103,6 +113,14 @@ while [[ $# -gt 0 ]]; do
       CONTEXT_POLL_SECONDS="$2"
       shift 2
       ;;
+    --context-soft-threshold)
+      CONTEXT_SOFT_THRESHOLD_PCT="$2"
+      shift 2
+      ;;
+    --quiet)
+      VERBOSE_TERMINAL_OUTPUT="0"
+      shift
+      ;;
     --once)
       RUN_ONCE="1"
       shift
@@ -134,14 +152,19 @@ RUNS_DIR="${RUNS_DIR:-$REPO_ROOT/.codex-runs}"
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 command -v "$CODEX_BIN" >/dev/null 2>&1 || { echo "codex executable not found: $CODEX_BIN" >&2; exit 1; }
 [[ -f "$TASKS_FILE" ]] || { echo "Task file not found: $TASKS_FILE" >&2; exit 1; }
-python3 - "$CONTEXT_THRESHOLD_PCT" "$CONTEXT_POLL_SECONDS" <<'PY'
+python3 - "$CONTEXT_THRESHOLD_PCT" "$CONTEXT_SOFT_THRESHOLD_PCT" "$CONTEXT_POLL_SECONDS" <<'PY'
 import sys
 
 threshold = float(sys.argv[1])
-poll = float(sys.argv[2])
+soft_threshold = float(sys.argv[2])
+poll = float(sys.argv[3])
 
 if threshold < 0 or threshold > 100:
     raise SystemExit("context threshold must be between 0 and 100")
+if soft_threshold < 0 or soft_threshold > 100:
+    raise SystemExit("context soft threshold must be between 0 and 100")
+if threshold > 0 and soft_threshold > threshold:
+    raise SystemExit("context soft threshold cannot exceed hard threshold")
 if poll <= 0:
     raise SystemExit("context poll interval must be greater than 0")
 PY
@@ -149,6 +172,48 @@ PY
 mkdir -p "$RUNS_DIR/context" "$RUNS_DIR/events" "$RUNS_DIR/messages" "$RUNS_DIR/prompts" "$RUNS_DIR/stderr"
 RUNLOG_FILE="$RUNS_DIR/RUNLOG.ndjson"
 STATE_FILE="$RUNS_DIR/STATE.json"
+
+run_codex_segment() {
+  local event_file="$1"
+  local stderr_file="$2"
+  shift 2
+
+  if [[ "$VERBOSE_TERMINAL_OUTPUT" == "1" ]]; then
+    "$CODEX_BIN" "$@" \
+      > >(tee "$event_file") \
+      2> >(tee "$stderr_file" >&2)
+  else
+    "$CODEX_BIN" "$@" > "$event_file" 2> "$stderr_file"
+  fi
+}
+
+resolve_target_repo_root() {
+  local workdir="$1"
+
+  if git -C "$workdir" rev-parse --show-toplevel >/dev/null 2>&1; then
+    git -C "$workdir" rev-parse --show-toplevel
+  else
+    printf '%s\n' "$workdir"
+  fi
+}
+
+initialize_task_reports() {
+  local task_id="$1"
+  local task_title="$2"
+  local task_workdir_rel="$3"
+  local task_workdir_abs="$4"
+  local target_repo_root="$5"
+  local report_dir="$6"
+
+  python3 "$REPO_ROOT/scripts/codex-report.py" init \
+    --report-dir "$report_dir" \
+    --task-id "$task_id" \
+    --title "$task_title" \
+    --working-dir "$task_workdir_rel" \
+    --dispatcher-agent "$DISPATCHER_AGENT" \
+    --control-repo "$REPO_ROOT" \
+    --target-repo "$target_repo_root" >/dev/null
+}
 
 pick_next_task() {
   python3 - "$TASKS_FILE" <<'PY'
@@ -367,17 +432,41 @@ PY
 
 build_prompt() {
   local task_json="$1"
-  python3 - "$REPO_ROOT" "$DISPATCHER_AGENT" <<'PY' <<< "$task_json"
+  local report_dir="$2"
+  local meta_file="$3"
+  local summary_file="$4"
+  local conversation_file="$5"
+  local decisions_file="$6"
+  local helper_script="$7"
+  python3 - "$REPO_ROOT" "$DISPATCHER_AGENT" "$report_dir" "$meta_file" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" <<'PY' <<< "$task_json"
 import json
 import sys
 
 repo_root = sys.argv[1]
 dispatcher = sys.argv[2]
+report_dir = sys.argv[3]
+meta_file = sys.argv[4]
+summary_file = sys.argv[5]
+conversation_file = sys.argv[6]
+decisions_file = sys.argv[7]
+helper_script = sys.argv[8]
 task = json.loads(sys.stdin.read())
 
 print(f"""You are executing a queued automation task for the SocialPredict repository at {repo_root}.
 
 Start by explicitly spawning the custom agent named `{dispatcher}` to coordinate the task. The dispatcher should decide whether to spawn any specialist agents and should wait for them before concluding.
+
+Reporting convention:
+- The canonical curated report location is `{report_dir}`.
+- Report files are already bootstrapped:
+  - meta: `{meta_file}`
+  - summary: `{summary_file}`
+  - conversation log: `{conversation_file}`
+  - decisions log: `{decisions_file}`
+- Use helper script `{helper_script}` for deterministic report I/O when practical.
+- Specialists should append facts and decisions; the dispatcher owns `summary.json`.
+- Prefer incremental reads, for example `read-events --after-seq <last_event_seq>` instead of rereading the full conversation log.
+- `summary.json.context` is runner-maintained. If `handoff_requested` becomes true, stop branching out, update the summary, record a handoff event, and converge toward a clean checkpoint.
 
 Execution contract:
 - Do the task end-to-end.
@@ -395,10 +484,20 @@ PY
 
 build_resume_prompt() {
   local task_json="$1"
-  python3 - <<'PY' <<< "$task_json"
+  local report_dir="$2"
+  local summary_file="$3"
+  local conversation_file="$4"
+  local decisions_file="$5"
+  local helper_script="$6"
+  python3 - "$report_dir" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" <<'PY' <<< "$task_json"
 import json
 import sys
 
+report_dir = sys.argv[1]
+summary_file = sys.argv[2]
+conversation_file = sys.argv[3]
+decisions_file = sys.argv[4]
+helper_script = sys.argv[5]
 task = json.loads(sys.stdin.read())
 runner_state = task.get("runner_state") or {}
 checkpoint = runner_state.get("last_context_checkpoint") or {}
@@ -406,6 +505,11 @@ checkpoint = runner_state.get("last_context_checkpoint") or {}
 print(f"""You are resuming queued automation task {task.get("id", "")} after codex-runner checkpointed the session because the active context window was getting full.
 
 Continue from the existing session state and current repository contents.
+- Reuse the canonical report directory `{report_dir}`.
+- Continue appending to `{conversation_file}` and `{decisions_file}` rather than creating new report files.
+- Keep `{summary_file}` current as the dispatcher-owned rollup.
+- Use helper script `{helper_script}` for incremental reads and summary updates when practical.
+- Check `summary.json.context` first. If `handoff_requested` is true, consolidate state before branching into more work.
 - Do not restart the task from scratch.
 - Avoid repeating work that is already complete.
 - Re-read files or rerun checks only when needed to safely continue.
@@ -429,6 +533,55 @@ append_context_log() {
   local context_file="$1"
   local event_json="$2"
   printf '%s\n' "$event_json" >> "$context_file"
+}
+
+
+update_report_context() {
+  local report_dir="$1"
+  local session_id="$2"
+  local used_tokens="$3"
+  local context_window="$4"
+  local remaining_tokens="$5"
+  local used_pct="$6"
+  local reason="$7"
+  local handoff_requested="$8"
+
+  local -a args
+  args=(
+    update-context
+    --report-dir "$report_dir"
+    --session-id "$session_id"
+    --used-tokens "$used_tokens"
+    --context-window "$context_window"
+    --remaining-tokens "$remaining_tokens"
+    --used-pct "$used_pct"
+    --soft-threshold-pct "$CONTEXT_SOFT_THRESHOLD_PCT"
+    --threshold-pct "$CONTEXT_THRESHOLD_PCT"
+  )
+
+  if [[ "$handoff_requested" == "1" ]]; then
+    args+=(--handoff-requested)
+  fi
+  if [[ -n "$reason" ]]; then
+    args+=(--reason "$reason")
+  fi
+
+  python3 "$REPO_ROOT/scripts/codex-report.py" "${args[@]}" >/dev/null
+}
+
+append_report_event() {
+  local report_dir="$1"
+  local agent_name="$2"
+  local agent_role="$3"
+  local event_type="$4"
+  local summary="$5"
+
+  python3 "$REPO_ROOT/scripts/codex-report.py" append-event \
+    --report-dir "$report_dir" \
+    --agent-name "$agent_name" \
+    --agent-role "$agent_role" \
+    --event-type "$event_type" \
+    --summary "$summary" >/dev/null
 }
 
 build_codex_exec_args() {
@@ -567,13 +720,15 @@ monitor_context_window() {
   local message_file="$5"
   local prompt_file="$6"
   local context_file="$7"
-  local codex_pid="$8"
-  local segment_index="$9"
-  local restart_request_file="${10}"
-  local next_restart_count="${11}"
+  local report_dir="$8"
+  local codex_pid="$9"
+  local segment_index="${10}"
+  local restart_request_file="${11}"
+  local next_restart_count="${12}"
 
   local known_session_id=""
   local last_logged_tokens=""
+  local soft_handoff_requested="0"
 
   while kill -0 "$codex_pid" >/dev/null 2>&1; do
     sleep "$CONTEXT_POLL_SECONDS"
@@ -670,7 +825,44 @@ print(json.dumps({
 PY
 )
       append_context_log "$context_file" "$progress_json"
+      update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "context_progress" "$soft_handoff_requested"
       write_running_state "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$session_id" "$snapshot_json"
+    fi
+
+    if [[ "$soft_handoff_requested" != "1" && "$(python3 - "$used_pct" "$CONTEXT_SOFT_THRESHOLD_PCT" <<'PY'
+import sys
+soft = float(sys.argv[2])
+print("1" if soft > 0 and float(sys.argv[1]) >= soft else "0")
+PY
+)" == "1" ]]; then
+      soft_handoff_requested="1"
+
+      local soft_warning_json
+      soft_warning_json=$(python3 - "$task_id" "$segment_index" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "$CONTEXT_SOFT_THRESHOLD_PCT" "$CONTEXT_THRESHOLD_PCT" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+(task_id, segment_index, session_id, used_tokens, context_window,
+ remaining_tokens, used_pct, soft_threshold_pct, threshold_pct) = sys.argv[1:]
+print(json.dumps({
+    "record_type": "context_soft_limit_reached",
+    "timestamp": datetime.now(timezone.utc).isoformat(),
+    "task_id": task_id,
+    "segment": int(segment_index),
+    "session_id": session_id,
+    "used_tokens": int(used_tokens),
+    "context_window": int(context_window),
+    "remaining_tokens": int(remaining_tokens),
+    "used_pct": float(used_pct),
+    "soft_threshold_pct": float(soft_threshold_pct),
+    "threshold_pct": float(threshold_pct),
+}))
+PY
+)
+      append_context_log "$context_file" "$soft_warning_json"
+      append_report_event "$report_dir" "codex_runner" "runner" "context_soft_limit_reached" "Soft context threshold reached. Dispatcher should stop branching and write a clean handoff into summary.json and conversation.ndjson."
+      update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "soft_threshold_reached" "1"
     fi
 
     if [[ "$(python3 - "$used_pct" "$CONTEXT_THRESHOLD_PCT" <<'PY'
@@ -743,6 +935,8 @@ PY
 
     update_task_runner_state "$task_id" "$checkpoint_patch_json"
     append_context_log "$context_file" "$checkpoint_log_json"
+    append_report_event "$report_dir" "codex_runner" "runner" "context_checkpoint_requested" "Hard context threshold reached. Runner is checkpointing and will resume the same task session."
+    update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "hard_threshold_reached" "1"
     write_running_state "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$session_id" "$snapshot_json"
     printf '%s\n' "$checkpoint_patch_json" > "$restart_request_file"
     kill -TERM "$codex_pid" >/dev/null 2>&1 || true
@@ -779,11 +973,20 @@ PY
   task_sandbox="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("sandbox", "workspace-write"))' <<< "$task_json")"
   task_approval="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("approval", "never"))' <<< "$task_json")"
   task_profile="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("profile", ""))' <<< "$task_json")"
+  target_repo_root="$(resolve_target_repo_root "$task_workdir_abs")"
+  report_dir="$target_repo_root/.codex-reports/tasks/$task_id"
+  meta_file="$report_dir/meta.json"
+  summary_json_file="$report_dir/summary.json"
+  conversation_file="$report_dir/conversation.ndjson"
+  decisions_file="$report_dir/decisions.ndjson"
+  report_helper="$REPO_ROOT/scripts/codex-report.py"
   start_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   resume_session_id="$(python3 -c 'import json,sys; print((json.loads(sys.stdin.read()).get("runner_state") or {}).get("session_id", ""))' <<< "$task_json")"
   resume_pending="$(python3 -c 'import json,sys; print("1" if ((json.loads(sys.stdin.read()).get("runner_state") or {}).get("resume_pending")) else "0")' <<< "$task_json")"
   stored_segment="$(python3 -c 'import json,sys; print(int((json.loads(sys.stdin.read()).get("runner_state") or {}).get("segment", 0)))' <<< "$task_json")"
   context_restart_count="$(python3 -c 'import json,sys; print(int((json.loads(sys.stdin.read()).get("runner_state") or {}).get("restart_count", 0)))' <<< "$task_json")"
+
+  initialize_task_reports "$task_id" "$task_title" "$task_workdir_rel" "$task_workdir_abs" "$target_repo_root" "$report_dir"
 
   if [[ "$resume_pending" == "1" && -n "$resume_session_id" ]]; then
     segment_index=$((stored_segment + 1))
@@ -816,11 +1019,11 @@ PY
     rm -f "$restart_request_file"
 
     if [[ -n "$resume_session_id" ]]; then
-      build_resume_prompt "$task_json" > "$prompt_file"
+      build_resume_prompt "$task_json" "$report_dir" "$summary_json_file" "$conversation_file" "$decisions_file" "$report_helper" > "$prompt_file"
       mapfile -d '' codex_args < <(build_codex_resume_args "$task_workdir_abs" "$task_sandbox" "$task_approval" "$task_profile")
       codex_args+=(--output-last-message "$message_file" "$resume_session_id" -)
     else
-      build_prompt "$task_json" > "$prompt_file"
+      build_prompt "$task_json" "$report_dir" "$meta_file" "$summary_json_file" "$conversation_file" "$decisions_file" "$report_helper" > "$prompt_file"
       mapfile -d '' codex_args < <(build_codex_exec_args "$task_workdir_abs" "$task_sandbox" "$task_approval" "$task_profile")
       codex_args+=(--output-last-message "$message_file" -)
     fi
@@ -834,7 +1037,7 @@ PY
     write_running_state "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$resume_session_id" "null"
 
     set +e
-    "$CODEX_BIN" "${codex_args[@]}" < "$prompt_file" > "$event_file" 2> "$stderr_file" &
+    run_codex_segment "$event_file" "$stderr_file" "${codex_args[@]}" < "$prompt_file" &
     codex_pid=$!
 
     monitor_pid=""
@@ -844,7 +1047,7 @@ print("1" if float(sys.argv[1]) > 0 else "0")
 PY
 )" == "1" ]]; then
       next_restart_count=$((context_restart_count + 1))
-      monitor_context_window "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$codex_pid" "$segment_index" "$restart_request_file" "$next_restart_count" &
+      monitor_context_window "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$report_dir" "$codex_pid" "$segment_index" "$restart_request_file" "$next_restart_count" &
       monitor_pid=$!
     fi
 
