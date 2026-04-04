@@ -125,14 +125,14 @@
     {
       "id": "PR581-006",
       "title": "Align unchecked analytics files with SRP",
-      "status": "pending",
+      "status": "running",
       "prompt": "This task is sourced from the SRP checklist only. Work only in the unchecked analytics files and exact symbols defined here: internal/domain/analytics/models.go (FinancialSnapshot, FinancialSnapshotRequest, MetricWithExplanation, MoneyCreated, MoneyUtilized, Verification, SystemMetrics); internal/domain/analytics/repository.go (GormRepository, RepositoryOption, WithRepositoryPositionCalculator, NewGormRepository, WithContext, ListUsers, ListMarkets, ListBetsForMarket, ListBetsOrdered, UserMarketPositions, listUserBets, collectMarketIDs, listMarketsByIDs, buildMarketSnapshots, listBetsByMarketIDs, groupBetsByMarket, ensurePositionCalculator, calculateUserPositions); internal/domain/analytics/systemmetrics_integration_test.go (TestComputeSystemMetrics_BalancedAfterFinalLockedBet, TestResolveMarket_DistributesAllBetVolume); and internal/domain/analytics/systemmetrics_test.go (TestComputeSystemMetrics_EmptyDatabase, TestComputeSystemMetrics_WithData). Update every listed unchecked symbol to align with the Single Responsibility Principle while preserving the existing analytics/service.go boundary around ComputeSystemMetrics and ComputeGlobalLeaderboard.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-001",
         "PR581-005"
       ],
-      "attempts": 0,
+      "attempts": 2,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -142,7 +142,14 @@
         "The file and symbol inventory in the prompt is the execution scope; the PR comments are provenance only and should not be needed to discover work.",
         "Keep analytics/service.go as the established boundary owner for ComputeSystemMetrics and ComputeGlobalLeaderboard; this task should improve surrounding models, repository behavior, and test coverage without re-monolithizing that service.",
         "Every listed unchecked symbol should be reviewed and updated for SRP alignment before this task is considered done."
-      ]
+      ],
+      "started_at": "2026-04-04T05:55:28.940235+00:00",
+      "finished_at": "2026-04-04T05:54:59.093314+00:00",
+      "last_exit_code": 1,
+      "runner_state": {
+        "resume_pending": false
+      },
+      "runner_pid": 3469
     },
     {
       "id": "PR581-007",

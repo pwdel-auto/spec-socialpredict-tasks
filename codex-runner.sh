@@ -498,7 +498,7 @@ summary_file = sys.argv[2]
 conversation_file = sys.argv[3]
 decisions_file = sys.argv[4]
 helper_script = sys.argv[5]
-task = json.loads(sys.stdin.read())
+task = json.loads(sys.argv[6])
 runner_state = task.get("runner_state") or {}
 checkpoint = runner_state.get("last_context_checkpoint") or {}
 
@@ -582,6 +582,20 @@ append_report_event() {
     --agent-role "$agent_role" \
     --event-type "$event_type" \
     --summary "$summary" >/dev/null
+}
+
+print_context_terminal_line() {
+  local task_id="$1"
+  local segment_index="$2"
+  local level="$3"
+  local used_pct="$4"
+  local used_tokens="$5"
+  local remaining_tokens="$6"
+  local context_window="$7"
+  local message="$8"
+
+  printf '[codex-runner][%s][task=%s][segment=%s][context=%s%% used][used=%s][remaining=%s/%s] %s\n' \
+    "$level" "$task_id" "$segment_index" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "$message" >&2
 }
 
 build_codex_exec_args() {
@@ -826,6 +840,7 @@ PY
 )
       append_context_log "$context_file" "$progress_json"
       update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "context_progress" "$soft_handoff_requested"
+      print_context_terminal_line "$task_id" "$segment_index" "progress" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "Context usage updated."
       write_running_state "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$session_id" "$snapshot_json"
     fi
 
@@ -863,6 +878,7 @@ PY
       append_context_log "$context_file" "$soft_warning_json"
       append_report_event "$report_dir" "codex_runner" "runner" "context_soft_limit_reached" "Soft context threshold reached. Dispatcher should stop branching and write a clean handoff into summary.json and conversation.ndjson."
       update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "soft_threshold_reached" "1"
+      print_context_terminal_line "$task_id" "$segment_index" "soft-threshold" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "Soft threshold reached. Dispatcher should wrap up toward checkpoint."
     fi
 
     if [[ "$(python3 - "$used_pct" "$CONTEXT_THRESHOLD_PCT" <<'PY'
@@ -937,6 +953,7 @@ PY
     append_context_log "$context_file" "$checkpoint_log_json"
     append_report_event "$report_dir" "codex_runner" "runner" "context_checkpoint_requested" "Hard context threshold reached. Runner is checkpointing and will resume the same task session."
     update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "hard_threshold_reached" "1"
+    print_context_terminal_line "$task_id" "$segment_index" "hard-threshold" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "Hard threshold reached. Runner is checkpointing and resuming the session."
     write_running_state "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$session_id" "$snapshot_json"
     printf '%s\n' "$checkpoint_patch_json" > "$restart_request_file"
     kill -TERM "$codex_pid" >/dev/null 2>&1 || true
