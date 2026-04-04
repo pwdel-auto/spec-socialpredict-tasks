@@ -1,0 +1,39 @@
+2026-04-04T06:13:34.487139Z ERROR codex_core::tools::router: error=write_stdin failed: Unknown process id 0
+2026-04-04T06:16:26.982789Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/socialpredict/backend/handlers/math/positions/adjust_valuation.go:
+) (map[string]UserValuationResult, error) {
+	// Filter out users with zero valuation
+	filtered := filterWinningValuations(userValuations)
+	if len(filtered) == 0 {
+		return userValuations, nil
+	}
+
+	// Fetch earliest bets for ordering
+	earliestBets, err := GetAllUserEarliestBetsForMarket(db, marketID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create sortable holder list
+	holders, sum := buildUserHolders(filtered, earliestBets)
+
+	// Apply delta correction
+	adjusted := adjustValuations(filtered, holders, sum, targetMarketVolume)
+
+	return adjusted, nil
+}
+2026-04-04T06:17:40.571330Z ERROR codex_core::tools::router: error=write_stdin failed: stdin is closed for this session; rerun exec_command with tty=true to keep stdin open
+2026-04-04T06:17:48.944577Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/spec-socialpredict-tasks/../socialpredict/backend/handlers/math/positions/profitability.go:
+func buildMarketLeaderboard(
+	marketPositions []UserMarketPosition,
+	allBetsOnMarket []models.Bet,
+) []UserProfitability {
+	leaderboard := make([]UserProfitability, 0, len(marketPositions))
+	for _, position := range marketPositions {
+2026-04-04T06:18:15.018381Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/socialpredict/backend/handlers/math/outcomes/dbpm/marketshares_test.go:
+var now = time.Now()
+
+// helper function to create course payouts succinctly
+func generateCoursePayouts(payouts []float64, outcomes []string) []CourseBetPayout {
+	if len(payouts) != len(outcomes) {
+		panic("payouts and outcomes slices must have the same length")
+	}
