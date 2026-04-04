@@ -1123,12 +1123,23 @@ PY
   prompt_files_json="$(printf '%s\n' "${prompt_files[@]}" | python3 -c 'import json,sys; print(json.dumps([line.strip() for line in sys.stdin if line.strip()]))')"
   context_files_json="$(printf '%s\n' "${context_files[@]}" | python3 -c 'import json,sys; print(json.dumps([line.strip() for line in sys.stdin if line.strip()]))')"
 
-  runlog_json=$(python3 - "$task_id" "$task_title" "$start_ts" "$end_ts" "$task_status" "$exit_code" "$MODE" "$REPO_ROOT" "$task_workdir_rel" "$DISPATCHER_AGENT" "$last_event_file" "$last_stderr_file" "$last_message_file" "$last_prompt_file" "$last_context_file" "$last_session_id" "$segment_index" "$context_restart_count" "$CONTEXT_THRESHOLD_PCT" <<'PY'
+  runlog_json=$(python3 - "$task_id" "$task_title" "$start_ts" "$end_ts" "$task_status" "$exit_code" "$MODE" "$REPO_ROOT" "$task_workdir_rel" "$DISPATCHER_AGENT" "$last_event_file" "$last_stderr_file" "$last_message_file" "$last_prompt_file" "$last_context_file" "$last_session_id" "$segment_index" "$context_restart_count" "$CONTEXT_THRESHOLD_PCT" "$event_files_json" "$stderr_files_json" "$message_files_json" "$prompt_files_json" "$context_files_json" "$files_changed_json" <<'PY'
 import json
 import sys
 (task_id, task_title, start_ts, end_ts, task_status, exit_code, mode, repo_root,
  task_workdir_rel, dispatcher_agent, event_file, stderr_file, message_file,
- prompt_file, context_file, session_id, segments, context_restarts, context_threshold_pct) = sys.argv[1:]
+ prompt_file, context_file, session_id, segments, context_restarts,
+ context_threshold_pct, event_files_json, stderr_files_json, message_files_json,
+ prompt_files_json, context_files_json, files_changed_json) = sys.argv[1:]
+
+def load_json_arg(raw, default):
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return default
+
 record = {
   "record_type": "run_summary",
   "task_id": task_id,
@@ -1150,12 +1161,12 @@ record = {
   "message_file": message_file,
   "prompt_file": prompt_file,
   "context_file": context_file,
-  "event_files": json.loads('''$event_files_json'''),
-  "stderr_files": json.loads('''$stderr_files_json'''),
-  "message_files": json.loads('''$message_files_json'''),
-  "prompt_files": json.loads('''$prompt_files_json'''),
-  "context_files": json.loads('''$context_files_json'''),
-  "files_changed": json.loads('''$files_changed_json''')
+  "event_files": load_json_arg(event_files_json, []),
+  "stderr_files": load_json_arg(stderr_files_json, []),
+  "message_files": load_json_arg(message_files_json, []),
+  "prompt_files": load_json_arg(prompt_files_json, []),
+  "context_files": load_json_arg(context_files_json, []),
+  "files_changed": load_json_arg(files_changed_json, [])
 }
 print(json.dumps(record))
 PY
