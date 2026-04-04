@@ -438,7 +438,7 @@ build_prompt() {
   local conversation_file="$5"
   local decisions_file="$6"
   local helper_script="$7"
-  python3 - "$REPO_ROOT" "$DISPATCHER_AGENT" "$report_dir" "$meta_file" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" <<'PY' <<< "$task_json"
+  python3 - "$REPO_ROOT" "$DISPATCHER_AGENT" "$report_dir" "$meta_file" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" "$task_json" <<'PY'
 import json
 import sys
 
@@ -450,7 +450,7 @@ summary_file = sys.argv[5]
 conversation_file = sys.argv[6]
 decisions_file = sys.argv[7]
 helper_script = sys.argv[8]
-task = json.loads(sys.stdin.read())
+task = json.loads(sys.argv[9])
 
 print(f"""You are executing a queued automation task for the SocialPredict repository at {repo_root}.
 
@@ -489,7 +489,7 @@ build_resume_prompt() {
   local conversation_file="$4"
   local decisions_file="$5"
   local helper_script="$6"
-  python3 - "$report_dir" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" <<'PY' <<< "$task_json"
+  python3 - "$report_dir" "$summary_file" "$conversation_file" "$decisions_file" "$helper_script" "$task_json" <<'PY'
 import json
 import sys
 
