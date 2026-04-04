@@ -125,14 +125,14 @@
     {
       "id": "PR581-006",
       "title": "Align unchecked analytics files with SRP",
-      "status": "pending",
+      "status": "done",
       "prompt": "This task is sourced from the SRP checklist only. Work only in the unchecked analytics files and exact symbols defined here: internal/domain/analytics/models.go (FinancialSnapshot, FinancialSnapshotRequest, MetricWithExplanation, MoneyCreated, MoneyUtilized, Verification, SystemMetrics); internal/domain/analytics/repository.go (GormRepository, RepositoryOption, WithRepositoryPositionCalculator, NewGormRepository, WithContext, ListUsers, ListMarkets, ListBetsForMarket, ListBetsOrdered, UserMarketPositions, listUserBets, collectMarketIDs, listMarketsByIDs, buildMarketSnapshots, listBetsByMarketIDs, groupBetsByMarket, ensurePositionCalculator, calculateUserPositions); internal/domain/analytics/systemmetrics_integration_test.go (TestComputeSystemMetrics_BalancedAfterFinalLockedBet, TestResolveMarket_DistributesAllBetVolume); and internal/domain/analytics/systemmetrics_test.go (TestComputeSystemMetrics_EmptyDatabase, TestComputeSystemMetrics_WithData). Update every listed unchecked symbol to align with the Single Responsibility Principle while preserving the existing analytics/service.go boundary around ComputeSystemMetrics and ComputeGlobalLeaderboard.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-001",
         "PR581-005"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -142,7 +142,21 @@
         "The file and symbol inventory in the prompt is the execution scope; the PR comments are provenance only and should not be needed to discover work.",
         "Keep analytics/service.go as the established boundary owner for ComputeSystemMetrics and ComputeGlobalLeaderboard; this task should improve surrounding models, repository behavior, and test coverage without re-monolithizing that service.",
         "Every listed unchecked symbol should be reviewed and updated for SRP alignment before this task is considered done."
-      ]
+      ],
+      "started_at": "2026-04-04T12:56:17.307395+00:00",
+      "runner_state": {
+        "segment": 1,
+        "session_id": "019d5890-ccc5-7b90-9591-6e20e1435538",
+        "event_file": "/workspace/spec-socialpredict-tasks/.codex-runs/events/PR581-006_20260404T125617Z_part01.ndjson",
+        "stderr_file": "/workspace/spec-socialpredict-tasks/.codex-runs/stderr/PR581-006_20260404T125617Z_part01.stderr.log",
+        "message_file": "/workspace/spec-socialpredict-tasks/.codex-runs/messages/PR581-006_20260404T125617Z_part01.txt",
+        "prompt_file": "/workspace/spec-socialpredict-tasks/.codex-runs/prompts/PR581-006_20260404T125617Z_part01.txt",
+        "context_file": "/workspace/spec-socialpredict-tasks/.codex-runs/context/PR581-006_20260404T125617Z_part01.ndjson",
+        "resume_pending": false
+      },
+      "finished_at": "2026-04-04T13:01:45.960919+00:00",
+      "last_exit_code": 0,
+      "last_summary": "`task_id: PR581-006`  \n`status: completed`\n\nScoped SRP cleanup is in place under the analytics-only boundary, without moving `ComputeSystemMetrics` or `ComputeGlobalLeaderboard` out of `analytics/service.go`. The main changes were typed metric accessors in [models.go](/workspace/socialpredict/backend/internal/domain/analytics/models.go), repository helper cleanup and DB/context responsibility tightening in [repository.go](/workspace/socialpredict/backend/internal/domain/analytics/repository.go), and test updates in [systemmetrics_test.go](/workspace/socialpredict/backend/internal/domain/analytics/systemmetrics_test.go) and [systemmetrics_integration_test.go](/workspace/socialpredict/backend/internal/domain/analytics/systemmetrics_integration_test.go) so assertions go through the model-layer helpers instead of ad hoc type assertions.\n\n`files_changed:`\n- `backend/internal/domain/analytics/models.go`\n- `backend/internal/domain/analytics/repository.go`\n- `backend/internal/domain/analytics/systemmetrics_test.go`\n- `backend/internal/domain/analytics/systemmetrics_integration_test.go`\n\n`checks_run:`\n- `gofmt -w backend/internal/domain/analytics/{models.go,repository.go,systemmetrics_test.go,systemmetrics_integration_test.go}`\n- `./scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `GOPATH=/workspace/.gopath GOCACHE=/workspace/.gocache GOMODCACHE=/workspace/.gomodcache go vet ./internal/domain/analytics`\n- `GOPATH=/workspace/.gopath GOCACHE=/workspace/.gocache GOMODCACHE=/workspace/.gomodcache go test -count=1 ./internal/domain/analytics` twice\n\n`follow_ups:`\n- none\n\nAssumption: workspace-local Go cache paths were used because `/home/agent/go` was not writable."
     },
     {
       "id": "PR581-007",
