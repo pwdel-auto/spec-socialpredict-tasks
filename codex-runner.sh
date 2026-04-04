@@ -750,11 +750,11 @@ monitor_context_window() {
     local snapshot_json session_id has_snapshot used_tokens context_window remaining_tokens used_pct
     snapshot_json="$(snapshot_context_usage "$event_file")"
     IFS=$'\t' read -r session_id has_snapshot used_tokens context_window remaining_tokens used_pct < <(
-      python3 - <<'PY' <<< "$snapshot_json"
+      python3 - "$snapshot_json" <<'PY'
 import json
 import sys
 
-snapshot = json.loads(sys.stdin.read())
+snapshot = json.loads(sys.argv[1])
 print(
     (snapshot.get("session_id") or ""),
     "1" if snapshot.get("has_snapshot") else "0",
