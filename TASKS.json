@@ -570,13 +570,13 @@
     {
       "id": "PR581-019",
       "title": "Align all bets files with LSP",
-      "status": "retry",
+      "status": "pending",
       "prompt": "This task is sourced from the LSP checklist only. None of the listed bets files are done for LSP. Work in all LSP-listed bets files: internal/domain/bets/errors.go (all top-level bet error vars, ErrDustCapExceeded, ErrDustCapExceeded.Error); internal/domain/bets/models.go (all top-level bet model definitions); internal/domain/bets/service_helpers_test.go (stubMarketService.GetMarket, stubMarketService.GetUserPositionInMarket, gateClock.Now, TestMarketGate_Open, TestFeeCalculator_Calculate, TestBalanceGuard_EnsureSufficient, ledgerRepo.Create, ledgerRepo.UserHasBet, ledgerUsers.GetUser, ledgerUsers.ApplyTransaction, TestBetLedger_ChargeAndRecord, TestBetLedger_ChargeAndRecord_RollsBackOnRepoError, TestBetLedger_CreditSale, TestSaleCalculator_Calculate); internal/domain/bets/service_test.go (fakeRepo.Create, fakeRepo.UserHasBet, fakeMarkets.GetMarket, fakeMarkets.GetUserPositionInMarket, fakeUsers.GetUser, fakeUsers.ApplyTransaction, fixedClock.Now, TestServicePlace_Succeeds, TestServicePlace_InsufficientBalance, TestServicePlace_InvalidOutcome, TestServicePlace_MarketClosed, TestServiceSell_Succeeds, TestServiceSell_NoPosition, TestServiceSell_DustCapExceeded, TestServiceSell_RequestTooSmall); and internal/domain/bets/service.go (serviceClock.Now, WithPlaceValidator, WithSellValidator, WithMarketGate, WithFeeCalculator, WithBalanceGuard, WithBetLedger, WithSaleCalculator, WithClock, NewService, ensureDefaults). Update every listed function and file-level definition to align with the Liskov Substitution Principle.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-014"
       ],
-      "attempts": 3,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -585,30 +585,18 @@
         "Source of truth for scope is the LSP checklist supplied by the user.",
         "The file and function inventory in the prompt is the execution scope."
       ],
-      "started_at": "2026-04-04T15:11:24.956213+00:00",
-      "runner_state": {
-        "segment": 1,
-        "session_id": "019d5903-9935-7963-98e0-8d227057636f",
-        "event_file": "/workspace/spec-socialpredict-tasks/.codex-runs/events/PR581-019_20260404T150141Z_part01.ndjson",
-        "stderr_file": "/workspace/spec-socialpredict-tasks/.codex-runs/stderr/PR581-019_20260404T150141Z_part01.stderr.log",
-        "message_file": "/workspace/spec-socialpredict-tasks/.codex-runs/messages/PR581-019_20260404T150141Z_part01.txt",
-        "prompt_file": "/workspace/spec-socialpredict-tasks/.codex-runs/prompts/PR581-019_20260404T150141Z_part01.txt",
-        "context_file": "/workspace/spec-socialpredict-tasks/.codex-runs/context/PR581-019_20260404T150141Z_part01.ndjson",
-        "resume_pending": false
-      },
-      "finished_at": "2026-04-04T15:11:26.937367+00:00",
-      "last_exit_code": 1
+      "started_at": null
     },
     {
       "id": "PR581-020",
       "title": "Align all markets files with LSP",
-      "status": "retry",
+      "status": "pending",
       "prompt": "This task is sourced from the LSP checklist only. None of the listed markets files are done for LSP. Work in all LSP-listed markets files: internal/domain/markets/errors.go (all top-level market error vars); internal/domain/markets/models.go (all top-level market model definitions); internal/domain/markets/service_details_test.go (TestServiceGetMarketDetailsCalculatesMetrics, TestServiceGetMarketDetails_InvalidAndMissing); internal/domain/markets/service_listbystatus_test.go (noopUserService.ValidateUserExists, noopUserService.ValidateUserBalance, noopUserService.DeductBalance, noopUserService.ApplyTransaction, noopUserService.GetPublicUser, fixedClock.Now, setupServiceWithDB, TestServiceListByStatusFiltersMarkets, TestServiceListByStatusInvalidStatus); internal/domain/markets/service_marketbets_test.go (betsRepo.Create, UpdateLabels, List, ListByStatus, Search, Delete, GetByID, ResolveMarket, GetUserPosition, ListMarketPositions, ListBetsForMarket, CalculatePayoutPositions, GetPublicMarket, nopUserService.ValidateUserExists, ValidateUserBalance, DeductBalance, ApplyTransaction, GetPublicUser, betsClock.Now, TestGetMarketBets_ReturnsProbabilities, TestGetMarketBets_EmptyWhenNoBets, TestGetMarketBets_ValidatesInputAndMarket, TestGetMarketPositions_ReturnsRepositoryData, TestGetMarketPositions_ValidatesInputAndMarket); internal/domain/markets/service_probability_test.go (projectionRepo.Create, UpdateLabels, List, ListByStatus, Search, Delete, ResolveMarket, GetUserPosition, ListMarketPositions, ListBetsForMarket, GetByID, CalculatePayoutPositions, GetPublicMarket, projectionClock.Now, TestProjectProbability_ComputesProjection, TestProjectProbability_InvalidOutcome, marketsToModel, modelsBet, absDiff); internal/domain/markets/service_resolve_test.go (resolveRepo.Create, UpdateLabels, List, ListByStatus, Search, Delete, GetByID, ResolveMarket, GetUserPosition, ListMarketPositions, ListBetsForMarket, CalculatePayoutPositions, GetPublicMarket, resolveUserService.ValidateUserExists, ValidateUserBalance, DeductBalance, ApplyTransaction, GetPublicUser, nopClock.Now, TestResolveMarketRefundsOnNA, TestResolveMarketPaysWinners, TestResolveMarketRejectsUnauthorized); internal/domain/markets/service_search_test.go (seedSearchMarkets, TestServiceSearchMarketsFiltersByStatus, TestServiceSearchMarketsInvalidInput); and internal/domain/markets/service.go (serviceClock.Now, WithCreationPolicy, WithResolutionPolicy, WithProbabilityEngine, WithProbabilityValidator, WithSearchPolicy, WithMetricsCalculator, WithLeaderboardCalculator, WithStatusPolicy, WithClock, NewService, ensureDefaults). Update every listed function and file-level definition to align with the Liskov Substitution Principle.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-015"
       ],
-      "attempts": 3,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -617,23 +605,18 @@
         "Source of truth for scope is the LSP checklist supplied by the user.",
         "The file and function inventory in the prompt is the execution scope."
       ],
-      "started_at": "2026-04-04T15:11:33.116451+00:00",
-      "finished_at": "2026-04-04T15:11:35.542440+00:00",
-      "last_exit_code": 1,
-      "runner_state": {
-        "resume_pending": false
-      }
+      "started_at": null
     },
     {
       "id": "PR581-021",
       "title": "Align all math files with LSP",
-      "status": "retry",
+      "status": "pending",
       "prompt": "This task is sourced from the LSP checklist only. None of the listed math files are done for LSP. Work in all LSP-listed math files: internal/domain/math/market/dust_test.go (TestGetMarketVolumeWithDust, TestCalculateDustStack, TestGetMarketDust, TestCalculateDustForSell_Placeholder, TestCurrencyConservationInvariant); internal/domain/math/market/dust.go (ConstantSellDustCalculator.DustForSell, GetMarketVolumeWithDust, calculateDustStack, GetMarketDustWithCalculator, calculateDustStackWithCalculator, calculateDustForSell, GetMarketDust, sortBetsChronologically); internal/domain/math/market/marketvolume_test.go (TestGetMarketVolume); internal/domain/math/market/marketvolume.go (GetMarketVolume, GetEndMarketVolume); internal/domain/math/outcomes/dbpm/marketshares_test.go (generateCoursePayouts, TestDivideUpMarketPoolSharesDBPM, TestCalculateCoursePayoutsDBPM, TestCalculateNormalizationFactorsDBPM, TestCalculateScaledPayoutsDBPM, TestCalculateExcess, TestAdjustForPositiveExcess, TestAdjustForNegativeExcess, TestAdjustPayouts, TestAggregateUserPayoutsDBPM, TestNetAggregateMarketPositions, TestSingleCreditYesNoAllocator); internal/domain/math/outcomes/dbpm/marketshares.go (DivideUpMarketPoolSharesDBPM, CalculateCoursePayoutsDBPM, CalculateNormalizationFactorsDBPM, CalculateScaledPayoutsDBPM, calculateExcess, adjustForPositiveExcess, adjustForNegativeExcess, AdjustPayouts, AggregateUserPayoutsDBPM, NetAggregateMarketPositions, singleCreditYesNoAllocator); internal/domain/math/positions/adjust_valuation_test.go (TestAdjustUserValuationsToMarketVolume); internal/domain/math/positions/adjust_valuation.go (ByValBetTimeUsername.Len, ByValBetTimeUsername.Swap, ByValBetTimeUsername.Less, AdjustUserValuationsToMarketVolume, filterWinningValuations, buildUserHolders, adjustValuations); internal/domain/math/positions/positionsmath_test.go (TestCalculateMarketPositions_WPAM_DBPM, TestCalculateMarketPositions_IncludesZeroPositionUsers); internal/domain/math/positions/positionsmath.go (WithProbabilityProvider, WithPayoutModel, NewPositionCalculator, ensureDefaults, CalculateMarketPositions_WPAM_DBPM, PositionCalculator.CalculateMarketPositions, computeEarliestBets, sortBetsChronologically, calculateNetPositions helper, PositionCalculator.calculateNetPositions, calculateNetPositionsWith, mapUserPositions, aggregateUserBetTotals, assembleDisplayPositions, CalculateMarketPositionForUser_WPAM_DBPM); internal/domain/math/positions/profitability_test.go (TestCalculateUserSpend, TestGetEarliestBetTime, TestDeterminePositionType, TestCalculateMarketLeaderboard_EmptyBets); internal/domain/math/positions/profitability.go (CalculateMarketLeaderboard, CalculateUserSpend, GetEarliestBetTime, DeterminePositionType); internal/domain/math/positions/valuation_test.go (makeUserPositions, TestCalculateRoundedUserValuationsFromUserMarketPositions); internal/domain/math/positions/valuation.go (CalculateRoundedUserValuationsFromUserMarketPositions, getFinalProbabilityFromMarketModel); internal/domain/math/probabilities/wpam/wpam_current_test.go (TestGetCurrentProbability); internal/domain/math/probabilities/wpam/wpam_current.go (GetCurrentProbability); internal/domain/math/probabilities/wpam/wpam_marketprobabilities_test.go (TestCalculateMarketProbabilitiesWPAM); and internal/domain/math/probabilities/wpam/wpam_marketprobabilities.go (StaticSeedProvider.Seeds, NewProbabilityCalculator, ProbabilityCalculator.Seeds, CalculateMarketProbabilitiesWPAM function, ProbabilityCalculator.CalculateMarketProbabilitiesWPAM method, ProjectNewProbabilityWPAM function, ProbabilityCalculator.ProjectNewProbabilityWPAM method). Update every listed function and file-level definition to align with the Liskov Substitution Principle.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-016"
       ],
-      "attempts": 3,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -642,23 +625,18 @@
         "Source of truth for scope is the LSP checklist supplied by the user.",
         "The file and function inventory in the prompt is the execution scope."
       ],
-      "started_at": "2026-04-04T15:11:39.286307+00:00",
-      "finished_at": "2026-04-04T15:11:40.807724+00:00",
-      "last_exit_code": 1,
-      "runner_state": {
-        "resume_pending": false
-      }
+      "started_at": null
     },
     {
       "id": "PR581-022",
       "title": "Align all users files with LSP",
-      "status": "retry",
+      "status": "pending",
       "prompt": "This task is sourced from the LSP checklist only. None of the listed users files are done for LSP. Work in all LSP-listed users files: internal/domain/users/errors.go (all top-level user error vars); internal/domain/users/models.go (all top-level user model definitions); internal/domain/users/service_profile_test.go (newFakeRepository, fakeRepository.GetByUsername, UpdateBalance, Create, Update, Delete, List, ListUserBets, GetMarketQuestion, GetUserPositionInMarket, ComputeUserFinancials, ListUserMarkets, GetCredentials, UpdatePassword, newServiceWithUser, TestServiceUpdateDescription, TestServiceUpdateDisplayName, TestServiceUpdateEmoji, TestServiceUpdatePersonalLinks, TestServiceChangePassword, TestServiceGetPrivateProfile); internal/domain/users/service_transactions_test.go (fakeAnalyticsService.ComputeUserFinancials, TestServiceApplyTransaction, TestServiceGetUserCredit, TestServiceGetUserPortfolio, TestServiceGetUserFinancials); internal/domain/users/service.go (NewService, ValidateUserExists, ValidateUserBalance, DeductBalance, GetUser, GetPublicUser, CreateUser, UpdateUser, ListUsers, DeleteUser, ApplyTransaction, GetUserCredit, GetUserPortfolio, ListUserMarkets, GetUserFinancials, UpdateDescription, UpdateDisplayName, UpdateEmoji, UpdatePersonalLinks, sanitizePersonalLinks, financialSnapshotToMap, GetPrivateProfile, PasswordHashCost, validatePasswordChangeInputs, ChangePassword); and internal/domain/users/transactions.go (all transaction-type constants). Update every listed function and file-level definition to align with the Liskov Substitution Principle.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-017"
       ],
-      "attempts": 3,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -667,23 +645,18 @@
         "Source of truth for scope is the LSP checklist supplied by the user.",
         "The file and function inventory in the prompt is the execution scope."
       ],
-      "started_at": "2026-04-04T15:11:44.302355+00:00",
-      "finished_at": "2026-04-04T15:11:47.278326+00:00",
-      "last_exit_code": 1,
-      "runner_state": {
-        "resume_pending": false
-      }
+      "started_at": null
     },
     {
       "id": "PR581-023",
       "title": "Align all analytics files with ISP",
-      "status": "retry",
+      "status": "pending",
       "prompt": "This task is sourced from the ISP checklist only. None of the listed analytics files are done for ISP. Work in all ISP-listed analytics files: internal/domain/analytics/financialsnapshot_test.go (newAnalyticsService, TestComputeUserFinancials_NewUser_NoPositions, TestComputeUserFinancials_NegativeBalance, TestComputeUserFinancials_WithActivePositions); internal/domain/analytics/leaderboard_test.go (TestAggregateLeaderboardUserStats, TestFindEarliestBetsPerUser, TestRankLeaderboardEntries_TieBreaksByEarliestBet, TestComputeGlobalLeaderboard_OrdersByProfit); internal/domain/analytics/models.go (all top-level analytics model definitions); internal/domain/analytics/repository.go (WithRepositoryPositionCalculator, NewGormRepository, WithContext, ListUsers, ListMarkets, ListBetsForMarket, ListBetsOrdered, UserMarketPositions, listUserBets, collectMarketIDs, listMarketsByIDs, buildMarketSnapshots, listBetsByMarketIDs, groupBetsByMarket, ensurePositionCalculator, calculateUserPositions); internal/domain/analytics/service.go (WithDebtCalculator, WithVolumeCalculator, WithFeeCalculator, WithMetricsAssembler, WithPositionCalculator, NewService, ensureStrategyDefaults); internal/domain/analytics/systemmetrics_integration_test.go (TestComputeSystemMetrics_BalancedAfterFinalLockedBet, TestResolveMarket_DistributesAllBetVolume); and internal/domain/analytics/systemmetrics_test.go (TestComputeSystemMetrics_EmptyDatabase, TestComputeSystemMetrics_WithData). Update every listed function and file-level definition to align with the Interface Segregation Principle.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "PR581-018"
       ],
-      "attempts": 3,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -692,12 +665,7 @@
         "Source of truth for scope is the ISP checklist supplied by the user.",
         "The file and function inventory in the prompt is the execution scope."
       ],
-      "started_at": "2026-04-04T15:11:50.994965+00:00",
-      "finished_at": "2026-04-04T15:11:52.568942+00:00",
-      "last_exit_code": 1,
-      "runner_state": {
-        "resume_pending": false
-      }
+      "started_at": null
     },
     {
       "id": "PR581-024",

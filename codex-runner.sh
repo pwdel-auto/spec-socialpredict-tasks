@@ -321,6 +321,77 @@ with open(path, 'w', encoding='utf-8') as f:
 PY
 }
 
+pause_task_for_usage_limit() {
+  local task_id="$1"
+  local event_file="$2"
+  local stderr_file="$3"
+  local exit_code="$4"
+
+  python3 - "$TASKS_FILE" "$task_id" "$event_file" "$stderr_file" "$exit_code" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+path, task_id, event_file, stderr_file, exit_code = sys.argv[1:]
+
+usage_message = ""
+
+def load_usage_message(paths):
+    for candidate in paths:
+        try:
+            with open(candidate, 'r', encoding='utf-8', errors='replace') as f:
+                for raw in f:
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    if candidate.endswith('.ndjson'):
+                        try:
+                            payload = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        if payload.get("type") == "error":
+                            message = payload.get("message") or ""
+                        else:
+                            err = payload.get("error")
+                            message = err.get("message") if isinstance(err, dict) else ""
+                        if message and "usage limit" in message.lower():
+                            return message
+                    elif "usage limit" in line.lower():
+                        return line
+        except FileNotFoundError:
+            continue
+    return ""
+
+usage_message = load_usage_message([event_file, stderr_file])
+now = datetime.now(timezone.utc).isoformat()
+
+with open(path, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+for task in data.get('tasks', []):
+    if task.get('id') != task_id:
+        continue
+    attempts = int(task.get('attempts', 0))
+    task['status'] = 'pending'
+    task['finished_at'] = now
+    task['last_exit_code'] = int(exit_code)
+    if attempts > 0:
+        task['attempts'] = attempts - 1
+    task.pop('runner_pid', None)
+    runner_state = task.setdefault('runner_state', {})
+    runner_state['resume_pending'] = False
+    runner_state['paused'] = True
+    runner_state['last_pause_reason'] = 'usage_limit'
+    runner_state['last_pause_message'] = usage_message
+    runner_state['paused_at'] = now
+    break
+
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PY
+}
+
 write_state() {
   local state_json="$1"
   printf '%s\n' "$state_json" > "$STATE_FILE"
@@ -664,6 +735,53 @@ build_codex_resume_args() {
   args+=(exec resume --json)
 
   printf '%s\0' "${args[@]}"
+}
+
+classify_codex_failure() {
+  local event_file="$1"
+  local stderr_file="$2"
+
+  python3 - "$event_file" "$stderr_file" <<'PY'
+import json
+import sys
+
+event_file, stderr_file = sys.argv[1:]
+
+def usage_limit_message(paths):
+    for path in paths:
+        try:
+            with open(path, 'r', encoding='utf-8', errors='replace') as f:
+                for raw in f:
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    if path.endswith('.ndjson'):
+                        try:
+                            payload = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        message = ""
+                        if payload.get("type") == "error":
+                            message = payload.get("message") or ""
+                        else:
+                            err = payload.get("error")
+                            if isinstance(err, dict):
+                                message = err.get("message") or ""
+                        if message and "usage limit" in message.lower():
+                            return message
+                    elif "usage limit" in line.lower():
+                        return line
+        except FileNotFoundError:
+            continue
+    return ""
+
+message = usage_limit_message([event_file, stderr_file])
+result = {
+    "kind": "usage_limit" if message else "generic_failure",
+    "message": message,
+}
+print(json.dumps(result))
+PY
 }
 
 snapshot_context_usage() {
@@ -1104,13 +1222,47 @@ PY
 
   end_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+  failure_kind="success"
+  failure_message=""
+  if [[ $exit_code -ne 0 ]]; then
+    failure_json="$(classify_codex_failure "$last_event_file" "$last_stderr_file")"
+    failure_kind="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("kind", ""))' <<< "$failure_json")"
+    failure_message="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("message", ""))' <<< "$failure_json")"
+  fi
+
   if [[ $exit_code -eq 0 ]]; then
     task_status="done"
+  elif [[ "$failure_kind" == "usage_limit" ]]; then
+    task_status="paused_usage_limit"
   else
     task_status="retry"
   fi
 
-  finalize_task "$task_id" "$task_status" "$message_file" "$exit_code"
+  if [[ "$task_status" == "paused_usage_limit" ]]; then
+    pause_task_for_usage_limit "$task_id" "$last_event_file" "$last_stderr_file" "$exit_code"
+    append_report_event "$report_dir" "codex_runner" "runner" "usage_limit_paused" "Codex usage limit reached. Runner paused the queue, restored this task to pending, and exited for deterministic recovery."
+    state_json=$(python3 - "$task_id" "$task_title" "$last_event_file" "$last_stderr_file" "$failure_message" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+task_id, task_title, event_file, stderr_file, message = sys.argv[1:]
+print(json.dumps({
+  "status": "paused",
+  "timestamp": datetime.now(timezone.utc).isoformat(),
+  "task_id": task_id,
+  "title": task_title,
+  "reason": "usage_limit",
+  "message": message or "Codex usage limit reached. Runner paused without consuming a task attempt.",
+  "event_file": event_file,
+  "stderr_file": stderr_file,
+}))
+PY
+)
+    write_state "$state_json"
+  else
+    finalize_task "$task_id" "$task_status" "$message_file" "$exit_code"
+  fi
 
   files_changed_json="[]"
   if git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -1172,6 +1324,10 @@ print(json.dumps(record))
 PY
 )
   append_runlog "$runlog_json"
+
+  if [[ "$task_status" == "paused_usage_limit" ]]; then
+    exit 0
+  fi
 
   if [[ "$RUN_ONCE" == "1" ]]; then
     exit $exit_code
