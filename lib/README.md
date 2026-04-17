@@ -3,6 +3,12 @@
 This directory keeps persistent task history outside the active `TASKS.json`
 queue.
 
+- `design/`
+  Canonical design-plan artifacts and schema shared by software-designer agents
+  and downstream architecture review.
+- `backlog-drafts/*.md`
+  Decision-oriented backlog drafts that are not yet ready to load into the
+  active runner queue.
 - `task-registry.json`
   UID-first task registry plus the historical display-ID index.
 - `task-archives/*.json`

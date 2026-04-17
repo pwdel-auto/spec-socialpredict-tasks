@@ -51,7 +51,7 @@ python3 scripts/codex-report.py read-events \
 
 python3 scripts/codex-report.py append-event \
   --report-dir ../socialpredict/.codex-reports/tasks/019d9935-ace6-7305-bbc5-9e35238350cc \
-  --agent-name dispatcher_agent \
+  --agent-name software_action_dispatcher_agent \
   --agent-role dispatcher \
   --event-type plan_updated \
   --summary "Narrowed scope to the two remaining markets handlers."
