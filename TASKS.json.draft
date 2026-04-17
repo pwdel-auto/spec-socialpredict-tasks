@@ -29,7 +29,7 @@
       "id": "W01-002",
       "title": "WAVE01: Remove hidden util runtime boundaries from touched code paths",
       "status": "pending",
-      "prompt": "Remove direct reliance on `util.GetDB()` and adjacent hidden runtime boundaries from the touched startup, server, handler, and auth paths. Treat this as prerequisite runtime-boundary cleanup for the later configuration-service extraction: prefer container-owned wiring, explicit dependencies, or clearly-scoped infrastructure seams over global accessors. Keep behavior stable and avoid pulling the configuration-service extraction into this task except where a shared boundary must be prepared first.",
+      "prompt": "Remove direct reliance on `util.GetDB()` and adjacent hidden runtime boundaries from the touched startup, server, handler, and auth paths. Prefer container-owned wiring, explicit dependencies, or clearly-scoped infrastructure seams over global accessors. Keep behavior stable and avoid pulling the configuration-service extraction into this task except where a boundary is directly shared.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "019d99d7-3d71-70aa-9f0b-d0f4da7524f0"
@@ -41,8 +41,7 @@
       "profile": "",
       "notes": [
         "This wave is about util breakup first, not the full config-service migration.",
-        "Keep changes extraction-ready and consistent with the existing container patterns.",
-        "The purpose is to remove hidden runtime dependency paths before WAVE02 introduces the owned configuration seam."
+        "Keep changes extraction-ready and consistent with the existing container patterns."
       ]
     },
     {
@@ -91,7 +90,7 @@
       "id": "W03-001",
       "title": "WAVE03: Establish domain-model boundary types and legacy-model adapters",
       "status": "pending",
-      "prompt": "Using the post-WAVE02 container-owned configuration seam as the baseline, introduce explicit boundary types, adapters, and conversion seams so repositories and explicit edge helpers own translation while internal domain/math code can stop treating `socialpredict/models` structs as native policy objects. Keep the first enabling pass concrete: establish at least one repository-owned translation path for each initial target area in markets, bets, math, analytics, and auth-adjacent flows, and make it possible for touched internal domain packages to depend on boundary types rather than `socialpredict/models`. Add focused tests. This is a prerequisite boundary wave, not an API contract wave.",
+      "prompt": "The internal domain and math packages still depend heavily on `socialpredict/models`. Introduce explicit boundary types, adapters, and conversion seams so repositories and boundary helpers own translation while internal domain/math code can stop treating the legacy persistence structs as native model types. Create the minimum shared seams needed for markets, bets, math, analytics, and auth-adjacent flows. Add focused tests. This is a prerequisite boundary wave, not an API contract wave.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "019d9996-f8a9-75b8-a4a3-7349b2560d4f"
@@ -103,8 +102,7 @@
       "profile": "",
       "notes": [
         "Preserve behavior and keep repository ownership of persistence concerns clear.",
-        "Avoid a giant flag-day rewrite; build stable seams first.",
-        "Do not start this wave until the configuration slice is container-owned, stable, and no longer leaking global access patterns."
+        "Avoid a giant flag-day rewrite; build stable seams first."
       ]
     },
     {
@@ -149,9 +147,9 @@
     {
       "uid": "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc",
       "id": "W04-001",
-      "title": "WAVE04: Introduce sanitized envelope helpers and migrate a representative hotspot flow",
+      "title": "WAVE04: Introduce sanitized envelope helpers and migrate API hotspot handlers",
       "status": "pending",
-      "prompt": "Implement shared backend helpers for the `{ ok, result, reason }` JSON contract described in `backend/docs/API-ISSUES.md`, then apply them to one representative hotspot flow first so the contract direction is proven before broad migration. Use a thin, reviewable slice such as the stats path and any directly-shared helper behavior it needs. Remove raw error leakage, use stable `reason` values for business-rule failures where the backend processed the request correctly, and reserve transport-level 4xx/5xx for malformed, unauthorized, or actual server failures where practical. Add focused tests.",
+      "prompt": "Implement shared backend helpers for the `{ ok, result, reason }` JSON contract described in `backend/docs/API-ISSUES.md`, then migrate the hotspot handlers called out there: stats, CMS homepage, bets buy/sell, positions, and user/profile helper paths as needed. Remove raw error leakage, use stable `reason` values for business-rule failures where the backend processed the request correctly, and reserve transport-level 4xx/5xx for malformed, unauthorized, or actual server failures where practical. Add focused tests.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
         "019d9996-f8a9-736b-93d9-de5a3e5e447f"
@@ -163,7 +161,7 @@
       "profile": "",
       "notes": [
         "Do not pull the limited-scope login-token redesign into this task.",
-        "Use this as the early contract proof point before spreading the envelope helpers further."
+        "The stats/setup overlap should build on WAVE02 rather than reintroduce direct config globals."
       ]
     },
     {
@@ -174,7 +172,7 @@
       "prompt": "Enforce `mustChangePassword` consistently on authenticated user/profile actions other than login and change-password, and normalize `/v0/login` and `/v0/changepassword` around the WAVE04 JSON response contract. Keep the current full-JWT issuance model on login for now, but return stable JSON envelopes and make change-password success JSON. Add or update tests. The later limited-scope-token redesign stays out of scope.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
-        "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc"
+        "019d9996-f8a9-736b-93d9-de5a3e5e447f"
       ],
       "attempts": 0,
       "max_attempts": 3,
@@ -186,26 +184,6 @@
       ]
     },
     {
-      "uid": "019d9b66-159d-7381-adbf-5829dff0e1fd",
-      "id": "W04-005",
-      "title": "WAVE04: Migrate the remaining API hotspot handlers onto the sanitized envelope",
-      "status": "pending",
-      "prompt": "After the representative WAVE04 envelope slice is proven, migrate the remaining hotspot handlers called out in `backend/docs/API-ISSUES.md`: CMS homepage, bets buy/sell, positions, and user/profile helper paths as needed. Reuse the shared envelope helpers, preserve route organization, remove raw error leakage, and keep `reason` values stable and reviewable. Add focused tests so the broader migration remains reversible and evidence-driven.",
-      "working_dir": "../socialpredict/backend",
-      "depends_on": [
-        "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc"
-      ],
-      "attempts": 0,
-      "max_attempts": 3,
-      "sandbox": "workspace-write",
-      "approval": "never",
-      "profile": "",
-      "notes": [
-        "Keep this as the broader follow-on migration after the first envelope slice proves the helper design.",
-        "Do not broaden this into auth redesign or public route migration."
-      ]
-    },
-    {
       "uid": "019d9996-f8a9-71b8-a7c0-81a2945b5cb4",
       "id": "W04-003",
       "title": "WAVE04: Align OpenAPI and tag ownership with the implemented API behavior",
@@ -213,7 +191,7 @@
       "prompt": "Update `backend/docs/openapi.yaml` so the touched endpoints match the implemented WAVE04 auth and `{ ok, result, reason }` response behavior. Align success/error payloads, auth requirements, and targeted tag ownership metadata such as ambiguous market-position tagging. Keep route organization stable; this is contract alignment, not public path redesign.",
       "working_dir": "../socialpredict/backend",
       "depends_on": [
-        "019d9b66-159d-7381-adbf-5829dff0e1fd",
+        "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc",
         "019d9996-f8a9-71b8-a7c0-81a1c4b0374c"
       ],
       "attempts": 0,
