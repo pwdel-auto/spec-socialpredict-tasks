@@ -189,7 +189,7 @@
       "uid": "019d9996-f8a9-75b8-a4a3-7349b2560d4f",
       "id": "W02-002",
       "title": "WAVE02: Migrate setup consumers and setup endpoints to the configuration service",
-      "status": "running",
+      "status": "done",
       "prompt": "Update the direct configuration consumers to use the new configuration service rather than `setup.LoadEconomicsConfig`, `setup.EconomicsConfig`, or similar global accessors. Focus on `server.go`, `handlers/setup`, `handlers/stats`, `handlers/admin/adduser`, `seed`, and any touched container wiring/tests. Keep `/v0/setup` and `/v0/setup/frontend` path semantics stable, but make them service-backed in the same architectural style as the rest of the backend. Prefer moving touched callers directly to the new internal config slice rather than leaving them behind a long-lived compatibility wrapper. Add or update tests and narrow docs where needed.",
       "acceptance_criteria": [
         "Named setup consumers move to the new configuration service instead of direct `setup.*` global accessors.",
@@ -232,22 +232,26 @@
         "A thin temporary shim is acceptable only if it clearly reduces migration risk; it should not become the new steady-state boundary."
       ],
       "started_at": "2026-04-18T12:30:31.537600+00:00",
-      "runner_pid": 158162,
       "runner_state": {
-        "segment": 1,
+        "segment": 2,
         "session_id": "019da092-3dd1-7de3-9ff0-40d866502502",
-        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260418T123031Z_part01.ndjson",
-        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260418T123031Z_part01.stderr.log",
-        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260418T123031Z_part01.txt",
-        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260418T123031Z_part01.txt",
-        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260418T123031Z_part01.ndjson"
-      }
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260419T033201Z_part02.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260419T033201Z_part02.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260419T033201Z_part02.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260419T033201Z_part02.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-75b8-a4a3-7349b2560d4f_20260419T033201Z_part02.ndjson",
+        "resume_pending": false
+      },
+      "last_resumed_at": "2026-04-19T03:32:01.334950+00:00",
+      "finished_at": "2026-04-19T03:45:12.171899+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid `019d9996-f8a9-75b8-a4a3-7349b2560d4f`  \ntask_id `W02-002`  \nstatus `completed`\n\nThe runtime config-service migration is present in the backend and verified. Startup now initializes the config service once and passes it through seeding and server startup, `/v0/setup` and `/v0/setup/frontend` remain service-backed with stable semantics, and the resumed segment updated the canonical report with current verification evidence rather than redoing implementation.\n\nfiles_changed `/workspace/socialpredict/backend/main.go`, `/workspace/socialpredict/backend/server/server.go`, `/workspace/socialpredict/backend/server/server_test.go`, `/workspace/socialpredict/backend/seed/seed.go`, `/workspace/socialpredict/backend/seed/seed_users_test.go`, `/workspace/socialpredict/backend/internal/app/runtime/config.go`, `/workspace/socialpredict/backend/internal/app/runtime/config_test.go`, `/workspace/socialpredict/backend/handlers/setup/setuphandler_test.go`\n\nchecks_run `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`, `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/gomod go test -p 1 -vet=off -count=1 ./handlers/setup ./handlers/stats ./seed ./server ./internal/app`, `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/gomod go vet -p 1 ./handlers/setup ./handlers/stats ./seed ./server ./internal/app`, `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/gomod go test ./... -run TestOpenAPISpecValidates -count=1`\n\nfollow_ups `None.`\n\nAssumption noted in the report: setup route payloads were intended to remain unchanged, so no OpenAPI contract edits were needed. The only resumed-session adjustment was using lower-parallelism Go validation because default `go test`/`go vet` runs hit environment memory pressure in transitive `modernc` compilation."
     },
     {
       "uid": "019d9996-f8a9-736b-93d9-de583bb6112a",
       "id": "W03-001",
       "title": "WAVE03: Establish domain-model boundary types and legacy-model adapters",
-      "status": "pending",
+      "status": "done",
       "prompt": "Using the post-WAVE02 container-owned configuration seam as the baseline, introduce explicit boundary types, adapters, and conversion seams so repositories and explicit edge helpers own translation while internal domain/math code can stop treating `socialpredict/models` structs as native policy objects. Keep the first enabling pass concrete: establish at least one repository-owned translation path for each initial target area in markets, bets, math, analytics, and auth-adjacent flows, and make it possible for touched internal domain packages to depend on boundary types rather than `socialpredict/models`. Add focused tests. This is a prerequisite boundary wave, not an API contract wave.",
       "acceptance_criteria": [
         "Explicit boundary types or adapters exist so translation is owned by repositories or explicit edge helpers rather than leaking through internal domain code.",
@@ -280,7 +284,7 @@
       "depends_on": [
         "019d9996-f8a9-75b8-a4a3-7349b2560d4f"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -289,13 +293,28 @@
         "Preserve behavior and keep repository ownership of persistence concerns clear.",
         "Avoid a giant flag-day rewrite; build stable seams first.",
         "Do not start this wave until the configuration slice is container-owned, stable, and no longer leaking global access patterns."
-      ]
+      ],
+      "started_at": "2026-04-19T03:45:12.283415+00:00",
+      "runner_state": {
+        "segment": 2,
+        "session_id": "019da3d7-a7c3-7523-b843-66ed4a62e4da",
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-736b-93d9-de583bb6112a_20260419T112127Z_part02.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-736b-93d9-de583bb6112a_20260419T112127Z_part02.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-736b-93d9-de583bb6112a_20260419T112127Z_part02.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-736b-93d9-de583bb6112a_20260419T112127Z_part02.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-736b-93d9-de583bb6112a_20260419T112127Z_part02.ndjson",
+        "resume_pending": false
+      },
+      "last_resumed_at": "2026-04-19T11:21:27.082961+00:00",
+      "finished_at": "2026-04-19T12:06:02.962807+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019d9996-f8a9-736b-93d9-de583bb6112a`  \ntask_id: `W03-001`  \nstatus: `completed`\n\nfiles_changed:\n- `backend/internal/domain/boundary/types.go`\n- `backend/internal/domain/math/market/{dust.go,dust_test.go,marketvolume.go,marketvolume_test.go}`\n- `backend/internal/domain/math/outcomes/dbpm/marketshares.go`\n- `backend/internal/domain/math/positions/{positionsmath.go,positionsmath_defaults.go,positionsmath_test.go,profitability.go,profitability_test.go}`\n- `backend/internal/domain/math/probabilities/wpam/{wpam_marketprobabilities.go,wpam_marketprobabilities_test.go}`\n- `backend/internal/domain/markets/{service.go,service_policies.go,models.go,market_bets.go,market_leaderboard.go,market_overview.go,market_projection.go,market_volume.go}`\n- `backend/internal/domain/bets/{service.go,models.go,bet_support.go}`\n- `backend/internal/domain/analytics/{models.go,service.go,positions_strategy.go,leaderboard.go,leaderboard_test.go,repository.go,system_metrics.go,repository_boundary_test.go}`\n- `backend/internal/repository/bets/{repository.go,repository_test.go}`\n- `backend/internal/repository/markets/{repository.go,repository_boundary_test.go}`\n- `backend/internal/repository/users/repository.go`\n- `backend/internal/service/auth/{loggin.go,loggin_boundary_test.go}`\n- `.codex-reports/tasks/019d9996-f8a9-736b-93d9-de583bb6112a/{summary.json,conversation.ndjson,decisions.ndjson}`\n\nchecks_run:\n- `gofmt -w` on the touched backend files\n- `GOMODCACHE=/workspace/.gomodcache GOCACHE=/workspace/.gocache go test ./internal/domain/math/positions ./internal/domain/math/probabilities/wpam ./internal/domain/math/market`\n- Dispatcher report confirms additional focused verification already recorded in `summary.json`:\n  `go build` on touched domain/repository/auth packages, focused repository tests, boundary check script, and `gofmt -l`\n\nfollow_ups:\n- Migrate the remaining broader legacy math and market test fixtures from direct `models.Bet` usage so a full touched-package `go test`/`go vet` pass can run without narrowing the verification slice.\n- The dispatcher-owned rollup is current at [summary.json](/workspace/socialpredict/.codex-reports/tasks/019d9996-f8a9-736b-93d9-de583bb6112a/summary.json).\n\nThe implemented seam is the intended first wave: touched domain and math code now depend on explicit boundary records, while repositories and the auth edge own the legacy-model translation paths. API contract behavior was left unchanged."
     },
     {
       "uid": "019d9996-f8a9-736b-93d9-de592fcac393",
       "id": "W03-002",
       "title": "WAVE03: Decouple markets, bets, and math from the legacy models package",
-      "status": "pending",
+      "status": "done",
       "prompt": "Using the WAVE03 boundary seams, remove direct `socialpredict/models` dependencies from the internal markets, bets, and math packages as far as practical. Push translation toward repositories or narrow boundary helpers, preserve existing behavior, and update tests. This wave should make the core business/domain layer less persistence-shaped before the API contract work lands.",
       "acceptance_criteria": [
         "Direct `socialpredict/models` dependencies are removed or materially reduced in the internal markets, bets, and math packages.",
@@ -327,20 +346,34 @@
       "depends_on": [
         "019d9996-f8a9-736b-93d9-de583bb6112a"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
       "profile": "",
       "notes": [
         "Focus first on `internal/domain/markets`, `internal/domain/bets`, and `internal/domain/math` plus their repository boundaries."
-      ]
+      ],
+      "started_at": "2026-04-19T12:06:03.116867+00:00",
+      "runner_state": {
+        "segment": 1,
+        "session_id": "019da5a2-321e-70f0-9130-1e3a0fe778da",
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-736b-93d9-de592fcac393_20260419T120603Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-736b-93d9-de592fcac393_20260419T120603Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-736b-93d9-de592fcac393_20260419T120603Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-736b-93d9-de592fcac393_20260419T120603Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-736b-93d9-de592fcac393_20260419T120603Z_part01.ndjson",
+        "resume_pending": false
+      },
+      "finished_at": "2026-04-19T12:14:32.329977+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019d9996-f8a9-736b-93d9-de592fcac393`  \ntask_id: `W03-002`  \nstatus: `completed`\n\nI explicitly spawned `software-action-dispatcher-agent` first, let it coordinate, and then finished the wave in the target repo. The core change is that `internal/domain/bets`, `internal/domain/markets`, and `internal/domain/math` now use `internal/domain/boundary.Bet` instead of depending directly on `socialpredict/models` in production code; repository translation remains at the repository edge. I also updated the affected tests so they exercise the new boundary seam instead of legacy model-shaped bet fixtures, and I updated the canonical task report under `/workspace/socialpredict/.codex-reports/tasks/019d9996-f8a9-736b-93d9-de592fcac393`.\n\nfiles_changed: `backend/internal/domain/boundary`, `backend/internal/domain/bets`, `backend/internal/domain/markets`, `backend/internal/domain/math`, `backend/internal/repository/bets`, `backend/internal/repository/markets`\n\nchecks_run:\n- `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `gofmt -l` across the touched domain/repository scopes\n- `GOCACHE=/workspace/.gocache GOMODCACHE=/workspace/.gomodcache go test -count=1 ./internal/domain/bets ./internal/domain/markets ./internal/domain/math/... ./internal/repository/bets ./internal/repository/markets` twice\n- `GOCACHE=/workspace/.gocache GOMODCACHE=/workspace/.gomodcache go vet ./internal/domain/bets ./internal/domain/markets ./internal/domain/math/... ./internal/repository/bets ./internal/repository/markets`\n\nfollow_ups:\n- Full-repo `go vet ./...` still reflects unrelated in-flight boundary changes outside this task\u2019s touched paths (`internal/domain/analytics`, `internal/repository/users`, and some handler tests), so this task used focused vet coverage on the changed packages.\n- Assumption: the existing in-flight edits in the touched packages were part of this wave, so I completed and validated that refactor rather than reverting or reworking unrelated dirty-worktree changes."
     },
     {
       "uid": "019d9996-f8a9-736b-93d9-de5a3e5e447f",
       "id": "W03-003",
       "title": "WAVE03: Decouple analytics and remaining internal boundary consumers from legacy models",
-      "status": "pending",
+      "status": "running",
       "prompt": "Finish the legacy-model decoupling wave by removing or tightly containing remaining `socialpredict/models` usage in analytics, auth login, and adjacent boundary consumers touched by the new seams. Any unavoidable legacy-model usage should be pushed to repositories or explicit edge adapters and documented. Update tests and application wiring as needed.",
       "acceptance_criteria": [
         "Remaining `socialpredict/models` usage in analytics, auth login, and adjacent touched boundary consumers is removed or tightly contained.",
@@ -371,14 +404,25 @@
         "019d9996-f8a9-736b-93d9-de583bb6112a",
         "019d9996-f8a9-736b-93d9-de592fcac393"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
       "profile": "",
       "notes": [
         "This is the gate into WAVE04. Leave no hidden persistence-model dependency surprises in internal code if they can be removed cleanly."
-      ]
+      ],
+      "started_at": "2026-04-19T12:14:32.419651+00:00",
+      "runner_pid": 179517,
+      "runner_state": {
+        "segment": 1,
+        "session_id": "019da5a9-f6d1-70a3-81f1-f8c20509380c",
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-736b-93d9-de5a3e5e447f_20260419T121432Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-736b-93d9-de5a3e5e447f_20260419T121432Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-736b-93d9-de5a3e5e447f_20260419T121432Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-736b-93d9-de5a3e5e447f_20260419T121432Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-736b-93d9-de5a3e5e447f_20260419T121432Z_part01.ndjson"
+      }
     },
     {
       "uid": "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc",
