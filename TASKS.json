@@ -607,7 +607,7 @@
       "uid": "019d9996-f8a9-71b8-a7c0-81a2945b5cb4",
       "id": "W04-003",
       "title": "WAVE04: Align OpenAPI and tag ownership with the implemented API behavior",
-      "status": "running",
+      "status": "done",
       "prompt": "Update `backend/docs/openapi.yaml` so the touched endpoints match the implemented WAVE04 auth and `{ ok, result, reason }` response behavior. Align success/error payloads, auth requirements, and targeted tag ownership metadata such as ambiguous market-position tagging. Keep route organization stable; this is contract alignment, not public path redesign.",
       "acceptance_criteria": [
         "`backend/docs/openapi.yaml` matches the implemented WAVE04 endpoint behavior for touched auth and envelope-migrated routes.",
@@ -648,24 +648,26 @@
         "Use the post-wave-4 code as the immediate contract source."
       ],
       "started_at": "2026-04-19T20:37:09.232084+00:00",
-      "runner_pid": 215908,
       "runner_state": {
-        "segment": 3,
+        "segment": 4,
         "session_id": "019da776-1f47-78b1-8f60-b0ffd8576e0a",
-        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260419T225131Z_part03.ndjson",
-        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260419T225131Z_part03.stderr.log",
-        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260419T225131Z_part03.txt",
-        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260419T225131Z_part03.txt",
-        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260419T225131Z_part03.ndjson",
-        "resume_pending": true
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260420T033332Z_part04.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260420T033332Z_part04.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260420T033332Z_part04.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260420T033332Z_part04.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-71b8-a7c0-81a2945b5cb4_20260420T033332Z_part04.ndjson",
+        "resume_pending": false
       },
-      "last_resumed_at": "2026-04-19T22:51:31.153593+00:00"
+      "last_resumed_at": "2026-04-20T03:33:32.600239+00:00",
+      "finished_at": "2026-04-20T03:33:53.048134+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019d9996-f8a9-71b8-a7c0-81a2945b5cb4`  \ntask_id: `W04-003`  \nstatus: `completed`\n\nfiles_changed: `backend/docs/openapi.yaml`\n\nchecks_run: `go test . -run TestOpenAPISpecValidates -count=1`; targeted route/auth/response cross-checks against `backend/server/server.go` and the touched handlers.\n\nfollow_ups: broader `go test ./...` verification in this environment is still limited by disk exhaustion, but the dispatcher summary, event log, and spec alignment are already recorded in `/workspace/socialpredict/.codex-reports/tasks/019d9996-f8a9-71b8-a7c0-81a2945b5cb4`.\n\nThe OpenAPI contract is already aligned in the current repo state: the stray `/v0/user/markets/{marketId}` path was removed, `/v0/userposition/{marketId}` now reflects the WAVE04 envelope and auth behavior, market-position routes are tagged under `Markets`, and the touched profile/bet/sell/private-profile routes document the implemented auth and response shapes without changing route organization."
     },
     {
       "uid": "019d9996-f8a9-71b8-a7c0-81a3c332d436",
       "id": "W04-004",
       "title": "WAVE04: Refresh API-ISSUES.md after the prerequisite and API waves",
-      "status": "pending",
+      "status": "done",
       "prompt": "Rewrite `backend/docs/API-ISSUES.md` so it reflects the code after Waves 1-4. Remove stale claims, capture what was actually fixed, and clearly separate the deferred items: limited-scope-token login redesign, public route reorganization, and Bets-to-Trades rename. Keep the document decision-oriented and aligned with current implementation rather than historical uncertainty.",
       "acceptance_criteria": [
         "`backend/docs/API-ISSUES.md` reflects the code state after Waves 1-4 rather than historical uncertainty.",
@@ -693,14 +695,28 @@
       "depends_on": [
         "019d9996-f8a9-71b8-a7c0-81a2945b5cb4"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
       "profile": "",
       "notes": [
         "This is documentation cleanup only; do not sneak in public path redesign or Bets-to-Trades renaming."
-      ]
+      ],
+      "started_at": "2026-04-20T03:33:53.142565+00:00",
+      "runner_state": {
+        "segment": 1,
+        "session_id": "019da8f3-a63e-7a41-892a-8c3fb90aa5b2",
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/events/019d9996-f8a9-71b8-a7c0-81a3c332d436_20260420T033353Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/stderr/019d9996-f8a9-71b8-a7c0-81a3c332d436_20260420T033353Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/messages/019d9996-f8a9-71b8-a7c0-81a3c332d436_20260420T033353Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/prompts/019d9996-f8a9-71b8-a7c0-81a3c332d436_20260420T033353Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/20260418-120411/context/019d9996-f8a9-71b8-a7c0-81a3c332d436_20260420T033353Z_part01.ndjson",
+        "resume_pending": false
+      },
+      "finished_at": "2026-04-20T03:40:45.250094+00:00",
+      "last_exit_code": 0,
+      "last_summary": "`backend/docs/API-ISSUES.md` was rewritten into a current-state follow-up register aligned with the Wave 1-4 codebase. The stale historical audit/redesign material was removed, completed work is now called out explicitly, and the deferred set is limited to the three scoped items: limited-scope-token login redesign, public route reorganization, and Bets-to-Trades rename. The canonical report summary and verifier event were also updated under `/workspace/socialpredict/.codex-reports/tasks/019d9996-f8a9-71b8-a7c0-81a3c332d436`.\n\n`task_uid`: `019d9996-f8a9-71b8-a7c0-81a3c332d436`  \n`task_id`: `W04-004`  \n`status`: `completed`  \n`files_changed`: `../socialpredict/backend/docs/API-ISSUES.md`  \n`checks_run`: `git diff --check -- backend/docs/API-ISSUES.md`; `GOMODCACHE=/workspace/.gomodcache GOCACHE=/workspace/.gocache go test ./... -run TestOpenAPISpecValidates -count=1`; `git status --short -- backend/docs/API-ISSUES.md backend/docs/openapi.yaml backend/server/server.go`  \n`follow_ups`: `none`\n\nAssumption used: this task was documentation-only, so I did not change backend behavior or `backend/docs/openapi.yaml`."
     }
   ]
 }
