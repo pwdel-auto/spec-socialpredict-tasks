@@ -7,6 +7,7 @@ Work only on backend/API contract scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when API/auth contract intent is unclear; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Keep implemented API behavior and OpenAPI/spec artifacts synchronized during refactor.
@@ -44,13 +45,16 @@ Repository-specific contract rules:
 - Never expose raw private model fields through public payloads.
 - Prefer explicit response structs for public API payloads.
 - Check embedded structs and JSON tags carefully before returning them from handlers.
+- Reject handler-level policy growth while syncing contracts. Contract work may add transport mapping and response helpers, but must not move business rules, authorization policy, accounting/math, persistence decisions, or reusable validation into HTTP handlers.
 - Require `software-action-db-migration-agent` review when persisted model changes affect public payloads, persisted enums/defaults, or schema-backed contract behavior.
 - Escalate to `software-action-architecture-agent` when DTO placement, package ownership, or boundary placement is unclear.
 - Require OpenAPI updates when route or handler behavior changes.
 - Record contract deltas for verifier review.
 - Treat `backend/server/server.go`, touched handlers, DTOs, and tests as the source of truth when docs have drifted.
 - Apply only the hard constraints from `backend/docs/API-ISSUES.md`.
-- Ignore aspirational login redesign, generic `ok/result/reason` envelope redesign, and broad REST route reorganization unless the task explicitly requests them.
+- Ignore aspirational login redesign and broad REST route reorganization unless the task explicitly requests them.
+- For W04 API/auth work, the accepted design direction is scoped `{ ok, result, reason }` tightening, not a flag-day universal envelope migration. Preserve actual implemented behavior where the task is only documenting drift; when a task explicitly asks for response-boundary helpers or stable reasons, keep public `reason` values small, documented, reusable across endpoint areas, and synchronized with OpenAPI.
+- Own public contract interpretation for `reason` values: validation, authentication, authorization, password-change gating, not-found, and business-rule failures should not become endpoint-specific ad hoc strings when a shared reason vocabulary exists or is being established.
 - For current error-contract review, inspect these hotspots when their endpoints are touched:
   - `backend/handlers/stats/statshandler.go`
   - `backend/handlers/cms/homepage/http/handler.go`

@@ -7,6 +7,7 @@ Work only on backend/API error-model, error-flow, and recovery scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when API/auth error semantics are unclear; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Make backend error handling consistent, boundary-safe, and extraction-ready.
@@ -51,9 +52,12 @@ Required artifacts:
 
 Repository-specific error rules:
 - Preserve the repo invariant that handlers are request-boundary code and reusable core logic should stay out of `http.ResponseWriter` and `*http.Request` paths when practical.
+- Reject handler-level policy growth during error cleanup. Handlers may map typed/domain errors to sanitized public responses, but they must not become owners of business rules, authorization policy, accounting/math, persistence decisions, or reusable validation.
 - Acquire `*gorm.DB` near the handler boundary and pass it downward; do not hide DB access inside a global error manager.
 - Prefer small helpers and typed errors over a large singleton error framework.
 - Keep public error payloads repo-consistent. If the current contract for a touched route is `{"error": "..."}`, do not silently redesign it unless the task explicitly calls for a contract change and `software-action-openapi-contract-agent` is involved.
+- For W04 API/auth tasks that explicitly call for `{ ok, result, reason }`, response-boundary helpers, or stable public reasons, help define and enforce a small public reason vocabulary instead of leaking raw internal error strings or inventing route-local labels.
+- Treat public `reason` values as client-visible contract language. Coordinate with `software-action-openapi-contract-agent` for documentation and with `software-action-test-reliability-agent` for representative mapping tests.
 - Panic recovery belongs in middleware at the request boundary, not in domain services.
 - Retry or recovery logic belongs only around real transient operations and must not obscure business-rule failures.
 - Log richer internal context separately from the public response.

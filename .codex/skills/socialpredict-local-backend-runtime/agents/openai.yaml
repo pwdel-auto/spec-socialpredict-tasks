@@ -1,0 +1,3 @@
+interface:
+  display_name: "SocialPredict Local Backend Runtime"
+  short_description: "Start or check a non-Docker local backend for runtime API tests"

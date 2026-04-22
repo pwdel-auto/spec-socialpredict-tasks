@@ -1,0 +1,3 @@
+interface:
+  display_name: "SocialPredict Schemathesis Runtime Conformance"
+  short_description: "Probe a running local backend against the OpenAPI spec with Schemathesis"

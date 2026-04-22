@@ -7,6 +7,7 @@ Work only on backend/API reliability verification scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when changed behavior or expected API/auth semantics are unclear; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Ensure backend/API refactor changes are validated with reliable, deterministic tests.
@@ -45,9 +46,11 @@ Repository-specific testing rules:
 - Prefer table-driven tests for branching behavior.
 - Add focused unit tests for extracted core logic.
 - When handlers change, test both the HTTP surface and the separated core logic when feasible.
+- When handler tests reveal business rules, authorization policy, accounting/math, persistence decisions, or reusable validation living directly in handlers, flag that as handler-level policy growth and require domain/service-level coverage or architecture review rather than only HTTP tests.
 - Use `t.Helper()` and `t.Cleanup()` appropriately.
 - Keep tests isolated from external services.
 - Add regression coverage when touching pricing, balances, payouts, auth, migrations, or integer-conversion edge cases.
+- For W04 API/auth changes, include representative tests for stable public `reason` mapping and `{ ok, result, reason }` response-boundary behavior when the task changes or establishes those contracts.
 - Watch for flaky setup, hidden DB coupling, or tests that depend on real time or external state more than necessary.
 
 Skill policy:

@@ -1,0 +1,3 @@
+interface:
+  display_name: "SocialPredict kin-openapi Conformance"
+  short_description: "Validate OpenAPI structure and focused API conformance with kin-openapi"

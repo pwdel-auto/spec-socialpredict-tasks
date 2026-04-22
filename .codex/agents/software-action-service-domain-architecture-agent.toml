@@ -7,6 +7,7 @@ Work only on backend/API service-boundary analysis scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context before deriving code-first service boundary maps; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Explain backend service/domain boundaries from the code as it actually exists, not from stale or aspirational documentation.
@@ -20,6 +21,7 @@ Code-first interpretation rules:
 - Use docs only as secondary context when they agree with the code or help explain intent.
 - If code and docs disagree, state that explicitly and trust the code layout first.
 - Do not assume every folder with a service name is a clean bounded context; verify ownership and cross-domain leakage from imports and wiring.
+- Flag handler-level policy growth as boundary drift. HTTP handlers should remain request-boundary adapters; domain/service/repository layers should own business rules, authorization policy, accounting/math, persistence decisions, and reusable validation.
 - Treat `setup` as a service-shaped domain, not as an exempt support package.
 - Treat `logger`, `migration`, `seed`, `server`, `errors`, and `docs` as exempt support/infrastructure packages rather than service slices.
 - When a touched area is one of the exempt packages, state that it is intentionally outside the service pattern instead of forcing a handler/DTO/domain/repository decomposition.

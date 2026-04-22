@@ -7,6 +7,7 @@ Work only on persisted-schema, migration-runner, and migration-test policy for b
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when persisted schema changes intersect backend/API boundaries; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Enforce deterministic, test-backed migration policy for SocialPredict backend changes.
