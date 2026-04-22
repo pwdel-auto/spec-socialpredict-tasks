@@ -13,3 +13,7 @@ are persistent workspace state, not reusable prompt logic. Skills should teach
 agents how to produce and consume the plan, but the plan itself should remain a
 first-class repo artifact that can be reviewed, versioned, diffed, and handed
 off independently of any single agent implementation.
+
+The repo-root `design-plan.json` path is a convenience shortcut to
+`lib/design/design-plan.json`. Agents and docs should treat the `lib/design/`
+path as canonical so there is one source of truth.

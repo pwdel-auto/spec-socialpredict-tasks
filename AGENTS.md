@@ -436,7 +436,9 @@ as the navigation point for the committed workspace contents.
   software-designer agents and the architecture agent.
 
 - `lib/design/design-plan.json`
-  Active shared design-plan artifact for the current design effort.
+  Active shared design-plan artifact for the current design effort. The
+  repo-root `design-plan.json` path is only a convenience shortcut to this
+  canonical file.
 
 - `lib/design/design-plan.schema.json`
   Canonical JSON Schema that all design-plan outputs must satisfy.
@@ -456,6 +458,15 @@ as the navigation point for the committed workspace contents.
 - `lib/design/design-plan.json` is repo state, not skill state. Skills define
   how agents produce or consume the plan; the plan itself is the reviewable
   artifact.
+- Execution agents should read `lib/design/design-plan.json` as binding
+  design context for ambiguous backend/API work, while treating it as read-only
+  unless the user explicitly asks to change design artifacts.
+- Execution agents should reject handler-level policy growth as a durable
+  backend invariant. HTTP handlers may parse transport input, call services,
+  map typed outcomes to responses, and write responses; business rules,
+  authorization policy, accounting/math, persistence decisions, and reusable
+  validation belong in owned domain, service, repository, or boundary-helper
+  packages.
 - `software-action-*` agents are the execution lane. They should treat task and
   design artifacts as read-only unless the user explicitly asks to edit them.
 - Older docs may still mention prior agent path conventions. The current

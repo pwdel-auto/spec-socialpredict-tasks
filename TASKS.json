@@ -58,11 +58,12 @@
       "id": "API-002",
       "title": "W04 API: Define stable reason vocabulary and response-boundary helpers",
       "status": "pending",
-      "prompt": "Prepare the API/auth contract cleanup by identifying the stable public `reason` vocabulary for validation, authorization, authentication, password-change gating, not-found, and business-rule failures. Reuse existing response helpers where practical and add narrow boundary helpers only where they remove ad hoc raw error strings from HTTP handlers. Keep business logic in domain services and keep handlers as transport mappers. Update focused tests for the chosen helper behavior.",
+      "prompt": "Prepare the API/auth contract cleanup by establishing a small initial public `reason` vocabulary before endpoint-area sweeps proceed. Define client-visible reason strings for the common failure classes the W04 queue depends on, including validation, authentication-required, authorization-denied, password-change-required, not-found, market/business-rule failures, and internal fallback failures. Publish where each reason should be used, preferably as constants or equivalent boundary-owned helpers, and document the vocabulary in OpenAPI schemas or route-visible docs touched by this task. Reuse existing response helpers where practical and add narrow boundary helpers only where they remove ad hoc raw error strings from HTTP handlers. Keep business logic in domain services and keep handlers as transport mappers. Update focused tests for the chosen helper behavior and representative handler-level mappings.",
       "acceptance_criteria": [
-        "A stable initial `reason` vocabulary exists for the API sweep's common failure classes.",
-        "Touched handlers can map policy outcomes to sanitized route-visible reasons without leaking internal error strings.",
-        "Focused tests cover the helper behavior and at least one handler-level mapping."
+        "A small stable initial public `reason` vocabulary exists for the API sweep's common failure classes and is expressed through constants or equivalent boundary-owned helpers.",
+        "The vocabulary includes usage guidance or a mapping table for validation, authentication, authorization, password-change gating, not-found, representative market/bet business-rule failures, and internal fallback failures.",
+        "Touched handlers can map policy outcomes to sanitized route-visible reasons without leaking internal error strings or inventing endpoint-local synonyms.",
+        "Focused tests cover the helper behavior and representative handler-level mappings that later markets, bets, users, and auth/setup tasks can reuse."
       ],
       "verification": {
         "owner": "software-action-openapi-contract-agent",
@@ -95,6 +96,7 @@
       "profile": "",
       "notes": [
         "This task answers the design-plan W04 open question about stable `reason` vocabulary.",
+        "Do not proceed to endpoint-area sweeps by improvising route-specific reason strings; establish the initial shared list first. Example candidates include `validation_failed`, `authentication_required`, `authorization_denied`, `password_change_required`, `not_found`, `market_closed`, `insufficient_balance`, `invalid_outcome`, `no_position`, and `internal_error`, but final names should follow repo style and implemented behavior.",
         "Apply envelope direction only where the current route behavior can be safely tightened without a flag-day API migration.",
         "Preserve public/private model boundaries in API responses."
       ]
@@ -104,7 +106,7 @@
       "id": "API-003",
       "title": "W04 API: Align auth, password-change, setup, and bootstrap-visible routes",
       "status": "pending",
-      "prompt": "Sweep the auth-adjacent and setup/bootstrap-visible API surface after the runtime/config service work. Verify and, where needed, fix the implemented behavior and OpenAPI contract for login, change-password, must-change-password enforcement, setup/frontend setup, health/docs exposure, and admin add-user behavior. Preserve the current login token contract while documenting and testing server-side password-change gating for authenticated actions.",
+      "prompt": "Sweep the auth-adjacent and setup/bootstrap-visible API surface after the runtime/config service work and after API-002 has established the initial public `reason` vocabulary. Verify and, where needed, fix the implemented behavior and OpenAPI contract for login, change-password, must-change-password enforcement, setup/frontend setup, health/docs exposure, and admin add-user behavior. Preserve the current login token contract while documenting and testing server-side password-change gating for authenticated actions. Reuse the shared reason vocabulary for auth, authorization, validation, password-change, not-found, and internal fallback outcomes instead of inventing route-local reason strings.",
       "acceptance_criteria": [
         "Login and change-password routes match the implemented contract in code, tests, and OpenAPI.",
         "Must-change-password users are allowed only through intended flows and blocked from other authenticated actions through server-side enforcement.",
@@ -144,6 +146,7 @@
       "profile": "",
       "notes": [
         "Design decision DP-006 is binding: enforce must-change-password restrictions without redesigning token issuance.",
+        "Reuse the API-002 public reason vocabulary; if an auth/setup outcome needs a new reason, route it through contract/error review rather than creating an endpoint-local synonym.",
         "Use `software-action-architecture-agent` for auth boundary review if handler/domain ownership becomes unclear.",
         "Keep `/v0/setup` and `/v0/setup/frontend` route semantics stable."
       ]
@@ -153,7 +156,7 @@
       "id": "API-004",
       "title": "W04 API: Align markets routes, business outcomes, and Swagger schemas",
       "status": "pending",
-      "prompt": "Sweep the markets API surface end to end: create, legacy create alias, list, status filtering, search, details, projected probability, market positions, market bets, and resolution. Verify that handlers stay thin around domain services, business-rule outcomes map to stable public reasons, and `backend/docs/openapi.yaml` documents the implemented request/response/status behavior. Add or update focused handler/domain contract tests where drift is found.",
+      "prompt": "Sweep the markets API surface end to end after API-002 has established the initial public `reason` vocabulary: create, legacy create alias, list, status filtering, search, details, projected probability, market positions, market bets, and resolution. Verify that handlers stay thin around domain services, business-rule outcomes map to the shared stable public reasons, and `backend/docs/openapi.yaml` documents the implemented request/response/status behavior. Add or update focused handler/domain contract tests where drift is found.",
       "acceptance_criteria": [
         "Markets route request and response schemas in OpenAPI match implemented DTOs and response helpers.",
         "Market business-rule failures use stable sanitized reasons at the HTTP boundary.",
@@ -191,6 +194,7 @@
       "profile": "",
       "notes": [
         "Preserve integer-first accounting and existing market-economics behavior.",
+        "Reuse the API-002 public reason vocabulary for market business-rule outcomes; add new reasons only through the shared contract/error review path.",
         "Keep repository-owned legacy model translation intact; do not leak persistence models into route DTOs.",
         "Treat `POST /v0/create` as a legacy alias if still implemented."
       ]
@@ -200,7 +204,7 @@
       "id": "API-005",
       "title": "W04 API: Align bets buy/sell routes and market-bets contract",
       "status": "pending",
-      "prompt": "Sweep the bets API surface for buy/place, sell, user betting constraints, market bet history, and related math-backed response behavior. Preserve bets terminology as the current public contract. Align business-rule failures such as insufficient balance, invalid outcome, market closed, no position, and dust-cap outcomes with stable public reasons and OpenAPI schemas. Add or update focused API and domain tests where contract drift is found.",
+      "prompt": "Sweep the bets API surface after API-002 has established the initial public `reason` vocabulary: buy/place, sell, user betting constraints, market bet history, and related math-backed response behavior. Preserve bets terminology as the current public contract. Align business-rule failures such as insufficient balance, invalid outcome, market closed, no position, and dust-cap outcomes with the shared stable public reasons and OpenAPI schemas. Add or update focused API and domain tests where contract drift is found.",
       "acceptance_criteria": [
         "Bet buy/sell and market-bets OpenAPI operations match implemented requests, responses, auth, and status codes.",
         "Business-rule outcomes from the bets domain map to stable route-visible reasons without raw internal leakage.",
@@ -239,6 +243,7 @@
       "profile": "",
       "notes": [
         "Preserve 32-bit safety guards when converting `uint64` to platform-sized `uint`.",
+        "Reuse the API-002 public reason vocabulary for bets business-rule outcomes; do not introduce endpoint-local synonyms for shared failures like insufficient balance, invalid outcome, market closed, or no position.",
         "Keep time-based market enforcement on the server side.",
         "Do not rename tags, paths, or schemas from bets to trades in this wave."
       ]
@@ -248,7 +253,7 @@
       "id": "API-006",
       "title": "W04 API: Align users, positions, portfolio, credit, and financial routes",
       "status": "pending",
-      "prompt": "Sweep user-facing authenticated and public API routes, including profile updates, public/private profile payloads, personal links, emoji/display metadata, user positions, portfolio, credit, financial summaries, user markets, and transaction-visible behavior. Preserve public versus private response boundaries, must-change-password enforcement, and domain-owned user business rules. Update OpenAPI and focused tests to match implemented behavior.",
+      "prompt": "Sweep user-facing authenticated and public API routes after API-002 has established the initial public `reason` vocabulary, including profile updates, public/private profile payloads, personal links, emoji/display metadata, user positions, portfolio, credit, financial summaries, user markets, and transaction-visible behavior. Preserve public versus private response boundaries, must-change-password enforcement, and domain-owned user business rules. Reuse the shared reason vocabulary for validation, auth, password-change, not-found, and user/account business-rule outcomes. Update OpenAPI and focused tests to match implemented behavior.",
       "acceptance_criteria": [
         "User, position, portfolio, credit, and financial route schemas match actual public/private DTO boundaries.",
         "Authenticated user routes enforce password-change gating consistently except for intended exempt flows.",
@@ -288,6 +293,7 @@
       "profile": "",
       "notes": [
         "Public versus private model boundaries are a hard invariant.",
+        "Reuse the API-002 public reason vocabulary; if user/account behavior needs a new public reason, route it through contract/error review rather than creating a route-local synonym.",
         "Known historical handlers/users failures should be rechecked and classified instead of hidden.",
         "Keep transaction/accounting behavior integer-first and domain-owned."
       ]
@@ -297,7 +303,7 @@
       "id": "API-007",
       "title": "W04 API: Align analytics, stats, metrics, leaderboard, and CMS/home routes",
       "status": "pending",
-      "prompt": "Sweep the remaining reporting and content-facing backend routes: stats, system metrics, global and market leaderboards, analytics-backed positions where not covered by user routes, CMS/homepage content, and root/home handlers. Verify that these routes use current response helpers, service-backed configuration where applicable, and OpenAPI schemas that match implemented payloads. Add or update focused tests around response shape and error behavior.",
+      "prompt": "Sweep the remaining reporting and content-facing backend routes after API-002 has established the initial public `reason` vocabulary: stats, system metrics, global and market leaderboards, analytics-backed positions where not covered by user routes, CMS/homepage content, and root/home handlers. Verify that these routes use current response helpers, service-backed configuration where applicable, shared public reasons for route-visible failures, and OpenAPI schemas that match implemented payloads. Add or update focused tests around response shape and error behavior.",
       "acceptance_criteria": [
         "Stats, metrics, leaderboard, CMS, and home route OpenAPI entries match implemented behavior.",
         "Config-derived reporting routes continue to use the configuration service boundary.",
@@ -337,6 +343,7 @@
       "profile": "",
       "notes": [
         "This is the stop-and-review point for route coverage before global conformance work.",
+        "Reuse the API-002 public reason vocabulary for reporting/content failures where those routes expose reason-bearing responses.",
         "Do not revive stale historical API docs as source of truth when current code differs."
       ]
     },
@@ -345,7 +352,7 @@
       "id": "API-008",
       "title": "W04 API: Add deterministic OpenAPI and API conformance regression checks",
       "status": "pending",
-      "prompt": "After endpoint-area sweeps are complete, add or tighten deterministic API conformance checks that prevent route/spec drift from returning. Use kin-openapi validation, the existing OpenAPI test, targeted route/spec sync checks, and focused handler/API tests. Where practical, add helper scripts or tests that compare route inventory and OpenAPI operations without requiring a full live environment. Keep checks scoped and deterministic.",
+      "prompt": "After endpoint-area sweeps are complete, add or tighten deterministic API conformance checks that prevent route/spec drift and public `reason` vocabulary drift from returning. Use kin-openapi validation, the existing OpenAPI test, targeted route/spec sync checks, focused handler/API tests, and any lightweight checks that ensure documented reason-bearing responses stay synchronized with the shared API-002 vocabulary. Where practical, add helper scripts or tests that compare route inventory and OpenAPI operations without requiring a full live environment. Keep checks scoped and deterministic.",
       "acceptance_criteria": [
         "OpenAPI structural validation passes for `backend/docs/openapi.yaml` and embedded Swagger assets remain valid.",
         "Deterministic checks catch missing or stale OpenAPI operations for the swept route areas.",
@@ -388,6 +395,7 @@
       "profile": "",
       "notes": [
         "Run the OpenAPI navigation and kin-openapi skills before any runtime probing.",
+        "Include the API-002 public reason vocabulary in conformance thinking: drift includes undocumented new reason strings or stale documented reasons.",
         "If broader Go tests fail for unrelated existing issues, classify them with exact package/test names.",
         "Prefer small regression checks that future API tasks can run cheaply."
       ]
@@ -397,7 +405,7 @@
       "id": "API-009",
       "title": "W04 API: Run runtime API conformance, reconcile Swagger docs, and verify sweep completion",
       "status": "pending",
-      "prompt": "Perform the final API sweep validation. Start or use a local non-Docker backend runtime when available, run scoped Schemathesis/runtime conformance after deterministic OpenAPI checks pass, verify Swagger UI serves the updated contract, and reconcile `backend/docs/API-ISSUES.md` so it lists only genuinely deferred decisions. Use the verifier agent for diff sanity checks and final validation evidence.",
+      "prompt": "Perform the final API sweep validation. Start or use a local non-Docker backend runtime when available, run scoped Schemathesis/runtime conformance after deterministic OpenAPI checks pass, verify Swagger UI serves the updated contract, verify public `reason` vocabulary consistency from API-002 through the endpoint sweeps, and reconcile `backend/docs/API-ISSUES.md` so it lists only genuinely deferred decisions. Use the verifier agent for diff sanity checks and final validation evidence.",
       "acceptance_criteria": [
         "Runtime API conformance is run against a local backend or the exact blocker is documented with all deterministic checks completed.",
         "Swagger/OpenAPI artifacts parse, validate, embed, and serve correctly for the updated contract.",
@@ -438,6 +446,7 @@
       "notes": [
         "Use `socialpredict-local-backend-runtime` before Schemathesis if no backend is already running.",
         "Keep final docs grounded in implemented behavior, not aspirational redesign notes.",
+        "Verify no endpoint-area sweep introduced undocumented route-local synonyms for shared public reasons.",
         "This is the final stop-and-review point for the API sweep queue."
       ]
     }

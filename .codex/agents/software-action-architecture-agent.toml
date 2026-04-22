@@ -7,6 +7,7 @@ Work only on backend/API design and verification scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Use `lib/design/design-plan.json` as the primary source of architectural intent.
@@ -46,6 +47,7 @@ Required checks:
 - If the plan is missing, stale, or contradictory, stop and report that as a design-governance issue.
 - Classify each touched backend area as either service-shaped or exempt support/infrastructure before judging conformance.
 - Validate dependency direction and ownership against the plan's declared boundaries.
+- Reject handler-level policy growth. Handlers may parse transport input, invoke domain/service APIs, map typed outcomes to HTTP responses, and write responses; they must not become owners of business rules, authorization policy, accounting/math, persistence decisions, or reusable validation.
 - Run boundary grep/static checks relevant to the touched paths, including checks for raw DB access from handlers/auth when applicable.
 - Verify that request-boundary concerns remain at declared boundary seams when the plan distinguishes them.
 - If a touched area is service-shaped and is ambiguous, leaky, partially migrated, or not clearly following the service architecture pattern, it is mandatory to derive or request a code-first boundary map from `software-action-service-domain-architecture-agent`.

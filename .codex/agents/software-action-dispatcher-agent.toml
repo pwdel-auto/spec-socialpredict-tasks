@@ -16,6 +16,8 @@ Execution-lane boundary:
 - Do not delegate execution tasks to `software-designer-01-evans-agent`, `software-designer-02-fowler-agent`, `software-designer-03-martin-agent`, or `software-planner-agent`.
 - Do not use `.codex/skills/socialpredict-design-plan/**` or `.codex/skills/socialpredict-task-planning/**` as execution skills.
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, and `lib/task-archives/**` as read-only execution inputs unless the user explicitly asks to edit planning/design artifacts.
+- Read `lib/design/design-plan.json` as the canonical design context for ambiguous backend/API work; `design-plan.json` at repo root is only a shortcut to that file.
+- For W04 API/auth work, treat the design-plan direction as contract truthfulness plus scoped `{ ok, result, reason }` tightening. Do not let specialists improvise route-specific reason strings when API-002 or an existing reason vocabulary should govern them.
 
 Use these specialists deliberately:
 - `software-action-architecture-agent` for package ownership, handler/core separation, DB acquisition and passing rules, transaction boundaries, splitting up and creating new boundaries, raw DB access from handlers/auth, and extraction-readiness constraints.
@@ -32,6 +34,7 @@ Use these specialists deliberately:
 Common routing patterns:
 - If a task changes handlers, routes, DTOs, or public payloads, strongly consider `software-action-architecture-agent`, `software-action-openapi-contract-agent`, `software-action-test-reliability-agent`, and `software-action-verifier-agent`.
 - If a task changes `backend/errors/**`, raw `http.Error(...)` usage, panic recovery, sanitized error messages, request-boundary error mapping, or middleware-visible error behavior, strongly consider `software-action-error-handling-agent`, `software-action-openapi-contract-agent` when the public contract changes, `software-action-test-reliability-agent`, and `software-action-verifier-agent`; add `software-action-architecture-agent` if package placement or layer ownership is unclear.
+- If a task changes or depends on public `{ ok, result, reason }` behavior, stable public `reason` values, or business-rule failure semantics, route to `software-action-openapi-contract-agent` and `software-action-error-handling-agent`; add `software-action-test-reliability-agent` for deterministic coverage.
 - If a task changes `backend/logger/**`, deprecated `backend/logging/**`, imports of `socialpredict/logging`, request logging middleware, correlation IDs, `/health` or `/metrics` endpoints, tracing hooks, or operator-visible observability behavior, strongly consider `software-action-logging-agent`, `software-action-architecture-agent` when placement is unclear, `software-action-error-handling-agent` when failure-detail policy intersects, `software-action-openapi-contract-agent` when route-visible behavior changes, `software-action-test-reliability-agent`, and `software-action-verifier-agent`.
 - If a task asks to prove API conformance, run OpenAPI request/response validation, reconcile `backend/docs/openapi.yaml` with implemented routes, or execute Schemathesis against a local backend, strongly consider `software-action-api-conformance-agent`, `software-action-openapi-contract-agent` when public contract decisions are needed, `software-action-test-reliability-agent` when results should become deterministic test coverage, and `software-action-verifier-agent`.
 - If a task changes persisted models, schema, defaults, enums, or backfills, strongly consider `software-action-db-migration-agent`, `software-action-openapi-contract-agent` when public behavior changes, `software-action-test-reliability-agent`, and `software-action-verifier-agent`.
@@ -64,6 +67,7 @@ Operating rules:
 - Use the fewest specialists that still cover the task safely.
 - Keep diffs small, reviewable, and repo-consistent.
 - Treat repo-level AGENTS.md as always-on policy.
+- Reject handler-level policy growth. If an implementation task starts putting business rules, authorization policy, accounting/math, persistence decisions, or reusable validation directly into HTTP handlers, route to `software-action-architecture-agent` and the relevant domain specialist instead of normalizing that shape.
 - Let specialists choose their relevant skills; do not micromanage skill scripts from here unless the task is explicitly about a script.
 - Use the specialists' TOML instructions as the source of truth for their scope and escalation triggers.
 - Treat these paths as read-only unless the user explicitly asks otherwise:
@@ -145,6 +149,7 @@ Preserve these repo-level rules unless the task explicitly requires changing the
 
 - In this repo, a handler means an actual HTTP handler at the request boundary.
 - Keep reusable core logic out of `http.ResponseWriter` and `*http.Request` code when practical.
+- Reject handler-level policy growth: handlers may parse requests, call services, map typed/domain outcomes to transport responses, and write responses, but business rules, authorization policy, accounting/math, persistence decisions, and reusable validation belong in domain/service/repository or boundary helper packages with explicit ownership.
 - Acquire `*gorm.DB` once near the handler boundary and pass it downward.
 - Use transactions when multiple writes must succeed or fail together.
 - Preserve public versus private model boundaries in API responses.

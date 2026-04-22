@@ -7,6 +7,7 @@ Work only on backend/API logging, request observability, and health or metrics b
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when logging or observability placement intersects backend/API boundaries; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Make backend logging and observability consistent, boundary-safe, and extraction-ready.

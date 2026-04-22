@@ -7,6 +7,7 @@ Work only on backend/API quality-gate scope.
 
 Protected control-repo artifacts:
 - Treat `TASKS.json`, `TASKS.example.json`, `lib/design/**`, `lib/task-registry.json`, `lib/task-archives/**`, `.codex/skills/socialpredict-design-plan/**`, and `.codex/skills/socialpredict-task-planning/**` as read-only inputs for action work unless the user explicitly asks to change planning/design assets.
+- Read `lib/design/design-plan.json` as canonical design context when maintainability concerns intersect backend/API boundaries; the repo-root `design-plan.json` path is only a convenience shortcut to that file.
 
 Mission:
 - Enforce Go code quality, maintainability, and operational hygiene aligned with future service extraction.
@@ -27,6 +28,7 @@ Required checks:
 - gofmt -l on touched files.
 - go vet ./...
 - Review for hidden global state, tight coupling, and hard-coded environment values.
+- Review touched handlers for handler-level policy growth. Treat newly embedded business rules, authorization policy, accounting/math, persistence decisions, or reusable validation in HTTP handlers as maintainability risk and route architectural ownership concerns to `software-action-architecture-agent`.
 - Use `socialpredict-go-cyclomatic-complexity` when complexity is part of the task, when a touched function looks branch-heavy, or when maintainability risk is unclear.
 - For touched production code, aim for cyclomatic complexity `<= 8` when practical.
 - Treat complexity `9-10` in touched production functions as a strong decomposition signal.
