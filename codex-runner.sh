@@ -31,6 +31,10 @@ Options:
                          Ask for a clean handoff once context usage reaches
                          this percent of the model window. Use 0 to disable.
                          Default: 60
+  --idle-notice SECONDS  Print a runner heartbeat when no new terminal output
+                         appears for this many seconds. Default: 60
+  --raw-terminal-output  Mirror raw Codex JSON/events to the terminal instead
+                         of the readable runner renderer
   --quiet                Do not mirror live Codex stdout/stderr to the terminal
   --once                 Run at most one ready task, then exit
   --codex-bin PATH       Codex executable. Default: codex
@@ -88,7 +92,10 @@ SLEEP_SECONDS="30"
 CONTEXT_THRESHOLD_PCT="${CONTEXT_THRESHOLD_PCT:-70}"
 CONTEXT_SOFT_THRESHOLD_PCT="${CONTEXT_SOFT_THRESHOLD_PCT:-60}"
 CONTEXT_POLL_SECONDS="${CONTEXT_POLL_SECONDS:-15}"
+TERMINAL_IDLE_NOTICE_SECONDS="${TERMINAL_IDLE_NOTICE_SECONDS:-60}"
+TERMINAL_IDLE_POLL_SECONDS="${TERMINAL_IDLE_POLL_SECONDS:-15}"
 VERBOSE_TERMINAL_OUTPUT="${VERBOSE_TERMINAL_OUTPUT:-1}"
+RAW_TERMINAL_OUTPUT="${RAW_TERMINAL_OUTPUT:-0}"
 RUN_ONCE="0"
 CODEX_BIN="${CODEX_BIN:-codex}"
 DISPATCHER_AGENT="${DISPATCHER_AGENT:-software-action-dispatcher-agent}"
@@ -97,6 +104,20 @@ TASK_REGISTRY_FILE="${TASK_REGISTRY_FILE:-}"
 FINAL_REPORT_TARGET_RELATIVE="${FINAL_REPORT_TARGET_RELATIVE:-../socialpredict}"
 FINAL_REPORT_PATH="${FINAL_REPORT_PATH:-.codex-reports/runner-final-status.json}"
 FINAL_REPORT_MESSAGE="${FINAL_REPORT_MESSAGE:-All queued tasks completed.}"
+TERMINAL_RENDERER=""
+
+CURRENT_TASK_UID=""
+CURRENT_TASK_ID=""
+CURRENT_TASK_TITLE=""
+CURRENT_SEGMENT_INDEX=""
+CURRENT_CODEX_PID=""
+CURRENT_EVENT_FILE=""
+CURRENT_STDERR_FILE=""
+CURRENT_MESSAGE_FILE=""
+CURRENT_PROMPT_FILE=""
+CURRENT_CONTEXT_FILE=""
+CURRENT_ACTIVITY_FILE=""
+RUNNER_SIGNAL_HANDLED="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -131,6 +152,14 @@ while [[ $# -gt 0 ]]; do
     --context-soft-threshold)
       CONTEXT_SOFT_THRESHOLD_PCT="$2"
       shift 2
+      ;;
+    --idle-notice)
+      TERMINAL_IDLE_NOTICE_SECONDS="$2"
+      shift 2
+      ;;
+    --raw-terminal-output)
+      RAW_TERMINAL_OUTPUT="1"
+      shift
       ;;
     --quiet)
       VERBOSE_TERMINAL_OUTPUT="0"
@@ -196,6 +225,7 @@ RUNNER_PROMPT_RENDERER="$REPO_ROOT/scripts/render-runner-prompt.py"
 TASK_PROMPT_TEMPLATE="$PROMPT_DIR/task-execution.md"
 RESUME_PROMPT_TEMPLATE="$PROMPT_DIR/task-resume.md"
 TASK_REGISTRY_TOOL="$REPO_ROOT/scripts/task-registry.py"
+TERMINAL_RENDERER="$REPO_ROOT/scripts/render_codex_stream.py"
 
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 command -v "$CODEX_BIN" >/dev/null 2>&1 || { echo "codex executable not found: $CODEX_BIN" >&2; exit 1; }
@@ -204,6 +234,7 @@ command -v "$CODEX_BIN" >/dev/null 2>&1 || { echo "codex executable not found: $
 [[ -f "$TASK_PROMPT_TEMPLATE" ]] || { echo "Task prompt template not found: $TASK_PROMPT_TEMPLATE" >&2; exit 1; }
 [[ -f "$RESUME_PROMPT_TEMPLATE" ]] || { echo "Resume prompt template not found: $RESUME_PROMPT_TEMPLATE" >&2; exit 1; }
 [[ -f "$TASK_REGISTRY_TOOL" ]] || { echo "Task registry tool not found: $TASK_REGISTRY_TOOL" >&2; exit 1; }
+[[ -f "$TERMINAL_RENDERER" ]] || { echo "Terminal renderer not found: $TERMINAL_RENDERER" >&2; exit 1; }
 python3 - "$CONTEXT_THRESHOLD_PCT" "$CONTEXT_SOFT_THRESHOLD_PCT" "$CONTEXT_POLL_SECONDS" <<'PY'
 import sys
 
@@ -226,17 +257,83 @@ RUNLOG_FILE="$RUNS_DIR/RUNLOG.ndjson"
 STATE_FILE="$RUNS_DIR/STATE.json"
 
 run_codex_segment() {
-  local event_file="$1"
-  local stderr_file="$2"
-  shift 2
+  local task_ref="$1"
+  local segment_index="$2"
+  local event_file="$3"
+  local stderr_file="$4"
+  local activity_file="$5"
+  shift 5
 
   if [[ "$VERBOSE_TERMINAL_OUTPUT" == "1" ]]; then
-    "$CODEX_BIN" "$@" \
-      > >(tee "$event_file") \
-      2> >(tee "$stderr_file" >&2)
+    if [[ "$RAW_TERMINAL_OUTPUT" == "1" ]]; then
+      "$CODEX_BIN" "$@" \
+        > >(tee "$event_file") \
+        2> >(tee "$stderr_file" >&2)
+    else
+      "$CODEX_BIN" "$@" \
+        > >(python3 "$TERMINAL_RENDERER" --stream events --output "$event_file" --activity-file "$activity_file" --task-ref "$task_ref" --segment "$segment_index") \
+        2> >(python3 "$TERMINAL_RENDERER" --stream stderr --output "$stderr_file" --activity-file "$activity_file" --task-ref "$task_ref" --segment "$segment_index" >&2)
+    fi
   else
     "$CODEX_BIN" "$@" > "$event_file" 2> "$stderr_file"
   fi
+}
+
+format_duration() {
+  local total="$1"
+  local minutes seconds hours
+  if (( total < 60 )); then
+    printf '%ss' "$total"
+    return
+  fi
+  if (( total < 3600 )); then
+    minutes=$((total / 60))
+    seconds=$((total % 60))
+    printf '%sm%02ds' "$minutes" "$seconds"
+    return
+  fi
+  hours=$((total / 3600))
+  minutes=$(((total % 3600) / 60))
+  seconds=$((total % 60))
+  printf '%sh%02dm%02ds' "$hours" "$minutes" "$seconds"
+}
+
+monitor_terminal_idle() {
+  local task_uid="$1"
+  local task_display_id="$2"
+  local segment_index="$3"
+  local activity_file="$4"
+  local codex_pid="$5"
+  local last_notice_second="-1"
+
+  local task_ref="$task_uid"
+  if [[ -n "$task_display_id" ]]; then
+    task_ref="${task_display_id}|${task_uid}"
+  fi
+
+  while kill -0 "$codex_pid" >/dev/null 2>&1; do
+    sleep "$TERMINAL_IDLE_POLL_SECONDS"
+
+    local now last_activity idle_for
+    now="$(date +%s)"
+    if [[ -f "$activity_file" ]]; then
+      last_activity="$(cat "$activity_file" 2>/dev/null || printf '%s' "$now")"
+    else
+      last_activity="$now"
+    fi
+    idle_for=$((now - last_activity))
+
+    if (( idle_for < TERMINAL_IDLE_NOTICE_SECONDS )); then
+      continue
+    fi
+    if [[ "$idle_for" == "$last_notice_second" ]]; then
+      continue
+    fi
+
+    last_notice_second="$idle_for"
+    printf '[codex-runner][idle][task=%s][segment=%s][no-new-output-for=%s] Process still running.\n' \
+      "$task_ref" "$segment_index" "$(format_duration "$idle_for")" >&2
+  done
 }
 
 resolve_target_repo_root() {
@@ -379,8 +476,82 @@ for task in data.get('tasks', []):
     task.pop('runner_pid', None)
     runner_state = task.setdefault('runner_state', {})
     runner_state['resume_pending'] = False
+    runner_state['paused'] = False
     if summary:
         task['last_summary'] = summary
+    break
+
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PY
+}
+
+pause_task_for_context_review() {
+  local task_uid="$1"
+  local segment_index="$2"
+  local session_id="$3"
+  local event_file="$4"
+  local stderr_file="$5"
+  local message_file="$6"
+  local prompt_file="$7"
+  local context_file="$8"
+  local used_tokens="$9"
+  local context_window="${10}"
+  local remaining_tokens="${11}"
+  local used_pct="${12}"
+  local exit_code="${13}"
+
+  python3 - "$TASKS_FILE" "$task_uid" "$segment_index" "$session_id" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "$CONTEXT_THRESHOLD_PCT" "$exit_code" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+(path, task_uid, segment_index, session_id, event_file, stderr_file, message_file,
+ prompt_file, context_file, used_tokens, context_window, remaining_tokens, used_pct,
+ threshold_pct, exit_code) = sys.argv[1:]
+
+now = datetime.now(timezone.utc).isoformat()
+snapshot = {
+    "observed_at": now,
+    "used_tokens": int(used_tokens),
+    "context_window": int(context_window),
+    "remaining_tokens": int(remaining_tokens),
+    "used_pct": float(used_pct),
+}
+
+with open(path, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+for task in data.get('tasks', []):
+    if task.get('uid') != task_uid:
+        continue
+    task['status'] = 'running'
+    task['finished_at'] = now
+    task['last_exit_code'] = int(exit_code)
+    task.pop('runner_pid', None)
+    runner_state = task.setdefault('runner_state', {})
+    runner_state.update({
+        "segment": int(segment_index),
+        "session_id": session_id,
+        "event_file": event_file,
+        "stderr_file": stderr_file,
+        "message_file": message_file,
+        "prompt_file": prompt_file,
+        "context_file": context_file,
+        "resume_pending": True,
+        "paused": True,
+        "last_pause_reason": "context_threshold_review",
+        "last_pause_message": "Hard context threshold reached. Review the task report and rerun codex-runner.sh to resume the saved session.",
+        "paused_at": now,
+        "last_context_snapshot": snapshot,
+        "last_context_checkpoint": {
+            "reason": "context_threshold_reached",
+            "checkpointed_at": now,
+            "threshold_pct": float(threshold_pct),
+            **snapshot,
+        },
+    })
     break
 
 with open(path, 'w', encoding='utf-8') as f:
@@ -454,7 +625,61 @@ for task in data.get('tasks', []):
     runner_state['paused_at'] = now
     break
 
-  with open(path, 'w', encoding='utf-8') as f:
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PY
+}
+
+reset_task_after_runner_interrupt() {
+  local task_uid="$1"
+  local reason="$2"
+  local message="$3"
+  local event_file="$4"
+  local stderr_file="$5"
+  local message_file="$6"
+  local prompt_file="$7"
+  local context_file="$8"
+
+  python3 - "$TASKS_FILE" "$task_uid" "$reason" "$message" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+(path, task_uid, reason, message, event_file, stderr_file,
+ message_file, prompt_file, context_file) = sys.argv[1:]
+now = datetime.now(timezone.utc).isoformat()
+
+with open(path, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+for task in data.get('tasks', []):
+    if task.get('uid') != task_uid:
+        continue
+    if task.get('status') == 'running':
+        task['status'] = 'pending'
+    attempts = int(task.get('attempts', 0))
+    if attempts > 0:
+        task['attempts'] = attempts - 1
+    task['finished_at'] = now
+    task['last_exit_code'] = 130
+    task.pop('runner_pid', None)
+    runner_state = task.setdefault('runner_state', {})
+    runner_state.update({
+        "resume_pending": False,
+        "paused": True,
+        "last_pause_reason": reason,
+        "last_pause_message": message,
+        "paused_at": now,
+        "event_file": event_file,
+        "stderr_file": stderr_file,
+        "message_file": message_file,
+        "prompt_file": prompt_file,
+        "context_file": context_file,
+    })
+    break
+
+with open(path, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2)
     f.write('\n')
 PY
@@ -471,6 +696,45 @@ tasks = data.get('tasks', [])
 print("1" if tasks and all(task.get("status") == "done" for task in tasks) else "0")
 PY
 }
+
+handle_runner_signal() {
+  local signal_name="$1"
+  local exit_code="130"
+  if [[ "$signal_name" == "TERM" ]]; then
+    exit_code="143"
+  fi
+
+  if [[ "$RUNNER_SIGNAL_HANDLED" == "1" ]]; then
+    exit "$exit_code"
+  fi
+  RUNNER_SIGNAL_HANDLED="1"
+
+  set +e
+
+  if [[ -n "$CURRENT_CODEX_PID" ]]; then
+    kill -TERM "$CURRENT_CODEX_PID" >/dev/null 2>&1 || true
+  fi
+
+  if [[ -n "$CURRENT_TASK_UID" ]]; then
+    reset_task_after_runner_interrupt \
+      "$CURRENT_TASK_UID" \
+      "runner_interrupted_by_user" \
+      "Runner interrupted by user signal. Task restored to pending for a clean restart." \
+      "$CURRENT_EVENT_FILE" \
+      "$CURRENT_STDERR_FILE" \
+      "$CURRENT_MESSAGE_FILE" \
+      "$CURRENT_PROMPT_FILE" \
+      "$CURRENT_CONTEXT_FILE"
+    printf '[codex-runner] Interrupted. Restored %s to pending for restart.\n' "$CURRENT_TASK_UID" >&2
+  else
+    printf '[codex-runner] Interrupted.\n' >&2
+  fi
+
+  exit "$exit_code"
+}
+
+trap 'handle_runner_signal INT' INT
+trap 'handle_runner_signal TERM' TERM
 
 run_final_status_report() {
   local target_repo="$1"
@@ -616,6 +880,36 @@ with open(path, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2)
     f.write('\n')
 PY
+}
+
+mark_task_segment_started() {
+  local task_uid="$1"
+  local segment_index="$2"
+  local event_file="$3"
+  local stderr_file="$4"
+  local message_file="$5"
+  local prompt_file="$6"
+  local context_file="$7"
+
+  local patch_json
+  patch_json=$(python3 - "$segment_index" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" <<'PY'
+import json
+import sys
+
+segment_index, event_file, stderr_file, message_file, prompt_file, context_file = sys.argv[1:]
+print(json.dumps({
+    "segment": int(segment_index),
+    "event_file": event_file,
+    "stderr_file": stderr_file,
+    "message_file": message_file,
+    "prompt_file": prompt_file,
+    "context_file": context_file,
+    "resume_pending": False,
+    "paused": False,
+}))
+PY
+)
+  update_task_runner_state "$task_uid" "$patch_json"
 }
 
 validate_task_uids() {
@@ -951,8 +1245,7 @@ monitor_context_window() {
   local report_dir="$9"
   local codex_pid="${10}"
   local segment_index="${11}"
-  local restart_request_file="${12}"
-  local next_restart_count="${13}"
+  local next_restart_count="${12}"
 
   local known_session_id=""
   local last_logged_tokens=""
@@ -1133,6 +1426,10 @@ print(json.dumps({
     "context_file": context_file,
     "restart_count": int(restart_count),
     "resume_pending": True,
+    "paused": True,
+    "last_pause_reason": "context_threshold_review",
+    "last_pause_message": "Hard context threshold reached. Review the task report and rerun codex-runner.sh to resume the saved session.",
+    "paused_at": now,
     "last_context_snapshot": snapshot,
     "last_context_checkpoint": {
         "reason": "context_threshold_reached",
@@ -1169,11 +1466,10 @@ PY
 
     update_task_runner_state "$task_uid" "$checkpoint_patch_json"
     append_context_log "$context_file" "$checkpoint_log_json"
-    append_report_event "$report_dir" "codex_runner" "runner" "context_checkpoint_requested" "Hard context threshold reached. Runner is checkpointing and will resume the same task session."
+    append_report_event "$report_dir" "codex_runner" "runner" "context_review_required" "Hard context threshold reached. Runner is pausing for human review; rerun codex-runner.sh to resume the saved session."
     update_report_context "$report_dir" "$session_id" "$used_tokens" "$context_window" "$remaining_tokens" "$used_pct" "hard_threshold_reached" "1"
-    print_context_terminal_line "$task_uid" "$task_display_id" "$segment_index" "hard-threshold" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "Hard threshold reached. Runner is checkpointing and resuming the session."
+    print_context_terminal_line "$task_uid" "$task_display_id" "$segment_index" "hard-threshold" "$used_pct" "$used_tokens" "$remaining_tokens" "$context_window" "Hard threshold reached. Runner is pausing for review; rerun the runner to resume."
     write_running_state "$task_uid" "$task_display_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$session_id" "$snapshot_json"
-    printf '%s\n' "$checkpoint_patch_json" > "$restart_request_file"
     kill -TERM "$codex_pid" >/dev/null 2>&1 || true
     return 0
   done
@@ -1282,8 +1578,8 @@ PY
     message_file="$RUNS_DIR/messages/${task_uid}_${task_timestamp}_part${segment_label}.txt"
     prompt_file="$RUNS_DIR/prompts/${task_uid}_${task_timestamp}_part${segment_label}.txt"
     context_file="$RUNS_DIR/context/${task_uid}_${task_timestamp}_part${segment_label}.ndjson"
-    restart_request_file="${context_file%.ndjson}.restart.json"
-    rm -f "$restart_request_file"
+    activity_file="$RUNS_DIR/context/${task_uid}_${task_timestamp}_part${segment_label}.activity"
+    printf '%s\n' "$(date +%s)" > "$activity_file"
 
     if [[ -n "$resume_session_id" ]]; then
       build_resume_prompt "$task_json" "$report_dir" "$summary_json_file" "$conversation_file" "$decisions_file" "$report_helper" > "$prompt_file"
@@ -1301,29 +1597,53 @@ PY
     prompt_files+=("$prompt_file")
     context_files+=("$context_file")
 
+    mark_task_segment_started "$task_uid" "$segment_index" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file"
     write_running_state "$task_uid" "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$segment_index" "$resume_session_id" "null"
 
+    CURRENT_TASK_UID="$task_uid"
+    CURRENT_TASK_ID="$task_id"
+    CURRENT_TASK_TITLE="$task_title"
+    CURRENT_SEGMENT_INDEX="$segment_index"
+    CURRENT_EVENT_FILE="$event_file"
+    CURRENT_STDERR_FILE="$stderr_file"
+    CURRENT_MESSAGE_FILE="$message_file"
+    CURRENT_PROMPT_FILE="$prompt_file"
+    CURRENT_CONTEXT_FILE="$context_file"
+    CURRENT_ACTIVITY_FILE="$activity_file"
+
     set +e
-    run_codex_segment "$event_file" "$stderr_file" "${codex_args[@]}" < "$prompt_file" &
+    run_codex_segment "${task_id:-$task_uid}" "$segment_index" "$event_file" "$stderr_file" "$activity_file" "${codex_args[@]}" < "$prompt_file" &
     codex_pid=$!
+    CURRENT_CODEX_PID="$codex_pid"
 
     monitor_pid=""
+    idle_monitor_pid=""
     if [[ "$(python3 - "$CONTEXT_THRESHOLD_PCT" <<'PY'
 import sys
 print("1" if float(sys.argv[1]) > 0 else "0")
 PY
 )" == "1" ]]; then
       next_restart_count=$((context_restart_count + 1))
-      monitor_context_window "$task_uid" "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$report_dir" "$codex_pid" "$segment_index" "$restart_request_file" "$next_restart_count" &
+      monitor_context_window "$task_uid" "$task_id" "$task_title" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" "$report_dir" "$codex_pid" "$segment_index" "$next_restart_count" &
       monitor_pid=$!
+    fi
+
+    if [[ "$VERBOSE_TERMINAL_OUTPUT" == "1" ]]; then
+      monitor_terminal_idle "$task_uid" "$task_id" "$segment_index" "$activity_file" "$codex_pid" &
+      idle_monitor_pid=$!
     fi
 
     wait "$codex_pid"
     exit_code=$?
+    CURRENT_CODEX_PID=""
 
     if [[ -n "$monitor_pid" ]]; then
       kill "$monitor_pid" >/dev/null 2>&1 || true
       wait "$monitor_pid" >/dev/null 2>&1 || true
+    fi
+    if [[ -n "$idle_monitor_pid" ]]; then
+      kill "$idle_monitor_pid" >/dev/null 2>&1 || true
+      wait "$idle_monitor_pid" >/dev/null 2>&1 || true
     fi
     set -e
 
@@ -1337,16 +1657,43 @@ PY
     last_prompt_file="$prompt_file"
     last_context_file="$context_file"
 
-    if [[ -f "$restart_request_file" ]]; then
-      resume_session_id="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("session_id", ""))' < "$restart_request_file")"
-      if [[ -z "$resume_session_id" ]]; then
-        resume_session_id="$last_session_id"
-      fi
-      last_session_id="$resume_session_id"
-      context_restart_count=$((context_restart_count + 1))
-      segment_index=$((segment_index + 1))
-      task_json="$(read_task_json "$task_uid")"
-      continue
+    task_json="$(read_task_json "$task_uid")"
+    if [[ -n "$task_json" && "$(python3 -c 'import json,sys; runner_state=(json.loads(sys.stdin.read()).get("runner_state") or {}); print("1" if runner_state.get("resume_pending") and runner_state.get("last_pause_reason") == "context_threshold_review" else "0")' <<< "$task_json")" == "1" ]]; then
+      context_snapshot_json="$(snapshot_context_usage "$event_file")"
+      pause_task_for_context_review "$task_uid" "$segment_index" "$last_session_id" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" \
+        "$(python3 -c 'import json,sys; snapshot=json.loads(sys.stdin.read()); print(snapshot.get("used_tokens", 0))' <<< "$context_snapshot_json")" \
+        "$(python3 -c 'import json,sys; snapshot=json.loads(sys.stdin.read()); print(snapshot.get("context_window", 0))' <<< "$context_snapshot_json")" \
+        "$(python3 -c 'import json,sys; snapshot=json.loads(sys.stdin.read()); print(snapshot.get("remaining_tokens", 0))' <<< "$context_snapshot_json")" \
+        "$(python3 -c 'import json,sys; snapshot=json.loads(sys.stdin.read()); print(snapshot.get("used_pct", 0))' <<< "$context_snapshot_json")" \
+        "$exit_code"
+      append_report_event "$report_dir" "codex_runner" "runner" "context_review_paused" "Runner paused this task for human review after hitting the hard context threshold. Rerun codex-runner.sh to resume the saved session."
+      state_json=$(python3 - "$task_uid" "$task_id" "$task_title" "$segment_index" "$last_session_id" "$event_file" "$stderr_file" "$message_file" "$prompt_file" "$context_file" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+task_uid, task_id, task_title, segment_index, session_id, event_file, stderr_file, message_file, prompt_file, context_file = sys.argv[1:]
+print(json.dumps({
+  "status": "paused_review",
+  "timestamp": datetime.now(timezone.utc).isoformat(),
+  "task_uid": task_uid,
+  "task_id": task_id,
+  "title": task_title,
+  "segment": int(segment_index),
+  "session_id": session_id or None,
+  "reason": "context_threshold_reached",
+  "message": "Hard context threshold reached. Review the task report and rerun codex-runner.sh to resume the saved session.",
+  "event_file": event_file,
+  "stderr_file": stderr_file,
+  "message_file": message_file,
+  "prompt_file": prompt_file,
+  "context_file": context_file,
+}))
+PY
+)
+      write_state "$state_json"
+      printf '[codex-runner] Hard context threshold reached for %s. Review the task report and rerun codex-runner.sh to resume the saved session.\n' "$task_uid" >&2
+      exit 0
     fi
 
     break
@@ -1458,6 +1805,18 @@ print(json.dumps(record))
 PY
 )
   append_runlog "$runlog_json"
+
+  CURRENT_TASK_UID=""
+  CURRENT_TASK_ID=""
+  CURRENT_TASK_TITLE=""
+  CURRENT_SEGMENT_INDEX=""
+  CURRENT_CODEX_PID=""
+  CURRENT_EVENT_FILE=""
+  CURRENT_STDERR_FILE=""
+  CURRENT_MESSAGE_FILE=""
+  CURRENT_PROMPT_FILE=""
+  CURRENT_CONTEXT_FILE=""
+  CURRENT_ACTIVITY_FILE=""
 
   if [[ "$task_status" == "paused_usage_limit" ]]; then
     exit 0
