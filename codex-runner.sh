@@ -9,13 +9,17 @@ Usage:
 Run queued `TASKS.json` work by repeatedly launching Codex in the selected
 automation mode. The runner picks the next ready task, asks a dispatcher-led
 Codex session to execute it end-to-end, writes run artifacts under
-`../log-socialpredict-tasks/.codex-runs/` when that sibling repo exists, captures Codex output into per-task log files there, and can
+`../log-socialpredict-tasks/.codex-runs/` when that logs repo exists, captures Codex output into per-task log files there, and can
 checkpoint/resume long sessions before the active context window gets too full.
 
 Options:
-  --repo PATH            Repository root. Default: current directory
+  --control-repo PATH    Control repo root for runner assets. Default: current directory
+  --repo PATH            Deprecated alias for --control-repo
   --tasks PATH           Task file. Default: <repo>/TASKS.json
-  --runs-dir PATH        Run artifact directory. Default: sibling log repo .codex-runs when available, else <repo>/.codex-runs
+  --logs-repo PATH       Path to the logs repo checkout. Default: ../log-socialpredict-tasks
+                         when that repo exists beside the control repo.
+  --runs-dir PATH        Run artifact directory override. Default: <logs-repo>/.codex-runs
+                         when the logs repo exists, else <repo>/.codex-runs
   --mode MODE            safe | full-access | yolo. Default: safe
   --sleep SECONDS        Poll interval when no task is ready. Default: 30
   --context-threshold PCT
@@ -41,6 +45,9 @@ Options:
   --dispatcher NAME      Custom dispatcher agent name. Default: software-action-dispatcher-agent
   --prompt-dir PATH      Prompt template directory. Default: <repo>/prompts/codex-runner
   --task-registry PATH   Override the task registry used for UID validation.
+  --target-repo PATH     Path (relative or absolute) to the target repo checkout.
+                         This sets the default final report target. Task execution
+                         still uses each task's `working_dir`.
   --final-report-target PATH
                          Path (relative or absolute) to the target repo used for the final status report. Default: ../socialpredict
   --final-report-path PATH
@@ -59,7 +66,8 @@ Task file:
   configured.
 
 Logs:
-  The runner writes logs under --runs-dir (default: sibling log repo .codex-runs when available, else <repo>/.codex-runs)
+  The runner writes logs under --runs-dir (default: <logs-repo>/.codex-runs
+  when the logs repo exists, else <repo>/.codex-runs)
   and, by default, also mirrors live Codex stdout/stderr to your terminal with
   UTC timestamps on each rendered line.
   Use --quiet to keep the previous fully silent terminal behavior.
@@ -86,6 +94,7 @@ USAGE
 REPO_ROOT="$(pwd)"
 TASKS_FILE=""
 RUNS_DIR=""
+LOGS_REPO=""
 MODE="safe"
 SLEEP_SECONDS="30"
 # Default to 70% used so long-running coordinator/dispatcher sessions keep
@@ -106,6 +115,7 @@ FINAL_REPORT_TARGET_RELATIVE="${FINAL_REPORT_TARGET_RELATIVE:-../socialpredict}"
 FINAL_REPORT_PATH="${FINAL_REPORT_PATH:-.codex-reports/runner-final-status.json}"
 FINAL_REPORT_MESSAGE="${FINAL_REPORT_MESSAGE:-All queued tasks completed.}"
 TERMINAL_RENDERER=""
+TARGET_REPO_OVERRIDE=""
 
 CURRENT_TASK_UID=""
 CURRENT_TASK_ID=""
@@ -122,12 +132,16 @@ RUNNER_SIGNAL_HANDLED="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --repo)
+    --control-repo|--repo)
       REPO_ROOT="$2"
       shift 2
       ;;
     --tasks)
       TASKS_FILE="$2"
+      shift 2
+      ;;
+    --logs-repo)
+      LOGS_REPO="$2"
       shift 2
       ;;
     --runs-dir)
@@ -186,6 +200,10 @@ while [[ $# -gt 0 ]]; do
       TASK_REGISTRY_FILE="$2"
       shift 2
       ;;
+    --target-repo)
+      TARGET_REPO_OVERRIDE="$2"
+      shift 2
+      ;;
     --final-report-target)
       FINAL_REPORT_TARGET_RELATIVE="$2"
       shift 2
@@ -211,10 +229,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 REPO_ROOT="$(cd "$REPO_ROOT" && pwd)"
+if [[ -n "$TARGET_REPO_OVERRIDE" ]]; then
+  FINAL_REPORT_TARGET_RELATIVE="$TARGET_REPO_OVERRIDE"
+fi
 TASKS_FILE="${TASKS_FILE:-$REPO_ROOT/TASKS.json}"
 DEFAULT_RUNS_DIR="$REPO_ROOT/.codex-runs"
-if [[ -d "$REPO_ROOT/../log-socialpredict-tasks" ]]; then
-  DEFAULT_RUNS_DIR="$(cd "$REPO_ROOT/../log-socialpredict-tasks" && pwd)/.codex-runs"
+if [[ -n "$LOGS_REPO" ]]; then
+  LOGS_REPO="$(cd "$LOGS_REPO" && pwd)"
+elif [[ -d "$REPO_ROOT/../log-socialpredict-tasks" ]]; then
+  LOGS_REPO="$(cd "$REPO_ROOT/../log-socialpredict-tasks" && pwd)"
+fi
+if [[ -n "$LOGS_REPO" ]]; then
+  DEFAULT_RUNS_DIR="$LOGS_REPO/.codex-runs"
 fi
 RUNS_DIR="${RUNS_DIR:-$DEFAULT_RUNS_DIR}"
 if [[ -z "$PROMPT_DIR" ]]; then
@@ -231,7 +257,14 @@ TERMINAL_RENDERER="$REPO_ROOT/scripts/render_codex_stream.py"
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 command -v "$CODEX_BIN" >/dev/null 2>&1 || { echo "codex executable not found: $CODEX_BIN" >&2; exit 1; }
 [[ -f "$TASKS_FILE" ]] || { echo "Task file not found: $TASKS_FILE" >&2; exit 1; }
-[[ -f "$RUNNER_PROMPT_RENDERER" ]] || { echo "Prompt renderer not found: $RUNNER_PROMPT_RENDERER" >&2; exit 1; }
+if [[ ! -f "$RUNNER_PROMPT_RENDERER" ]]; then
+  cat >&2 <<EOF
+Prompt renderer not found: $RUNNER_PROMPT_RENDERER
+The runner expects --control-repo (or deprecated --repo) to point at the task/control repo that contains codex-runner assets.
+If you meant the application checkout, use --target-repo for $FINAL_REPORT_TARGET_RELATIVE and keep --control-repo at the current repo.
+EOF
+  exit 1
+fi
 [[ -f "$TASK_PROMPT_TEMPLATE" ]] || { echo "Task prompt template not found: $TASK_PROMPT_TEMPLATE" >&2; exit 1; }
 [[ -f "$RESUME_PROMPT_TEMPLATE" ]] || { echo "Resume prompt template not found: $RESUME_PROMPT_TEMPLATE" >&2; exit 1; }
 [[ -f "$TASK_REGISTRY_TOOL" ]] || { echo "Task registry tool not found: $TASK_REGISTRY_TOOL" >&2; exit 1; }
