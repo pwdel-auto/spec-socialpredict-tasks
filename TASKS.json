@@ -10,7 +10,7 @@
       "uid": "019dae73-2ffa-78b9-bf6e-dd7e33c407dd",
       "id": "API-001",
       "title": "W04 API: Establish route, handler, and OpenAPI drift baseline",
-      "status": "done",
+      "status": "pending",
       "prompt": "Create the first feedback slice for the API sweep by inventorying implemented backend routes against the current OpenAPI contract. Treat `backend/server/server.go`, touched handlers, DTOs, and handler tests as the source of truth, then compare them with `backend/docs/openapi.yaml` and `backend/docs/API-ISSUES.md`. Record mismatches by route, method, request shape, response shape, status code, auth requirement, and error/reason behavior. Fix only narrow obvious documentation drift needed to make the baseline truthful; do not redesign routes or response envelopes in this task.",
       "acceptance_criteria": [
         "Implemented routes are inventoried against `backend/docs/openapi.yaml` with mismatches grouped by endpoint area.",
@@ -42,7 +42,7 @@
       ],
       "working_dir": "../socialpredict/backend",
       "depends_on": [],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -51,32 +51,13 @@
         "Use `software-planner-agent` posture: this is the first useful feedback slice, not a broad rewrite.",
         "Use `software-action-openapi-contract-agent` and API conformance skills for route/spec comparison.",
         "Source-of-truth order: `server.go`, handlers/DTOs/tests, `docs/openapi.yaml`, then `API-ISSUES.md`."
-      ],
-      "started_at": "2026-04-23T04:02:11.724354+00:00",
-      "finished_at": "2026-04-23T04:16:18.463291+00:00",
-      "last_exit_code": 0,
-      "runner_state": {
-        "segment": 1,
-        "session_id": "019db880-a5c3-75b3-adac-84e685e14e8f",
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2ffa-78b9-bf6e-dd7e33c407dd_20260423T040211Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2ffa-78b9-bf6e-dd7e33c407dd_20260423T040211Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2ffa-78b9-bf6e-dd7e33c407dd_20260423T040211Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2ffa-78b9-bf6e-dd7e33c407dd_20260423T040211Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2ffa-78b9-bf6e-dd7e33c407dd_20260423T040211Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "last_pause_reason": "runner_interrupted_by_user",
-        "last_pause_message": "Runner interrupted by user. Task restored to pending for a clean restart.",
-        "paused_at": "2026-04-23T03:49:28+00:00"
-      },
-      "last_resumed_at": "2026-04-23T03:41:56.070850+00:00",
-      "last_summary": "Updated [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml:47) to include the live `/openapi.yaml` endpoint and the legacy `/v0/markets/active|closed|resolved` aliases, then updated [API-ISSUES.md](/workspace/socialpredict/backend/docs/API-ISSUES.md:35) with the first grouped drift baseline from live code: auth drift, request-shape drift, response/error-shape drift, status-code drift, and content-type drift by endpoint area. I treated routed code and `SecurityMiddleware()` behavior as the source of truth, and kept the spec edits narrow instead of rewriting every stale security/error block in one pass. The canonical report was updated in [summary.json](/workspace/socialpredict/.codex-reports/tasks/019dae73-2ffa-78b9-bf6e-dd7e33c407dd/summary.json:1).\n\n- `task_uid:` `019dae73-2ffa-78b9-bf6e-dd7e33c407dd`\n- `task_id:` `API-001`\n- `status:` `completed`\n- `files_changed:` [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml:47), [API-ISSUES.md](/workspace/socialpredict/backend/docs/API-ISSUES.md:35)\n- `checks_run:` `GOCACHE=/tmp/socialpredict-gocache GOMODCACHE=/tmp/socialpredict-gomodcache bash /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-api-contract-drift-control/scripts/check_api_contract_sync.sh /workspace/socialpredict` passed\n- `checks_run:` `GOCACHE=/tmp/socialpredict-gocache GOMODCACHE=/tmp/socialpredict-gomodcache bash /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-openapi-kin-conformance/scripts/run_kin_openapi_conformance.sh /workspace/socialpredict` loaded and validated the spec, then failed on 41 pre-existing missing `operationId` fields\n- `follow_ups:` decide whether `/swagger`, `/swagger/`, and `/v0/marketprojection/{marketId}/{amount}/{outcome}/` belong in canonical OpenAPI\n- `follow_ups:` reconcile `bearerAuth` annotations with the current public-read implementation for Config, Metrics, Markets read endpoints, and public Users read endpoints\n- `follow_ups:` fix the `/v0/markets/{id}/projection` route/handler mismatch or narrow the contract to the legacy projection route\n- `follow_ups:` normalize remaining plain-text error/status behavior, or document it explicitly, especially middleware `429`s, metrics `500`s, market parse/auth failures, and portfolio missing-user handling"
+      ]
     },
     {
       "uid": "019dae73-2ffb-7463-bd2c-a85943d8e3ed",
       "id": "API-002",
       "title": "W04 API: Define stable reason vocabulary and response-boundary helpers",
-      "status": "done",
+      "status": "pending",
       "prompt": "Prepare the API/auth contract cleanup by establishing a small initial public `reason` vocabulary before endpoint-area sweeps proceed. Define client-visible reason strings for the common failure classes the W04 queue depends on, including validation, authentication-required, authorization-denied, password-change-required, not-found, market/business-rule failures, and internal fallback failures. Publish where each reason should be used, preferably as constants or equivalent boundary-owned helpers, and document the vocabulary in OpenAPI schemas or route-visible docs touched by this task. Reuse existing response helpers where practical and add narrow boundary helpers only where they remove ad hoc raw error strings from HTTP handlers. Keep business logic in domain services and keep handlers as transport mappers. Update focused tests for the chosen helper behavior and representative handler-level mappings.",
       "acceptance_criteria": [
         "A small stable initial public `reason` vocabulary exists for the API sweep's common failure classes and is expressed through constants or equivalent boundary-owned helpers.",
@@ -108,7 +89,7 @@
       "depends_on": [
         "019dae73-2ffa-78b9-bf6e-dd7e33c407dd"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -118,28 +99,13 @@
         "Do not proceed to endpoint-area sweeps by improvising route-specific reason strings; establish the initial shared list first. Example candidates include `validation_failed`, `authentication_required`, `authorization_denied`, `password_change_required`, `not_found`, `market_closed`, `insufficient_balance`, `invalid_outcome`, `no_position`, and `internal_error`, but final names should follow repo style and implemented behavior.",
         "Apply envelope direction only where the current route behavior can be safely tightened without a flag-day API migration.",
         "Preserve public/private model boundaries in API responses."
-      ],
-      "started_at": "2026-04-23T04:16:18.556299+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2ffb-7463-bd2c-a85943d8e3ed_20260423T041618Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2ffb-7463-bd2c-a85943d8e3ed_20260423T041618Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2ffb-7463-bd2c-a85943d8e3ed_20260423T041618Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2ffb-7463-bd2c-a85943d8e3ed_20260423T041618Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2ffb-7463-bd2c-a85943d8e3ed_20260423T041618Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db88d-91b7-7e61-8b33-a5749dcd3e96"
-      },
-      "finished_at": "2026-04-23T05:00:13.157673+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Established the initial shared public reason layer in `backend/handlers`: canonical reason constants live in `handlers/reasons.go`, shared auth/validation mapping helpers live in `handlers/failurereason`, the hotspot handlers now map onto that vocabulary, and `backend/docs/openapi.yaml` now documents the reasons with route-level examples. I also updated the canonical task report under `/workspace/socialpredict/.codex-reports/tasks/019dae73-2ffb-7463-bd2c-a85943d8e3ed`.\n\nAssumption: on routes touched by API-002, `NOT_FOUND` is now the canonical shared not-found reason; legacy `USER_NOT_FOUND` and `MARKET_NOT_FOUND` remain only on unswept endpoints.\n\n- `task_uid`: `019dae73-2ffb-7463-bd2c-a85943d8e3ed`\n- `task_id`: `API-002`\n- `status`: `completed`\n- `files_changed`: `backend/handlers/reasons.go`, `backend/handlers/failurereason/failurereason.go`, `backend/handlers/failurereason/failurereason_test.go`, `backend/handlers/envelope.go`, `backend/handlers/bets/buying/buypositionhandler.go`, `backend/handlers/bets/buying/buypositionhandler_test.go`, `backend/handlers/bets/selling/sellpositionhandler.go`, `backend/handlers/bets/selling/sellpositionhandler_test.go`, `backend/handlers/cms/homepage/http/handler.go`, `backend/handlers/cms/homepage/http/handler_test.go`, `backend/handlers/positions/positionshandler.go`, `backend/handlers/positions/positionshandler_test.go`, `backend/handlers/users/changepassword.go`, `backend/handlers/users/changepassword_test.go`, `backend/handlers/users/profile_helpers.go`, `backend/handlers/users/profile_handlers_test.go`, `backend/handlers/users/userpositiononmarkethandler.go`, `backend/handlers/users/userpositiononmarkethandler_test.go`, `backend/docs/openapi.yaml`\n- `checks_run`: `run_gofmt.sh /workspace/socialpredict write/check on touched Go files`; `go test ./handlers/failurereason -count=1`; `go test ./handlers/bets/buying -count=1`; `go test ./handlers/bets/selling -count=1`; `go test ./handlers/cms/homepage/http -count=1`; `go test ./handlers/positions -count=1`; `go test ./handlers/users -run Test(ChangePasswordHandler_InvalidTokenReturnsFailureEnvelope|ChangeDescriptionHandler_InvalidTokenReturnsFailureEnvelope|WriteProfileError_SanitizesFailureReasons|WriteProfileError_SanitizesValidationFailure|UserMarketPositionHandlerUnauthorizedWithoutToken)$ -count=1`; `run_boundary_checks.sh /workspace/socialpredict`; `check_api_contract_sync.sh /workspace/socialpredict main`; `run_quality_guardrails.sh /workspace/socialpredict main`\n- `follow_ups`: untouched legacy envelope routes still emit older reason synonyms until later endpoint sweeps migrate them; a full `go test ./handlers/users` still has unrelated pre-existing failures outside this task path (`TestEmojiValidation` and a bets-table setup path), so I kept verification focused on the changed behavior"
+      ]
     },
     {
       "uid": "019dae73-2ffc-7384-8478-1140bc1d7f63",
       "id": "API-003",
       "title": "W04 API: Align auth, password-change, setup, and bootstrap-visible routes",
-      "status": "done",
+      "status": "pending",
       "prompt": "Sweep the auth-adjacent and setup/bootstrap-visible API surface after the runtime/config service work and after API-002 has established the initial public `reason` vocabulary. Verify and, where needed, fix the implemented behavior and OpenAPI contract for login, change-password, must-change-password enforcement, setup/frontend setup, health/docs exposure, and admin add-user behavior. Preserve the current login token contract while documenting and testing server-side password-change gating for authenticated actions. Reuse the shared reason vocabulary for auth, authorization, validation, password-change, not-found, and internal fallback outcomes instead of inventing route-local reason strings.",
       "acceptance_criteria": [
         "Login and change-password routes match the implemented contract in code, tests, and OpenAPI.",
@@ -173,7 +139,7 @@
       "depends_on": [
         "019dae73-2ffb-7463-bd2c-a85943d8e3ed"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -183,28 +149,13 @@
         "Reuse the API-002 public reason vocabulary; if an auth/setup outcome needs a new reason, route it through contract/error review rather than creating an endpoint-local synonym.",
         "Use `software-action-architecture-agent` for auth boundary review if handler/domain ownership becomes unclear.",
         "Keep `/v0/setup` and `/v0/setup/frontend` route semantics stable."
-      ],
-      "started_at": "2026-04-23T05:00:13.240240+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2ffc-7384-8478-1140bc1d7f63_20260423T050013Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2ffc-7384-8478-1140bc1d7f63_20260423T050013Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2ffc-7384-8478-1140bc1d7f63_20260423T050013Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2ffc-7384-8478-1140bc1d7f63_20260423T050013Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2ffc-7384-8478-1140bc1d7f63_20260423T050013Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db8b5-c5bc-7ef1-aee8-4b10323145c7"
-      },
-      "finished_at": "2026-04-23T05:16:42.293905+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Kept the existing login token contract per DP-006, standardized login/admin failure reasons onto the shared API-002 vocabulary, preserved server-side must-change-password gating, and aligned OpenAPI plus tests for setup and docs exposure. The dispatcher agent was spawned as requested, but it did not converge before timeout; I finalized the implementation and canonical summary directly.\n\n- `task_uid`: `019dae73-2ffc-7384-8478-1140bc1d7f63`\n- `task_id`: `API-003`\n- `status`: `completed`\n- `files_changed`: `backend/internal/service/auth/loggin.go`, `backend/internal/service/auth/middleware_test.go`, `backend/handlers/admin/adduser.go`, `backend/handlers/admin/adduser_test.go`, `backend/server/server_test.go`, `backend/docs/openapi.yaml`, `backend/docs/API-ISSUES.md`, `/workspace/socialpredict/.codex-reports/tasks/019dae73-2ffc-7384-8478-1140bc1d7f63/summary.json`\n- `checks_run`: `gofmt -w` on modified Go files; `go test -count=1 ./internal/service/auth`; `go test -count=1 ./handlers/admin`; `go test -count=1 ./handlers/setup`; `go test -count=1 ./server`; `go test -count=1 ./handlers/cms/homepage/http`; `go test -count=1 ./handlers/users -run 'TestChangePasswordHandler|TestPassword'`; second deterministic pass of those focused suites; `go test ./... -run TestOpenAPISpecValidates -count=1`; `go vet ./internal/service/auth ./handlers/admin ./handlers/setup ./server`; `run_boundary_checks.sh /workspace/socialpredict`; `check_api_contract_sync.sh /workspace/socialpredict HEAD`\n- `follow_ups`: Broad `go test -count=1 ./handlers/users` still has unrelated pre-existing failures outside this task scope (`TestEmojiValidation` and a separate missing-`bets`-table path in other user tests)."
+      ]
     },
     {
       "uid": "019dae73-2ffd-7b6e-975d-30e068c747f5",
       "id": "API-004",
       "title": "W04 API: Align markets routes, business outcomes, and Swagger schemas",
-      "status": "done",
+      "status": "pending",
       "prompt": "Sweep the markets API surface end to end after API-002 has established the initial public `reason` vocabulary: create, legacy create alias, list, status filtering, search, details, projected probability, market positions, market bets, and resolution. Verify that handlers stay thin around domain services, business-rule outcomes map to the shared stable public reasons, and `backend/docs/openapi.yaml` documents the implemented request/response/status behavior. Add or update focused handler/domain contract tests where drift is found.",
       "acceptance_criteria": [
         "Markets route request and response schemas in OpenAPI match implemented DTOs and response helpers.",
@@ -236,7 +187,7 @@
       "depends_on": [
         "019dae73-2ffb-7463-bd2c-a85943d8e3ed"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -246,28 +197,13 @@
         "Reuse the API-002 public reason vocabulary for market business-rule outcomes; add new reasons only through the shared contract/error review path.",
         "Keep repository-owned legacy model translation intact; do not leak persistence models into route DTOs.",
         "Treat `POST /v0/create` as a legacy alias if still implemented."
-      ],
-      "started_at": "2026-04-23T05:16:42.375581+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2ffd-7b6e-975d-30e068c747f5_20260423T051642Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2ffd-7b6e-975d-30e068c747f5_20260423T051642Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2ffd-7b6e-975d-30e068c747f5_20260423T051642Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2ffd-7b6e-975d-30e068c747f5_20260423T051642Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2ffd-7b6e-975d-30e068c747f5_20260423T051642Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db8c4-dd7a-7640-99d3-793fb2c973b2"
-      },
-      "finished_at": "2026-04-23T05:45:01.567664+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Aligned the live markets API surface with the shared failure-reason vocabulary and the current DTOs. The routed handlers now emit stable `ReasonResponse` failures, `POST /v0/markets` returns the correct create DTO shape, `/v0/markets/{id}/projection` reads `amount` and `outcome` from query params, market-bets now use `NOT_FOUND` instead of the legacy synonym, and `backend/docs/openapi.yaml` was updated to match the live markets routes and parse cleanly again.\n\n- `task_uid`: `019dae73-2ffd-7b6e-975d-30e068c747f5`\n- `task_id`: `API-004`\n- `status`: `blocked` by a repo-wide OpenAPI conformance issue. The markets sweep itself is implemented and locally verified, but the required `kin-openapi` wrapper fails on many pre-existing missing `operationId` entries across `backend/docs/openapi.yaml`, so the follow-on Schemathesis sign-off could not be run.\n- `files_changed`: `backend/docs/openapi.yaml`, `backend/handlers/markets/handler.go`, `backend/handlers/markets/failure_helpers.go`, `backend/handlers/markets/marketprojectedprobability.go`, `backend/handlers/markets/dto/requests.go`, `backend/handlers/markets/handler_contract_test.go`, `backend/handlers/bets/betshandler.go`, `backend/handlers/bets/betshandler_test.go`\n- `checks_run`: `go test . ./handlers/markets ./handlers/bets -count=1` twice; `run_boundary_checks.sh`; `check_api_contract_sync.sh`; `run_quality_guardrails.sh`; `run_reliability_suite.sh /workspace/socialpredict ./handlers/markets`; `run_kin_openapi_conformance.sh /workspace/socialpredict`\n- `follow_ups`: add `operationId` values across `backend/docs/openapi.yaml`, then rerun the kin-openapi wrapper and Schemathesis runtime conformance for final API-004 sign-off\n\nAssumption: no live `POST /v0/create` legacy alias exists in the current backend routing, so no alias code or spec entry was added for it."
+      ]
     },
     {
       "uid": "019dae73-2ffe-7cae-a31d-e314caba370f",
       "id": "API-005",
       "title": "W04 API: Align bets buy/sell routes and market-bets contract",
-      "status": "done",
+      "status": "pending",
       "prompt": "Sweep the bets API surface after API-002 has established the initial public `reason` vocabulary: buy/place, sell, user betting constraints, market bet history, and related math-backed response behavior. Preserve bets terminology as the current public contract. Align business-rule failures such as insufficient balance, invalid outcome, market closed, no position, and dust-cap outcomes with the shared stable public reasons and OpenAPI schemas. Add or update focused API and domain tests where contract drift is found.",
       "acceptance_criteria": [
         "Bet buy/sell and market-bets OpenAPI operations match implemented requests, responses, auth, and status codes.",
@@ -300,7 +236,7 @@
       "depends_on": [
         "019dae73-2ffd-7b6e-975d-30e068c747f5"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -310,28 +246,13 @@
         "Reuse the API-002 public reason vocabulary for bets business-rule outcomes; do not introduce endpoint-local synonyms for shared failures like insufficient balance, invalid outcome, market closed, or no position.",
         "Keep time-based market enforcement on the server side.",
         "Do not rename tags, paths, or schemas from bets to trades in this wave."
-      ],
-      "started_at": "2026-04-23T05:45:01.650359+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2ffe-7cae-a31d-e314caba370f_20260423T054501Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2ffe-7cae-a31d-e314caba370f_20260423T054501Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2ffe-7cae-a31d-e314caba370f_20260423T054501Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2ffe-7cae-a31d-e314caba370f_20260423T054501Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2ffe-7cae-a31d-e314caba370f_20260423T054501Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db8de-cb5a-7052-89e3-84ba2d1553e7"
-      },
-      "finished_at": "2026-04-23T06:27:34.779969+00:00",
-      "last_exit_code": 0,
-      "last_summary": "task_uid `019dae73-2ffe-7cae-a31d-e314caba370f`  \ntask_id `API-005`  \nstatus `blocked`\n\nAligned the touched bets surface locally and updated the canonical report at [summary.json](/workspace/socialpredict/.codex-reports/tasks/019dae73-2ffe-7cae-a31d-e314caba370f/summary.json). I added focused buy/sell auth-failure mapping coverage in [buypositionhandler_test.go](/workspace/socialpredict/backend/handlers/bets/buying/buypositionhandler_test.go) and [sellpositionhandler_test.go](/workspace/socialpredict/backend/handlers/bets/selling/sellpositionhandler_test.go), and tightened the touched bets OpenAPI entries in [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml) by adding `operationId` to `GET /v0/markets/bets/{marketId}`, `POST /v0/bet`, and `POST /v0/sell`, plus clarifying the `401` and `404` descriptions for buy/sell to match live handler behavior. Assumption: the remaining `operationId` sweep is a repo-wide follow-up outside the intended API-005 bets-only scope.\n\nfiles_changed:\n- `backend/handlers/bets/buying/buypositionhandler_test.go`\n- `backend/handlers/bets/selling/sellpositionhandler_test.go`\n- `backend/docs/openapi.yaml`\n\nchecks_run:\n- `PASS: gofmt -w /workspace/socialpredict/backend/handlers/bets/buying/buypositionhandler_test.go /workspace/socialpredict/backend/handlers/bets/selling/sellpositionhandler_test.go`\n- `PASS x2: GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod go test ./handlers/bets/... ./internal/domain/bets -count=1 -vet=off`\n- `PASS: GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod go test ./... -run TestOpenAPISpecValidates -count=1`\n- `PASS: GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod go vet ./handlers/bets/... ./internal/domain/bets`\n- `PASS: ./.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `BLOCKED: ./.codex/skills/socialpredict-openapi-kin-conformance/scripts/run_kin_openapi_conformance.sh /workspace/socialpredict`\n  Remaining blocker: `backend/docs/openapi.yaml` still has `41` operations without `operationId`, so the required kin-openapi sign-off cannot complete yet.\n\nfollow_ups:\n- Add `operationId` values to the remaining `41` OpenAPI operations in `backend/docs/openapi.yaml`.\n- Rerun `./.codex/skills/socialpredict-openapi-kin-conformance/scripts/run_kin_openapi_conformance.sh /workspace/socialpredict`.\n- After that passes, rerun the API-005 conformance sign-off flow."
+      ]
     },
     {
       "uid": "019dae73-2fff-7116-be2b-996b3468c19f",
       "id": "API-006",
       "title": "W04 API: Align users, positions, portfolio, credit, and financial routes",
-      "status": "done",
+      "status": "pending",
       "prompt": "Sweep user-facing authenticated and public API routes after API-002 has established the initial public `reason` vocabulary, including profile updates, public/private profile payloads, personal links, emoji/display metadata, user positions, portfolio, credit, financial summaries, user markets, and transaction-visible behavior. Preserve public versus private response boundaries, must-change-password enforcement, and domain-owned user business rules. Reuse the shared reason vocabulary for validation, auth, password-change, not-found, and user/account business-rule outcomes. Update OpenAPI and focused tests to match implemented behavior.",
       "acceptance_criteria": [
         "User, position, portfolio, credit, and financial route schemas match actual public/private DTO boundaries.",
@@ -365,7 +286,7 @@
         "019dae73-2ffc-7384-8478-1140bc1d7f63",
         "019dae73-2ffe-7cae-a31d-e314caba370f"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -375,28 +296,13 @@
         "Reuse the API-002 public reason vocabulary; if user/account behavior needs a new public reason, route it through contract/error review rather than creating a route-local synonym.",
         "Known historical handlers/users failures should be rechecked and classified instead of hidden.",
         "Keep transaction/accounting behavior integer-first and domain-owned."
-      ],
-      "started_at": "2026-04-23T06:27:34.862372+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-2fff-7116-be2b-996b3468c19f_20260423T062734Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-2fff-7116-be2b-996b3468c19f_20260423T062734Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-2fff-7116-be2b-996b3468c19f_20260423T062734Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-2fff-7116-be2b-996b3468c19f_20260423T062734Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-2fff-7116-be2b-996b3468c19f_20260423T062734Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db905-c0d6-7ca0-8e76-5833f90032b5"
-      },
-      "finished_at": "2026-04-23T06:47:44.788896+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Spawned `software-action-dispatcher-agent` as requested. Its specialist rollup surfaced the last remaining blocker in `/v0/userposition/{marketId}`; I fixed that, completed the user-route/OpenAPI sweep, reran the focused checks, and updated the canonical report at `/workspace/socialpredict/.codex-reports/tasks/019dae73-2fff-7116-be2b-996b3468c19f`.\n\n`task_uid`: `019dae73-2fff-7116-be2b-996b3468c19f`  \n`task_id`: `API-006`  \n`status`: `completed`\n\n`files_changed`:\n- `backend/handlers/failurereason/{failurereason.go, failurereason_test.go}`\n- `backend/handlers/positions/{dto.go, positionshandler.go, positionshandler_test.go}`\n- `backend/handlers/users/{changepassword.go, financial.go, profile_helpers.go, publicuser.go, publicuser_test.go, userpositiononmarkethandler.go, userpositiononmarkethandler_test.go}`\n- `backend/handlers/users/credit/{usercredit.go, usercredit_test.go}`\n- `backend/handlers/users/privateuser/{privateuser.go, privateuser_test.go}`\n- `backend/handlers/users/publicuser/{portfolio.go, portfolio_test.go}`\n- `backend/docs/openapi.yaml`\n\n`checks_run`:\n- `GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild go test ./handlers/failurereason ./handlers/users ./handlers/users/credit ./handlers/users/publicuser ./handlers/users/privateuser ./handlers/positions ./server .`\n- `GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild go test ./handlers/users -run Test(GetPublicUserHandlerReturnsPublicUser|GetPublicUserHandlerNotFound|GetPublicUserHandlerInternalError|GetUserFinancialHandlerSuccess|GetUserFinancialHandlerUserNotFound|GetUserFinancialHandlerInternalError|ChangeDescriptionHandler_InvalidTokenReturnsFailureEnvelope|ChangeDescriptionHandler_SuccessReturnsEnvelope|WriteProfileError_SanitizesFailureReasons|ChangePasswordHandler_InvalidTokenReturnsFailureEnvelope|ChangePasswordHandler_SuccessResponseEnvelope|UserMarketPositionHandlerReturnsUserPosition|UserMarketPositionHandlerUnauthorizedWithoutToken)$`\n- `GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild go test ./handlers/failurereason ./handlers/users/credit ./handlers/users/publicuser ./handlers/users/privateuser ./handlers/positions ./server .`\n- `GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `BASE_REF=main GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-api-contract-drift-control/scripts/check_api_contract_sync.sh /workspace/socialpredict main`\n- `BASE_REF=main GOMODCACHE=/workspace/.cache/socialpredict-gomod GOPATH=/workspace/.cache/socialpredict-gopath GOCACHE=/workspace/.cache/socialpredict-gobuild /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-code-quality-guardrails/scripts/run_quality_guardrails.sh /workspace/socialpredict main`\n\n`follow_ups`:\n- Broad `socialpredict/handlers/users` still has a pre-existing unrelated failure: `TestEmojiValidation/Text_with_HTML` expects HTML-tagged emoji text to pass, while the current sanitizer rejects it as invalid emoji format.\n\nAssumption made: the overlapping dirty worktree edits under the API-006 touched paths were part of this queued task, so I preserved them and finished on top rather than reverting anything."
+      ]
     },
     {
       "uid": "019dae73-3000-7761-bf58-e81d3b70e8a6",
       "id": "API-007",
       "title": "W04 API: Align analytics, stats, metrics, leaderboard, and CMS/home routes",
-      "status": "done",
+      "status": "pending",
       "prompt": "Sweep the remaining reporting and content-facing backend routes after API-002 has established the initial public `reason` vocabulary: stats, system metrics, global and market leaderboards, analytics-backed positions where not covered by user routes, CMS/homepage content, and root/home handlers. Verify that these routes use current response helpers, service-backed configuration where applicable, shared public reasons for route-visible failures, and OpenAPI schemas that match implemented payloads. Add or update focused tests around response shape and error behavior.",
       "acceptance_criteria": [
         "Stats, metrics, leaderboard, CMS, and home route OpenAPI entries match implemented behavior.",
@@ -430,7 +336,7 @@
       "depends_on": [
         "019dae73-2ffb-7463-bd2c-a85943d8e3ed"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -439,28 +345,13 @@
         "This is the stop-and-review point for route coverage before global conformance work.",
         "Reuse the API-002 public reason vocabulary for reporting/content failures where those routes expose reason-bearing responses.",
         "Do not revive stale historical API docs as source of truth when current code differs."
-      ],
-      "started_at": "2026-04-23T06:47:44.870389+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-3000-7761-bf58-e81d3b70e8a6_20260423T064744Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-3000-7761-bf58-e81d3b70e8a6_20260423T064744Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-3000-7761-bf58-e81d3b70e8a6_20260423T064744Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-3000-7761-bf58-e81d3b70e8a6_20260423T064744Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-3000-7761-bf58-e81d3b70e8a6_20260423T064744Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db918-3735-77a3-a52a-f0dcae5bb285"
-      },
-      "finished_at": "2026-04-23T07:04:13.460530+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Normalized the reporting/content route sweep so the touched API-007 handlers and spec now agree on the shared API contract: stats uses the shared `INTERNAL_ERROR` reason, system metrics and global leaderboard now return shared success/failure envelopes, `/v0/home` uses the shared home envelope, CMS public content has explicit not-found coverage, and the touched OpenAPI paths/schemas were synchronized in [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml:149), [statshandler.go](/workspace/socialpredict/backend/handlers/stats/statshandler.go:43), [getsystemmetrics.go](/workspace/socialpredict/backend/handlers/metrics/getsystemmetrics.go:10), [getgloballeaderboard.go](/workspace/socialpredict/backend/handlers/metrics/getgloballeaderboard.go:10), [home.go](/workspace/socialpredict/backend/handlers/home.go:7), and the focused tests under [home_test.go](/workspace/socialpredict/backend/handlers/home_test.go:10), [getsystemmetrics_test.go](/workspace/socialpredict/backend/handlers/metrics/getsystemmetrics_test.go:29), [getgloballeaderboard_test.go](/workspace/socialpredict/backend/handlers/metrics/getgloballeaderboard_test.go:45), [statshandler_test.go](/workspace/socialpredict/backend/handlers/stats/statshandler_test.go:15), and [handler_test.go](/workspace/socialpredict/backend/handlers/cms/homepage/http/handler_test.go:21). The dispatcher report also recorded scoped API-conformance sign-off: the touched API-007 routes cleared the blocker list, and the remaining kin-openapi failures are unrelated repo-wide `operationId` debt.\n\n- `task_uid`: `019dae73-3000-7761-bf58-e81d3b70e8a6`\n- `task_id`: `API-007`\n- `status`: `completed`\n- `files_changed`: `backend/docs/openapi.yaml`, `backend/handlers/home.go`, `backend/handlers/home_test.go`, `backend/handlers/stats/statshandler.go`, `backend/handlers/stats/statshandler_test.go`, `backend/handlers/metrics/getsystemmetrics.go`, `backend/handlers/metrics/getsystemmetrics_test.go`, `backend/handlers/metrics/getgloballeaderboard.go`, `backend/handlers/metrics/getgloballeaderboard_test.go`, `backend/handlers/cms/homepage/http/handler_test.go`\n- `checks_run`: `gofmt -w` on touched Go files; `go test -count=1 ./handlers ./handlers/stats ./handlers/metrics ./handlers/cms/homepage/http` twice; `go test -count=1 .`; `go test -count=1 ./server -run TestServerRegistersAndServesCoreRoutes`; `run_boundary_checks.sh /workspace/socialpredict`; `run_quality_guardrails.sh /workspace/socialpredict HEAD`; `check_api_contract_sync.sh /workspace/socialpredict HEAD`; `run_kin_openapi_conformance.sh /workspace/socialpredict`\n- `follow_ups`: repo-wide kin-openapi still fails on 35 untargeted endpoints missing `operationId`; the broad `./handlers/...` reliability wrapper still hits unrelated pre-existing `handlers/users` failures, but the API-007-focused suites were deterministic and green\n\nAssumption: the worktree was already dirty in unrelated API files before this task, so I kept edits scoped to the reporting/home/CMS sweep and did not touch unrelated changes."
+      ]
     },
     {
       "uid": "019dae73-3001-7b7c-a2e0-74529cf102a4",
       "id": "API-008",
       "title": "W04 API: Add deterministic OpenAPI and API conformance regression checks",
-      "status": "done",
+      "status": "pending",
       "prompt": "After endpoint-area sweeps are complete, add or tighten deterministic API conformance checks that prevent route/spec drift and public `reason` vocabulary drift from returning. Use kin-openapi validation, the existing OpenAPI test, targeted route/spec sync checks, focused handler/API tests, and any lightweight checks that ensure documented reason-bearing responses stay synchronized with the shared API-002 vocabulary. Where practical, add helper scripts or tests that compare route inventory and OpenAPI operations without requiring a full live environment. Keep checks scoped and deterministic.",
       "acceptance_criteria": [
         "OpenAPI structural validation passes for `backend/docs/openapi.yaml` and embedded Swagger assets remain valid.",
@@ -497,7 +388,7 @@
         "019dae73-2fff-7116-be2b-996b3468c19f",
         "019dae73-3000-7761-bf58-e81d3b70e8a6"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -507,28 +398,13 @@
         "Include the API-002 public reason vocabulary in conformance thinking: drift includes undocumented new reason strings or stale documented reasons.",
         "If broader Go tests fail for unrelated existing issues, classify them with exact package/test names.",
         "Prefer small regression checks that future API tasks can run cheaply."
-      ],
-      "started_at": "2026-04-23T07:04:13.541649+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-3001-7b7c-a2e0-74529cf102a4_20260423T070413Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-3001-7b7c-a2e0-74529cf102a4_20260423T070413Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-3001-7b7c-a2e0-74529cf102a4_20260423T070413Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-3001-7b7c-a2e0-74529cf102a4_20260423T070413Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-3001-7b7c-a2e0-74529cf102a4_20260423T070413Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db927-4d58-79e0-b744-86090e5a53c1"
-      },
-      "finished_at": "2026-04-23T07:23:22.048737+00:00",
-      "last_exit_code": 0,
-      "last_summary": "task_uid: `019dae73-3001-7b7c-a2e0-74529cf102a4`  \ntask_id: `API-008`  \nstatus: `completed`\n\nAdded deterministic OpenAPI/API conformance regressions and converged the canonical report. The final state has full OpenAPI `operationId` coverage, embedded docs asset validation, route-inventory-versus-spec checks, and a canonical API-002 failure-reason schema enforced by tests. The required verification sign-off was recorded by `software-action-test-reliability-agent`.\n\nfiles_changed:\n- [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml)\n- [openapi_test.go](/workspace/socialpredict/backend/openapi_test.go)\n- [server.go](/workspace/socialpredict/backend/server/server.go)\n- [server_test.go](/workspace/socialpredict/backend/server/server_test.go)\n- [reasons.go](/workspace/socialpredict/backend/handlers/reasons.go)\n\nchecks_run:\n- `gofmt -l /workspace/socialpredict/backend/openapi_test.go /workspace/socialpredict/backend/server/server_test.go /workspace/socialpredict/backend/handlers/reasons.go`\n- `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/go-mod go test . -run 'Test(OpenAPI|Embedded)' -count=1`\n- `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/go-mod go test ./server -run TestOpenAPISpecMatchesRegisteredRoutes -count=1`\n- `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-openapi-kin-conformance/scripts/run_kin_openapi_conformance.sh /workspace/socialpredict`\n- `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/go-mod go test . ./server -run 'Test(OpenAPI|Embedded)' -count=1` twice\n- `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/go-mod go vet ./...`\n- `GOCACHE=/workspace/socialpredict/.cache/go-build GOMODCACHE=/workspace/socialpredict/.cache/go-mod RUNS=2 ENABLE_RACE=0 /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-testing-reliability/scripts/run_reliability_suite.sh /workspace/socialpredict ./server`\n\nfollow_ups:\n- none\n\nassumptions:\n- Completed on top of the existing in-flight API sweep worktree state already present in `/workspace/socialpredict`."
+      ]
     },
     {
       "uid": "019dae73-3002-782c-bdeb-569256ff5db8",
       "id": "API-009",
       "title": "W04 API: Run runtime API conformance, reconcile Swagger docs, and verify sweep completion",
-      "status": "done",
+      "status": "pending",
       "prompt": "Perform the final API sweep validation. Start or use a local non-Docker backend runtime when available, run scoped Schemathesis/runtime conformance after deterministic OpenAPI checks pass, verify Swagger UI serves the updated contract, verify public `reason` vocabulary consistency from API-002 through the endpoint sweeps, and reconcile `backend/docs/API-ISSUES.md` so it lists only genuinely deferred decisions. Use the verifier agent for diff sanity checks and final validation evidence.",
       "acceptance_criteria": [
         "Runtime API conformance is run against a local backend or the exact blocker is documented with all deterministic checks completed.",
@@ -562,7 +438,7 @@
       "depends_on": [
         "019dae73-3001-7b7c-a2e0-74529cf102a4"
       ],
-      "attempts": 1,
+      "attempts": 0,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -572,22 +448,7 @@
         "Keep final docs grounded in implemented behavior, not aspirational redesign notes.",
         "Verify no endpoint-area sweep introduced undocumented route-local synonyms for shared public reasons.",
         "This is the final stop-and-review point for the API sweep queue."
-      ],
-      "started_at": "2026-04-23T07:23:22.129465+00:00",
-      "runner_state": {
-        "segment": 1,
-        "event_file": "../log-socialpredict-tasks/.codex-runs/events/019dae73-3002-782c-bdeb-569256ff5db8_20260423T072322Z_part01.ndjson",
-        "stderr_file": "../log-socialpredict-tasks/.codex-runs/stderr/019dae73-3002-782c-bdeb-569256ff5db8_20260423T072322Z_part01.stderr.log",
-        "message_file": "../log-socialpredict-tasks/.codex-runs/messages/019dae73-3002-782c-bdeb-569256ff5db8_20260423T072322Z_part01.txt",
-        "prompt_file": "../log-socialpredict-tasks/.codex-runs/prompts/019dae73-3002-782c-bdeb-569256ff5db8_20260423T072322Z_part01.txt",
-        "context_file": "../log-socialpredict-tasks/.codex-runs/context/019dae73-3002-782c-bdeb-569256ff5db8_20260423T072322Z_part01.ndjson",
-        "resume_pending": false,
-        "paused": false,
-        "session_id": "019db938-d3ac-7082-830a-28f695845435"
-      },
-      "finished_at": "2026-04-23T07:37:40.858378+00:00",
-      "last_exit_code": 0,
-      "last_summary": "Completed the final API sweep. The target repo now has the contract/docs reconciliation in [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml) and [API-ISSUES.md](/workspace/socialpredict/backend/docs/API-ISSUES.md), plus the remaining runtime fix in [server.go](/workspace/socialpredict/backend/server/server.go) with regression coverage in [server_test.go](/workspace/socialpredict/backend/server/server_test.go). Verifier sign-off is approved.\n\n- `task_uid`: `019dae73-3002-782c-bdeb-569256ff5db8`\n- `task_id`: `API-009`\n- `status`: `completed`\n- `files_changed`: [openapi.yaml](/workspace/socialpredict/backend/docs/openapi.yaml), [API-ISSUES.md](/workspace/socialpredict/backend/docs/API-ISSUES.md), [server.go](/workspace/socialpredict/backend/server/server.go), [server_test.go](/workspace/socialpredict/backend/server/server_test.go)\n- `checks_run`: `gofmt -w backend/server/server.go backend/server/server_test.go`; focused `go test` for OpenAPI/embed checks in `backend/.`; focused `go test ./server`; kin-openapi conformance; local non-Docker backend runtime start; served `/openapi.yaml` byte-match check; scoped Schemathesis v4.15.2 runtime conformance against 16 public/docs operation IDs (`16 passed`); `git diff --check`; `go vet ./server`; architecture boundary checks\n- `follow_ups`: control-repo Schemathesis wrapper still uses obsolete `--base-url` instead of `--url`; Schemathesis still emits non-fatal schema-validation-mismatch warnings on 8 read-only endpoints even though all generated cases passed\n\nAssumptions: `/swagger` redirect evidence was verified with direct runtime `GET` probes rather than Schemathesis, because the installed CLI treats disabled redirect following as a transport error rather than a passing documented `301`."
+      ]
     }
   ]
 }
