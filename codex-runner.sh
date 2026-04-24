@@ -34,7 +34,7 @@ Options:
   --idle-notice SECONDS  Print a runner heartbeat when no new terminal output
                          appears for this many seconds. Default: 60
   --raw-terminal-output  Mirror raw Codex JSON/events to the terminal instead
-                         of the readable runner renderer
+                         of the readable timestamped runner renderer
   --quiet                Do not mirror live Codex stdout/stderr to the terminal
   --once                 Run at most one ready task, then exit
   --codex-bin PATH       Codex executable. Default: codex
@@ -60,7 +60,8 @@ Task file:
 
 Logs:
   The runner writes logs under --runs-dir (default: sibling log repo .codex-runs when available, else <repo>/.codex-runs)
-  and, by default, also mirrors live Codex stdout/stderr to your terminal.
+  and, by default, also mirrors live Codex stdout/stderr to your terminal with
+  UTC timestamps on each rendered line.
   Use --quiet to keep the previous fully silent terminal behavior.
   It also bootstraps canonical curated task reports under
   <target-repo>/.codex-reports/tasks/<task-uid>/ for dispatcher/agent use.

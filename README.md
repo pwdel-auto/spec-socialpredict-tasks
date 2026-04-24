@@ -27,7 +27,8 @@ The intended topology is:
   Historical task-queue archives moved out of the active `TASKS.json`.
 - `codex-runner.sh`
   Queue runner that launches Codex, captures logs, and maintains canonical task
-  reports.
+  reports. Its readable live terminal renderer shows UTC timestamps on each
+  rendered line while preserving raw run logs on disk.
 - `AGENTS.md`
   Workspace table of contents plus the current target-repo map and active scope.
 - `README/`

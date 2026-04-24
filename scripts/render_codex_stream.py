@@ -8,6 +8,7 @@ import json
 import sys
 import textwrap
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -32,56 +33,68 @@ def shorten(text: str, limit: int = 120) -> str:
     return text[: limit - 3] + "..."
 
 
-def emit(prefix: str, text: str, *, stream) -> None:
+def format_timestamp(value: object | None = None) -> str:
+    if isinstance(value, str) and value.strip():
+        normalized = value.strip()
+        if normalized.endswith("Z"):
+            normalized = normalized[:-1] + "+00:00"
+        try:
+            return datetime.fromisoformat(normalized).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        except ValueError:
+            pass
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def emit(prefix: str, text: str, *, stream, timestamp: str) -> None:
     wrapped = textwrap.wrap(text, width=110) or [""]
-    for idx, chunk in enumerate(wrapped):
-        label = prefix if idx == 0 else " " * len(prefix)
-        print(f"{label}{chunk}", file=stream, flush=True)
+    line_prefix = f"[{timestamp}] {prefix}"
+    for chunk in wrapped:
+        print(f"{line_prefix}{chunk}", file=stream, flush=True)
 
 
-def render_command_status(item: dict, *, stream, task_ref: str, segment: str) -> None:
+def render_command_status(item: dict, *, stream, task_ref: str, segment: str, timestamp: str) -> None:
     command = shorten(item.get("command") or "")
     exit_code = item.get("exit_code")
     status = item.get("status") or "completed"
     prefix = f"[codex-runner][task={task_ref}][segment={segment}] "
 
     if status == "in_progress":
-        emit(prefix, f"cmd start: {command}", stream=stream)
+        emit(prefix, f"cmd start: {command}", stream=stream, timestamp=timestamp)
         return
 
     if exit_code == 0 and status == "completed":
-        emit(prefix, f"cmd ok: {command}", stream=stream)
+        emit(prefix, f"cmd ok: {command}", stream=stream, timestamp=timestamp)
         return
 
-    emit(prefix, f"cmd failed ({exit_code}): {command}", stream=stream)
+    emit(prefix, f"cmd failed ({exit_code}): {command}", stream=stream, timestamp=timestamp)
     output = (item.get("aggregated_output") or "").strip()
     if output:
         preview = shorten(output.splitlines()[-1], limit=140)
-        emit(prefix, f"last output: {preview}", stream=stream)
+        emit(prefix, f"last output: {preview}", stream=stream, timestamp=timestamp)
 
 
-def render_collab_status(item: dict, *, stream, task_ref: str, segment: str) -> None:
+def render_collab_status(item: dict, *, stream, task_ref: str, segment: str, timestamp: str) -> None:
     tool = item.get("tool") or "agent"
     status = item.get("status") or "completed"
     receivers = item.get("receiver_thread_ids") or []
     prefix = f"[codex-runner][task={task_ref}][segment={segment}] "
 
     if status == "in_progress":
-        emit(prefix, f"agent action started: {tool}", stream=stream)
+        emit(prefix, f"agent action started: {tool}", stream=stream, timestamp=timestamp)
         return
 
     extra = ""
     if tool == "spawn_agent" and receivers:
         extra = f" ({len(receivers)} agent{'s' if len(receivers) != 1 else ''})"
-    emit(prefix, f"agent action completed: {tool}{extra}", stream=stream)
+    emit(prefix, f"agent action completed: {tool}{extra}", stream=stream, timestamp=timestamp)
 
 
-def render_agent_message(item: dict, *, stream, task_ref: str, segment: str) -> None:
+def render_agent_message(item: dict, *, stream, task_ref: str, segment: str, timestamp: str) -> None:
     text = (item.get("text") or "").strip()
     if not text:
         return
     prefix = f"[codex-runner][task={task_ref}][segment={segment}] "
-    emit(prefix, text, stream=stream)
+    emit(prefix, text, stream=stream, timestamp=timestamp)
 
 
 def render_event_line(raw: str, *, stream, task_ref: str, segment: str) -> None:
@@ -89,18 +102,24 @@ def render_event_line(raw: str, *, stream, task_ref: str, segment: str) -> None:
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
-        emit(prefix, shorten(raw, limit=140), stream=stream)
+        emit(prefix, shorten(raw, limit=140), stream=stream, timestamp=format_timestamp())
         return
 
+    timestamp = format_timestamp(payload.get("timestamp"))
     event_type = payload.get("type")
     if event_type == "thread.started":
-        emit(prefix, f"session started: {payload.get('thread_id') or payload.get('id') or 'unknown'}", stream=stream)
+        emit(
+            prefix,
+            f"session started: {payload.get('thread_id') or payload.get('id') or 'unknown'}",
+            stream=stream,
+            timestamp=timestamp,
+        )
         return
     if event_type == "turn.started":
-        emit(prefix, "turn started", stream=stream)
+        emit(prefix, "turn started", stream=stream, timestamp=timestamp)
         return
     if event_type == "error":
-        emit(prefix, f"error: {payload.get('message') or 'unknown error'}", stream=stream)
+        emit(prefix, f"error: {payload.get('message') or 'unknown error'}", stream=stream, timestamp=timestamp)
         return
 
     item = payload.get("item")
@@ -109,13 +128,13 @@ def render_event_line(raw: str, *, stream, task_ref: str, segment: str) -> None:
 
     item_type = item.get("type")
     if item_type == "agent_message" and event_type == "item.completed":
-        render_agent_message(item, stream=stream, task_ref=task_ref, segment=segment)
+        render_agent_message(item, stream=stream, task_ref=task_ref, segment=segment, timestamp=timestamp)
         return
     if item_type == "command_execution":
-        render_command_status(item, stream=stream, task_ref=task_ref, segment=segment)
+        render_command_status(item, stream=stream, task_ref=task_ref, segment=segment, timestamp=timestamp)
         return
     if item_type == "collab_tool_call":
-        render_collab_status(item, stream=stream, task_ref=task_ref, segment=segment)
+        render_collab_status(item, stream=stream, task_ref=task_ref, segment=segment, timestamp=timestamp)
         return
 
 
@@ -140,7 +159,7 @@ def main() -> int:
                 line = raw.rstrip("\n")
                 if line:
                     prefix = f"[codex-runner][task={args.task_ref}][segment={args.segment}][stderr] "
-                    emit(prefix, shorten(line, limit=140), stream=sink)
+                    emit(prefix, shorten(line, limit=140), stream=sink, timestamp=format_timestamp())
     return 0
 
 
