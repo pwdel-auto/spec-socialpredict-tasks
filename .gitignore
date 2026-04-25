@@ -3,4 +3,7 @@
 *.swp
 __pycache__/
 *.pyc
+.gocache/
+.gomodcache/
 .codex-runs/
+.codex-agent-runs
