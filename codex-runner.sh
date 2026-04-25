@@ -9,7 +9,8 @@ Usage:
 Run queued `TASKS.json` work by repeatedly launching Codex in the selected
 automation mode. The runner picks the next ready task, asks a dispatcher-led
 Codex session to execute it end-to-end, writes run artifacts under
-`../log-socialpredict-tasks/.codex-runs/` when that logs repo exists, captures Codex output into per-task log files there, and can
+`../log-socialpredict-tasks/.codex-runs/` when that logs repo exists, captures Codex output into per-task log files there, folds legacy
+`.codex-agent-runs/` captures into `.codex-runs/agent-runs/`, and can
 checkpoint/resume long sessions before the active context window gets too full.
 
 Options:
@@ -84,6 +85,10 @@ Logs:
       Prompt sent to Codex for that run segment.
     context/<task-uid>_<timestamp>_partNN.ndjson
       Context telemetry plus checkpoint/restart events.
+    agent-runs/<task-ref>/*
+      Compatibility location for legacy `.codex-agent-runs/` specialist
+      prompt/output captures. The runner migrates existing local captures into
+      this tree and exposes `.codex-agent-runs` as an alias to it.
 
   The runner also appends one summary record per completed task to
   <runs-dir>/RUNLOG.ndjson and keeps current runner state in
@@ -253,6 +258,8 @@ TASK_PROMPT_TEMPLATE="$PROMPT_DIR/task-execution.md"
 RESUME_PROMPT_TEMPLATE="$PROMPT_DIR/task-resume.md"
 TASK_REGISTRY_TOOL="$REPO_ROOT/scripts/task-registry.py"
 TERMINAL_RENDERER="$REPO_ROOT/scripts/render_codex_stream.py"
+LEGACY_AGENT_RUNS_PATH="$REPO_ROOT/.codex-agent-runs"
+AGENT_RUNS_DIR="$RUNS_DIR/agent-runs"
 
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 command -v "$CODEX_BIN" >/dev/null 2>&1 || { echo "codex executable not found: $CODEX_BIN" >&2; exit 1; }
@@ -286,7 +293,28 @@ if poll <= 0:
     raise SystemExit("context poll interval must be greater than 0")
 PY
 
-mkdir -p "$RUNS_DIR/context" "$RUNS_DIR/events" "$RUNS_DIR/messages" "$RUNS_DIR/prompts" "$RUNS_DIR/stderr"
+setup_legacy_agent_runs_alias() {
+  mkdir -p "$RUNS_DIR/context" "$RUNS_DIR/events" "$RUNS_DIR/messages" "$RUNS_DIR/prompts" "$RUNS_DIR/stderr" "$AGENT_RUNS_DIR"
+
+  if [[ -L "$LEGACY_AGENT_RUNS_PATH" ]]; then
+    rm -f "$LEGACY_AGENT_RUNS_PATH"
+  elif [[ -d "$LEGACY_AGENT_RUNS_PATH" ]]; then
+    local legacy_item
+    shopt -s nullglob dotglob
+    for legacy_item in "$LEGACY_AGENT_RUNS_PATH"/*; do
+      mv "$legacy_item" "$AGENT_RUNS_DIR/"
+    done
+    shopt -u nullglob dotglob
+    rmdir "$LEGACY_AGENT_RUNS_PATH"
+  elif [[ -e "$LEGACY_AGENT_RUNS_PATH" ]]; then
+    echo "Legacy agent-run path exists and is not a directory: $LEGACY_AGENT_RUNS_PATH" >&2
+    exit 1
+  fi
+
+  ln -s "$AGENT_RUNS_DIR" "$LEGACY_AGENT_RUNS_PATH"
+}
+
+setup_legacy_agent_runs_alias
 RUNLOG_FILE="$RUNS_DIR/RUNLOG.ndjson"
 STATE_FILE="$RUNS_DIR/STATE.json"
 

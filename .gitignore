@@ -6,3 +6,4 @@ __pycache__/
 .gocache/
 .gomodcache/
 .codex-runs/
+.codex-agent-runs
