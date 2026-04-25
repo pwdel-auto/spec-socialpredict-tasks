@@ -4,7 +4,7 @@
   "title": "Active Backend Modernization Slice: Runtime Boundary Cleanup, Configuration Service Extraction, Legacy Model Decoupling, and API Contract Alignment",
   "status": "draft",
   "created_at": "2026-04-17T11:56:27Z",
-  "updated_at": "2026-04-17T11:56:27Z",
+  "updated_at": "2026-04-25T20:05:00Z",
   "source_context": {
     "task_repo": ".",
     "target_repo": "../socialpredict",
@@ -16,8 +16,11 @@
       "../socialpredict/backend/internal/repository/**",
       "../socialpredict/backend/internal/service/auth/**",
       "../socialpredict/backend/server/**",
+      "../socialpredict/backend/logger/**",
+      "../socialpredict/backend/logging/**",
       "../socialpredict/backend/handlers/setup/**",
       "../socialpredict/backend/handlers/stats/**",
+      "../socialpredict/backend/handlers/metrics/**",
       "../socialpredict/backend/handlers/admin/adduser.go",
       "../socialpredict/backend/docs/API-ISSUES.md",
       "../socialpredict/backend/docs/openapi.yaml"
@@ -29,12 +32,22 @@
       "../socialpredict/backend/README/BACKEND/API/API-DESIGN-REPORT.md",
       "../socialpredict/backend/README/BACKEND/API/API-DOCS.md",
       "../socialpredict/backend/internal/app/container.go",
+      "../socialpredict/backend/internal/app/env/devloader.go",
+      "../socialpredict/backend/internal/app/runtime/config.go",
+      "../socialpredict/backend/internal/app/runtime/db.go",
       "../socialpredict/backend/main.go",
       "../socialpredict/backend/server/server.go",
+      "../socialpredict/backend/internal/service/config/service.go",
       "../socialpredict/backend/setup/setup.go",
       "../socialpredict/backend/handlers/setup/setuphandler.go",
-      "../socialpredict/backend/util/postgres.go",
-      "../socialpredict/backend/util/getenv.go"
+      "../socialpredict/backend/handlers/stats/statshandler.go",
+      "../socialpredict/backend/internal/domain/bets/service.go",
+      "../socialpredict/backend/internal/domain/analytics/service.go",
+      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md",
+      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md",
+      "../socialpredict/backend/logger/simplelogging.go",
+      "../socialpredict/backend/logging/loggingutils.go",
+      "../socialpredict/backend/handlers/markets/resolvemarket.go"
     ],
     "related_task_uids": [
       "019d99d7-3d71-70aa-9f0b-d0f4da7524f0",
@@ -68,16 +81,18 @@
     }
   ],
   "summary": {
-    "one_sentence": "Modernize the active SocialPredict backend slice by removing hidden runtime globals, extracting configuration into a service-backed boundary, decoupling domain logic from legacy persistence models, and then aligning auth/API behavior with a cleaner contract.",
+    "one_sentence": "Modernize the active SocialPredict backend slice by finishing the migration from legacy runtime/config globals and duplicated runtime helpers to explicit runtime/bootstrap, observability, and application-policy seams, decoupling domain logic from legacy persistence models, and then aligning auth/API behavior with a cleaner contract.",
     "business_outcomes": [
       "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
       "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
-      "Make backend behavior more predictable for operators and clients by clarifying ownership boundaries, auth behavior, and API contracts."
+      "Make backend behavior more predictable for operators and clients by clarifying ownership boundaries, auth behavior, and API contracts.",
+      "Preserve 100% financial and accounting correctness by treating economics policy as an immutable, accounting-sensitive input rather than a live mutable control surface.",
+      "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership and clarifying health/readiness and observability boundaries."
     ],
-    "proposed_direction": "Treat the current work as a prerequisite-architecture program in four waves: util breakup, configuration-service extraction, legacy-model decoupling, and finally scoped API/auth/OpenAPI alignment."
+    "proposed_direction": "Treat the current work as a prerequisite-architecture program in four waves: util breakup, completion of the existing runtime/bootstrap and configuration boundary split, legacy-model decoupling, and finally scoped API/auth/OpenAPI alignment."
   },
   "problem": {
-    "statement": "The backend has already moved toward layered internal services and repositories, but core runtime boundaries still live in globally accessible packages such as `util` and `setup`, while internal domain code remains too persistence-shaped through direct dependence on `socialpredict/models`. Those seams make the system harder to reason about, harder to test safely, and more likely to resist later high-availability extraction or service isolation.",
+    "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the runtime story is still transitional: `setup` still behaves as a package-global seam, `internal/service/config` still aliases `setup` types, the backend still carries duplicated logging packages with inconsistent conventions, some consumers still traverse the whole config tree, and internal domain code remains too persistence-shaped through direct dependence on `socialpredict/models`. Those seams make the system harder to reason about, harder to test safely, and more likely to resist later high-availability extraction or service isolation.",
     "why_now": "The active queue already assumes these prerequisites. Attempting to normalize auth contracts and API semantics before runtime/config/model boundaries are cleaned up would freeze unstable internals into the public contract and create avoidable rework.",
     "out_of_scope": [
       "Full microservice decomposition or container rollout in this pass.",
@@ -91,12 +106,17 @@
     "business_constraints": [
       "Preserve existing behavior while modernizing architecture in small steps.",
       "Keep current external setup endpoints and current public route organization stable during prerequisite waves.",
-      "Avoid a flag-day rewrite because the platform is already live and operational assumptions must remain intact."
+      "Avoid a flag-day rewrite because the platform is already live and operational assumptions must remain intact.",
+      "Maintain 100% financial and accounting correctness while configuration and accounting-sensitive flows are modernized."
     ],
     "architecture_drivers": [
       "Extraction readiness for future service/container boundaries.",
       "Dependency direction from handlers to policy to repositories rather than hidden globals.",
-      "Configuration as an owned runtime boundary instead of a singleton package.",
+      "Runtime/bootstrap configuration and application-policy configuration are different concerns with different owners.",
+      "Validate runtime/bootstrap config once at startup and inject immutable snapshots for the process lifetime.",
+      "Runtime diagnostic logging, health/readiness signals, metrics, and tracing are separate operational concerns with separate owners and sequencing.",
+      "Standardize on one owned backend logging adapter with stable vocabulary and safe redaction before expanding richer observability surfaces.",
+      "Application-policy configuration should live behind an owned internal boundary instead of a singleton package.",
       "Repository-owned translation between persistence models and internal domain types.",
       "Explicit, testable contract shaping at the HTTP boundary."
     ],
@@ -105,17 +125,20 @@
       "Testability",
       "Fault isolation",
       "Operational predictability",
+      "Financial correctness",
       "Security consistency",
       "Contract clarity"
     ]
   },
   "current_state": {
-    "shape": "The backend is a monolith with a partially modernized internal architecture: `internal/app/container.go` wires repositories and services, but startup and route wiring still depend on global `util` and `setup` packages, and several internal packages still import `socialpredict/models` directly.",
+    "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, and setup handlers already consume that seam, but the runtime/config boundary is still incomplete because `setup` remains a transitional global seam, `internal/service/config` still aliases `setup` types, some consumers still depend on full-tree config access, and several internal packages still import `socialpredict/models` directly.",
     "pain_points": [
       "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
-      "`util.GetDB()` remains a hidden runtime dependency in startup, server, auth, admin, stats, and tests.",
-      "`backend/setup` is a global singleton with embedded YAML and package-level accessors rather than a service-backed slice.",
-      "`server.go` and setup handlers still wire configuration and DB access through globals instead of container-owned seams.",
+      "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
+      "`backend/setup` is still a transitional singleton seam with embedded YAML, `sync.Once`, `init()` loading, and package-level accessors instead of being reduced to a source-asset/translation role.",
+      "`internal/service/config` still aliases `setup` types and loads through `setup.LoadEconomicsConfig`, so the owned boundary is present but not complete.",
+      "The backend still has two overlapping logging packages: `backend/logger` is the stronger live adapter, while `backend/logging` remains duplicate legacy overlap with reflection-heavy debug helpers and one remaining active import.",
+      "Some handlers and services still consume too much configuration surface area through whole-tree access or raw `setup` shapes instead of narrow immutable policy slices.",
       "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
       "The API document and API-issues notes still describe a contract direction that depends on unresolved internal cleanup.",
       "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
@@ -128,22 +151,28 @@
     ]
   },
   "target_state": {
-    "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns env and DB setup, a service-backed configuration slice owns economics/frontend configuration access, repositories and adapters own translation from legacy persistence models into internal domain types, and API/auth contract changes happen only after those seams are stable.",
+    "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, runtime diagnostic logging, and health/readiness wiring; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; repositories and adapters own translation from legacy persistence models into internal domain types; and API/auth contract changes happen only after those seams are stable.",
     "boundaries": [
       {
         "name": "Runtime Bootstrap and Infrastructure",
         "kind": "module",
-        "purpose": "Own process startup concerns such as env loading, DB initialization, migration invocation, readiness checks, and seed bootstrapping.",
+        "purpose": "Own process startup concerns such as env loading, runtime/bootstrap configuration validation, DB initialization, migration invocation, readiness checks, and seed bootstrapping.",
         "owns": [
           "Environment loading",
+          "Runtime/bootstrap configuration",
           "DB configuration normalization",
           "DB connection creation",
+          "Runtime diagnostic logging",
+          "Health/readiness wiring",
           "Startup sequencing"
         ],
         "does_not_own": [
           "Business logic",
+          "Economics or accounting policy",
           "HTTP contract shaping",
-          "Long-lived domain helpers under a generic util namespace"
+          "Long-lived domain helpers under a generic util namespace",
+          "A second backend logging dialect",
+          "Reflection-heavy production debug dumping as durable architecture"
         ],
         "upstream_dependencies": [],
         "downstream_dependencies": [
@@ -151,21 +180,24 @@
           "Migration Runner",
           "Seed Bootstrap"
         ],
-        "reason": "This separates process/runtime details from domain policy and removes hidden global access paths."
+        "reason": "This separates process/runtime details and supporting operational capabilities from domain policy and removes hidden global access paths."
       },
       {
         "name": "Configuration Service Slice",
         "kind": "service",
-        "purpose": "Provide typed access to economics and frontend configuration through the same internal architecture style used by other service-backed slices.",
+        "purpose": "Provide owned typed access to application-policy configuration such as economics and frontend policy, while reducing `backend/setup` to a source-asset/translation seam during migration.",
         "owns": [
-          "Typed configuration models",
-          "Configuration loading from setup assets",
-          "Configuration access interfaces",
+          "Owned application-policy configuration types",
+          "Immutable application-policy snapshots",
+          "Configuration loading from setup assets during migration",
+          "Configuration access interfaces and narrow policy views",
           "Configuration-related handler/service seams"
         ],
         "does_not_own": [
+          "Runtime/bootstrap env and infrastructure settings",
           "Global singleton access",
-          "Direct package-level runtime state spread across unrelated consumers"
+          "Direct package-level runtime state spread across unrelated consumers",
+          "A generic top-level config subsystem for every concern in the system"
         ],
         "upstream_dependencies": [
           "Runtime Bootstrap and Infrastructure"
@@ -177,7 +209,7 @@
           "Admin AddUser Flow",
           "Seed Bootstrap"
         ],
-        "reason": "Configuration is a shared policy input and should behave like an owned service boundary rather than a magic package."
+        "reason": "Application-policy configuration is a shared policy input and should behave like an owned service boundary rather than a magic package or a thin wrapper around `setup`."
       },
       {
         "name": "Domain Core",
@@ -260,7 +292,17 @@
           "Application Container"
         ],
         "contract": "Startup code constructs DB/config dependencies once and passes them into a composition root instead of exposing package-level globals.",
-        "notes": "This seam is the main replacement for `util.GetDB()` and package-level config access in runtime flows."
+        "notes": "This seam is the main replacement for `util.GetDB()` and other package-level runtime access patterns in startup flows."
+      },
+      {
+        "name": "Runtime Observability Seam",
+        "participants": [
+          "Runtime Bootstrap and Infrastructure",
+          "Application Container",
+          "HTTP Server Boundary"
+        ],
+        "contract": "Runtime logging, health/readiness signals, and request-correlation behavior use one owned backend logger adapter and are introduced at startup, server, or middleware boundaries rather than through duplicate helper packages.",
+        "notes": "Package unification to `backend/logger` comes before richer tracing or expanded metrics surface area."
       },
       {
         "name": "Configuration Access Seam",
@@ -268,8 +310,8 @@
           "Configuration Service Slice",
           "Domain Core"
         ],
-        "contract": "Consumers obtain typed config through explicit interfaces or container-provided services, not `setup.EconomicsConfig()` or `LoadEconomicsConfig()` globals.",
-        "notes": "Stats, setup handlers, admin, server startup, seed, and test helpers are the main current consumers."
+        "contract": "Consumers obtain owned typed policy views through explicit interfaces or container-provided services, not `setup.EconomicsConfig()` or `LoadEconomicsConfig()` globals, raw `setup` types, or broad whole-tree traversal.",
+        "notes": "Setup handlers, stats, seed, admin, and current domain consumers such as bets and analytics are the main migration hotspots."
       },
       {
         "name": "Domain to Legacy Model Translation Seam",
@@ -305,7 +347,7 @@
       },
       {
         "term": "Configuration Service",
-        "definition": "The owned internal slice that loads and serves typed economics/frontend configuration to the rest of the backend.",
+        "definition": "The owned internal slice that loads and serves typed application-policy configuration such as economics and frontend policy to the rest of the backend.",
         "synonyms_to_avoid": [
           "setup singleton",
           "global config package"
@@ -313,6 +355,85 @@
         "confused_with": [
           "YAML asset",
           "environment variables"
+        ]
+      },
+      {
+        "term": "Runtime/Bootstrap Configuration",
+        "definition": "Process and infrastructure detail introduced at startup, such as DB connectivity and env-driven runtime settings, validated once and owned by bootstrap/infrastructure code.",
+        "synonyms_to_avoid": [
+          "business config"
+        ],
+        "confused_with": [
+          "Application-policy configuration",
+          "YAML source asset"
+        ]
+      },
+      {
+        "term": "Runtime Diagnostic Logging",
+        "definition": "Backend log emission used to understand process and request behavior at runtime, owned by runtime/bootstrap, server, middleware, and selected adapter boundaries.",
+        "synonyms_to_avoid": [
+          "domain event log",
+          "debug dump"
+        ],
+        "confused_with": [
+          "Metrics",
+          "Tracing"
+        ]
+      },
+      {
+        "term": "Health/Readiness Signal",
+        "definition": "Operator-facing runtime signal that answers whether the process is alive, healthy, and ready to receive traffic.",
+        "synonyms_to_avoid": [
+          "business metric"
+        ],
+        "confused_with": [
+          "Application metrics route",
+          "Tracing"
+        ]
+      },
+      {
+        "term": "Logging Dialect",
+        "definition": "A package-level logging convention and vocabulary that shapes how runtime truth is emitted and interpreted in production.",
+        "synonyms_to_avoid": [
+          "temporary helper package"
+        ],
+        "confused_with": [
+          "Logger implementation detail",
+          "Observability platform"
+        ]
+      },
+      {
+        "term": "Application-Policy Configuration",
+        "definition": "Accounting-sensitive and product-policy inputs such as economics, incentives, balances, debt limits, fee rules, and approved frontend policy values.",
+        "synonyms_to_avoid": [
+          "ops toggle",
+          "environment setting"
+        ],
+        "confused_with": [
+          "Runtime/bootstrap configuration",
+          "deployment config"
+        ]
+      },
+      {
+        "term": "Immutable Snapshot",
+        "definition": "A validated configuration view fixed for the lifetime of a running process or explicitly versioned workflow scope.",
+        "synonyms_to_avoid": [
+          "live mutable config"
+        ],
+        "confused_with": [
+          "hot reload",
+          "singleton state"
+        ]
+      },
+      {
+        "term": "Transitional Seam",
+        "definition": "A temporary compatibility boundary kept only long enough to migrate consumers safely off a legacy access pattern.",
+        "synonyms_to_avoid": [
+          "final architecture"
+        ],
+        "confused_with": [
+          "owned boundary",
+          "source of truth"
         ]
       },
       {
@@ -390,9 +511,49 @@
         "reason": "Hidden runtime globals undermine testability and boundary ownership."
       },
       {
+        "rule": "Logging is a runtime and infrastructure adapter concern, not a core domain-policy concern.",
+        "owner_boundary": "Runtime Bootstrap and Infrastructure",
+        "reason": "Operational signals should be introduced at startup, server, middleware, migration, seed, and adapter boundaries rather than spread through the policy core."
+      },
+      {
+        "rule": "The backend standardizes on `backend/logger` as the sole runtime log-emission package; `backend/logging` is transitional deletion-only scope and no new `socialpredict/logging` imports are allowed.",
+        "owner_boundary": "Runtime Bootstrap and Infrastructure",
+        "reason": "Two logging dialects create conflicting runtime truth and slow later observability hardening."
+      },
+      {
+        "rule": "Secrets, tokens, passwords, and API keys must never be logged.",
+        "owner_boundary": "Runtime Bootstrap and Infrastructure",
+        "reason": "Safe redaction is a hard production invariant."
+      },
+      {
+        "rule": "Health/readiness signals, metrics, and tracing are separate operational surfaces and should not be collapsed into one generic observability abstraction.",
+        "owner_boundary": "Runtime Bootstrap and Infrastructure",
+        "reason": "Each signal answers different operational questions and needs clear ownership."
+      },
+      {
         "rule": "Configuration values remain sourced from `backend/setup/setup.yaml` during this slice, but runtime access to those values moves behind an owned service boundary.",
         "owner_boundary": "Configuration Service Slice",
         "reason": "The source asset is stable, but the access pattern is not."
+      },
+      {
+        "rule": "Runtime/bootstrap configuration is validated once at startup, injected as an immutable snapshot for the process lifetime, and rolled forward by controlled restart or deployment rather than live mutation.",
+        "owner_boundary": "Runtime Bootstrap and Infrastructure",
+        "reason": "Deterministic startup and replica consistency matter more than hot-reload convenience in a high-availability architecture."
+      },
+      {
+        "rule": "Economics and other accounting-sensitive policy inputs must not be hot-reloaded during live operation.",
+        "owner_boundary": "Configuration Service Slice",
+        "reason": "Financial and accounting correctness is binary and must not drift across replicas or requests."
+      },
+      {
+        "rule": "Only configuration-owned seams may expose the full policy tree; domain and handler consumers should depend on the smallest immutable policy slice or interface they need.",
+        "owner_boundary": "Configuration Service Slice",
+        "reason": "Whole-tree access preserves coupling behind a nicer facade and weakens dependency direction."
+      },
+      {
+        "rule": "Accounting-relevant economics values should be copied into durable workflow or domain state where replay and correctness require historical stability.",
+        "owner_boundary": "Configuration Service Slice",
+        "reason": "Some policy values must remain tied to the accounting scope they governed, not merely read from the current runtime snapshot forever."
       },
       {
         "rule": "Internal domain and math code should not treat `socialpredict/models` as its native policy language once adapter seams exist.",
@@ -416,6 +577,20 @@
         "why": "The existing container pattern is already present and should become the explicit owner of runtime dependency assembly.",
         "risks": [
           "A half-migrated container can become a thin wrapper around globals instead of replacing them."
+        ]
+      },
+      {
+        "name": "Immutable Configuration Snapshot",
+        "why": "High-availability rollout safety and accounting-sensitive behavior require validated startup snapshots rather than live mutable economics policy.",
+        "risks": [
+          "If consumers still depend on whole-tree reads or singleton state, the snapshot remains conceptual rather than real."
+        ]
+      },
+      {
+        "name": "Single Logging Adapter",
+        "why": "One owned backend logging package reduces duplicated runtime vocabulary and makes later request correlation, redaction, and health/readiness hardening coherent.",
+        "risks": [
+          "A partial migration can leave `backend/logging` as a permanent compatibility shim and preserve split operational conventions."
         ]
       },
       {
@@ -458,10 +633,11 @@
       "title": "Keep setup.yaml as the source asset while replacing setup as a singleton runtime boundary",
       "status": "accepted",
       "context": "The current configuration data is embedded and already used by multiple flows.",
-      "decision": "Retain `backend/setup/setup.yaml` as the source data for this slice, but introduce a service-backed config access boundary under the internal architecture.",
+      "decision": "Retain `backend/setup/setup.yaml` as the source data for this slice, but treat `setup` as a temporary source-asset and translation seam only; the owned runtime access boundary moves under `internal/service/config` with owned types and immutable snapshots.",
       "consequences": [
         "Migration risk stays lower because source data does not churn.",
-        "Runtime ownership becomes clearer because access patterns move out of the singleton package."
+        "Runtime ownership becomes clearer because access patterns move out of the singleton package.",
+        "The long-term design no longer permits `setup` package behavior to remain the runtime boundary."
       ]
     },
     {
@@ -507,22 +683,66 @@
         "Security consistency improves without broad auth redesign.",
         "The limited-scope-token problem remains a deferred follow-up."
       ]
+    },
+    {
+      "id": "DP-007",
+      "title": "Split configuration into runtime/bootstrap concerns and application-policy concerns",
+      "status": "accepted",
+      "context": "The revised production note distinguishes infrastructure/runtime settings from economics and frontend policy, and the code already has explicit startup seams plus a transitional config-service boundary.",
+      "decision": "Treat runtime/bootstrap configuration as a startup/composition-root concern and application-policy configuration as an owned internal boundary concern with different owners, rules, and mutability expectations.",
+      "consequences": [
+        "The architecture avoids collapsing all settings into one mega configuration subsystem.",
+        "Boundary ownership and dependency direction become clearer for future HA-oriented evolution."
+      ]
+    },
+    {
+      "id": "DP-008",
+      "title": "Use immutable validated snapshots and deployment-driven rollout for economics policy",
+      "status": "accepted",
+      "context": "Economics and accounting-sensitive behavior must remain consistent across replicas and over the workflow scope they govern.",
+      "decision": "Validate configuration at startup, inject immutable snapshots for the process lifetime, reject hot reload for economics/accounting-sensitive policy, and copy accounting-relevant values into durable state where correctness requires historical stability.",
+      "consequences": [
+        "Replica drift and accounting inconsistency risk are reduced.",
+        "Operational rollout stays simpler because policy changes move through deploy/restart rather than live mutation."
+      ]
+    },
+    {
+      "id": "DP-009",
+      "title": "Standardize backend runtime logging on backend/logger and delete backend/logging",
+      "status": "accepted",
+      "context": "The backend currently has two overlapping logging packages, but `backend/logger` already has live usage and tests while `backend/logging` remains legacy overlap with one remaining active import.",
+      "decision": "Treat `backend/logger` as the sole backend runtime log-emission adapter, migrate remaining `socialpredict/logging` usage, and delete `backend/logging`; do not introduce new logging package families while standardization is incomplete.",
+      "consequences": [
+        "Runtime vocabulary and package ownership become clearer for HA-oriented operations.",
+        "Future request correlation, redaction, and health/readiness hardening can build on one adapter instead of two dialects."
+      ]
+    },
+    {
+      "id": "DP-010",
+      "title": "Treat observability as a supporting runtime capability, not a separate platform program",
+      "status": "accepted",
+      "context": "The rewritten logging note rejects a greenfield observability platform and instead sequences logger unification, health/readiness hardening, metrics, and tracing as supporting runtime improvements.",
+      "decision": "Keep logging, health/readiness, metrics, and tracing under runtime-boundary ownership and evolve them incrementally from the current backend surface rather than creating a top-level observability mega-tree.",
+      "consequences": [
+        "The architecture stays incremental and boundary-first instead of restarting with a parallel platform initiative.",
+        "Operational capabilities can improve without outrunning the ongoing runtime/config modernization work."
+      ]
     }
   ],
   "workstreams": [
     {
       "name": "W01 Util Breakup and Runtime Boundary Cleanup",
-      "objective": "Remove `backend/util` as a mixed catch-all and eliminate direct hidden runtime access from touched startup/server/handler/auth paths.",
+      "objective": "Remove `backend/util` as a mixed catch-all, eliminate direct hidden runtime access from touched startup/server/handler/auth paths, and unify duplicated runtime helper ownership such as backend logging.",
       "depends_on": [],
-      "notes": "This creates the first explicit infrastructure seam and reduces hidden dependency injection-by-global."
+      "notes": "This creates the first explicit infrastructure seam, reduces hidden dependency injection-by-global, and should include migration from `backend/logging` to `backend/logger` plus clarification of runtime observability ownership."
     },
     {
       "name": "W02 Configuration Service Extraction",
-      "objective": "Convert `backend/setup` from a global singleton access pattern into a service-backed slice wired through the application container.",
+      "objective": "Finish the existing runtime/bootstrap and configuration boundary split by removing `setup` aliasing and global access patterns, and by moving consumers onto owned narrow policy views.",
       "depends_on": [
         "W01 Util Breakup and Runtime Boundary Cleanup"
       ],
-      "notes": "This should preserve current endpoint semantics while making config access explicit."
+      "notes": "This should preserve current endpoint semantics while completing the existing config-service seam rather than inventing a greenfield config subsystem."
     },
     {
       "name": "W03 Legacy Model Decoupling",
@@ -548,6 +768,16 @@
       "mitigation": "Make ownership explicit in W01/W02 and move touched consumers directly onto the new seams wherever practical."
     },
     {
+      "severity": "medium",
+      "statement": "Two backend logging packages create competing runtime vocabulary and can undermine operational diagnosis across replicas and deploy/restart events.",
+      "mitigation": "Complete package unification onto `backend/logger`, ban new `socialpredict/logging` imports, and treat `backend/logging` as deletion-only scope."
+    },
+    {
+      "severity": "high",
+      "statement": "If economics or other accounting-sensitive policy can vary across instances or be hot-reloaded live, replica drift can eliminate financial and accounting correctness.",
+      "mitigation": "Use startup-validated immutable snapshots, deployment-driven rollout, and durable persistence of accounting-relevant values where workflow correctness requires historical stability."
+    },
+    {
       "severity": "high",
       "statement": "Legacy-model decoupling can sprawl into a flag-day rewrite if boundary types are introduced without containment discipline.",
       "mitigation": "Limit translation ownership to repositories and explicit adapters, and sequence the work through narrow domain slices."
@@ -556,6 +786,16 @@
       "severity": "medium",
       "statement": "W04 could become a superficial response-shape pass if handlers still own too much config loading, DB access, or policy behavior.",
       "mitigation": "Treat W01-W03 as real prerequisites and stop contract cleanup from outrunning boundary cleanup."
+    },
+    {
+      "severity": "medium",
+      "statement": "`configService.Current()` can preserve whole-tree coupling behind a cleaner facade if consumers continue to reach through the full configuration tree.",
+      "mitigation": "Treat narrow immutable policy slices and consumer-owned interfaces as explicit W02 exit criteria for handlers and domain services."
+    },
+    {
+      "severity": "medium",
+      "statement": "Ad hoc debug helpers or reflection-based dumps in runtime logging can violate redaction expectations and raise operational noise.",
+      "mitigation": "Keep one owned logging adapter, define redaction and message-vocabulary rules early, and do not preserve reflection-heavy production dump helpers."
     },
     {
       "severity": "medium",
@@ -580,6 +820,26 @@
       "blocking": false
     },
     {
+      "question": "Which economics values must be persisted into market, bet, or accounting state versus safely read from the injected runtime snapshot?",
+      "why_it_matters": "Financial and accounting correctness may require some policy values to remain historically stable for the workflow scope they governed.",
+      "blocking": true
+    },
+    {
+      "question": "What is the minimal stable runtime logger contract for `backend/logger`, especially around redaction, field vocabulary, and request/correlation context?",
+      "why_it_matters": "Logger unification only helps if the surviving package becomes a clear operational boundary rather than a renamed convenience wrapper.",
+      "blocking": false
+    },
+    {
+      "question": "What, if anything, from `backend/logging/mocklogging.go` must survive the deletion of `backend/logging`, and where should that testing seam live without recreating package duplication?",
+      "why_it_matters": "The migration should not preserve duplicate package ownership just to keep one legacy mock alive.",
+      "blocking": false
+    },
+    {
+      "question": "How should `/health` evolve into explicit readiness/liveness semantics without conflating infrastructure health with application metrics routes like `/v0/system/metrics`?",
+      "why_it_matters": "High-availability rollout and orchestration depend on clear runtime signal boundaries.",
+      "blocking": false
+    },
+    {
       "question": "Which internal packages genuinely need dedicated boundary types, and which can be decoupled with narrower repository-return types or adapters?",
       "why_it_matters": "This determines whether W03 stays surgical or turns into type proliferation.",
       "blocking": true
@@ -598,8 +858,13 @@
   "next_steps": [
     "Use the software-planner pass to translate this design into smaller queue slices without changing the architectural decisions above.",
     "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
-    "Define the configuration service interface shape before migrating setup consumers.",
+    "Migrate the remaining `socialpredict/logging` usage to `socialpredict/logger` and delete `backend/logging` once any minimal test support is ported or replaced.",
+    "Define the minimal stable `backend/logger` contract, including redaction expectations and request/correlation vocabulary, before adding richer observability surfaces.",
+    "Define the runtime/bootstrap versus application-policy configuration taxonomy explicitly in implementation guidance and ADRs.",
+    "Replace `internal/service/config` aliases with owned types and loader seams before migrating remaining setup consumers.",
+    "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
     "Inventory the highest-value legacy-model dependencies in `internal/domain/markets`, `internal/domain/bets`, `internal/domain/math`, and analytics before W03 task breakdown.",
+    "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
     "Draft the initial public `reason` vocabulary for W04 so the API/auth cleanup does not improvise string contracts during implementation."
   ]
 }
