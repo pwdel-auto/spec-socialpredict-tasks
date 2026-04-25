@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "plan_uid": "9f8c16f4-a20e-4ba0-a98a-1f7ffc377292",
-  "title": "Active Backend Modernization Slice: Runtime Boundary Cleanup, Configuration Service Extraction, Legacy Model Decoupling, and API Contract Alignment",
+  "title": "Active Backend Modernization Slice: Runtime Boundary Cleanup, Fault-Tolerant Failure Handling, Configuration Service Extraction, Legacy Model Decoupling, and API Contract Alignment",
   "status": "draft",
   "created_at": "2026-04-17T11:56:27Z",
-  "updated_at": "2026-04-25T20:05:00Z",
+  "updated_at": "2026-04-25T23:45:00Z",
   "source_context": {
     "task_repo": ".",
     "target_repo": "../socialpredict",
@@ -14,10 +14,16 @@
       "../socialpredict/backend/internal/app/**",
       "../socialpredict/backend/internal/domain/**",
       "../socialpredict/backend/internal/repository/**",
+      "../socialpredict/backend/errors/**",
       "../socialpredict/backend/internal/service/auth/**",
       "../socialpredict/backend/server/**",
       "../socialpredict/backend/logger/**",
       "../socialpredict/backend/logging/**",
+      "../socialpredict/backend/security/**",
+      "../socialpredict/backend/handlers/envelope.go",
+      "../socialpredict/backend/handlers/markets/**",
+      "../socialpredict/backend/handlers/users/**",
+      "../socialpredict/backend/handlers/bets/**",
       "../socialpredict/backend/handlers/setup/**",
       "../socialpredict/backend/handlers/stats/**",
       "../socialpredict/backend/handlers/metrics/**",
@@ -37,6 +43,18 @@
       "../socialpredict/backend/internal/app/runtime/db.go",
       "../socialpredict/backend/main.go",
       "../socialpredict/backend/server/server.go",
+      "../socialpredict/backend/errors/httperror.go",
+      "../socialpredict/backend/errors/normalerror.go",
+      "../socialpredict/backend/handlers/envelope.go",
+      "../socialpredict/backend/handlers/markets/failure_helpers.go",
+      "../socialpredict/backend/handlers/markets/handler.go",
+      "../socialpredict/backend/handlers/markets/createmarket.go",
+      "../socialpredict/backend/handlers/users/publicuser.go",
+      "../socialpredict/backend/handlers/users/profile_helpers.go",
+      "../socialpredict/backend/handlers/bets/selling/sellpositionhandler.go",
+      "../socialpredict/backend/internal/service/auth/auth.go",
+      "../socialpredict/backend/internal/service/auth/authutils.go",
+      "../socialpredict/backend/internal/service/auth/loggin.go",
       "../socialpredict/backend/internal/service/config/service.go",
       "../socialpredict/backend/setup/setup.go",
       "../socialpredict/backend/handlers/setup/setuphandler.go",
@@ -45,8 +63,12 @@
       "../socialpredict/backend/internal/domain/analytics/service.go",
       "../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md",
       "../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md",
+      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md",
       "../socialpredict/backend/logger/simplelogging.go",
       "../socialpredict/backend/logging/loggingutils.go",
+      "../socialpredict/backend/security/ratelimit.go",
+      "../socialpredict/backend/security/security.go",
+      "../socialpredict/backend/docs/openapi.yaml",
       "../socialpredict/backend/handlers/markets/resolvemarket.go"
     ],
     "related_task_uids": [
@@ -78,10 +100,15 @@
       "agent": "software-designer-03-martin-agent",
       "design_posture": "martin",
       "notes": "Tightened dependency direction, policy-vs-detail boundaries, and framework/runtime isolation expectations for implementation."
+    },
+    {
+      "agent": "codex",
+      "design_posture": "fowler",
+      "notes": "Grounded the plan against the live backend's mixed error-handling paths, pre-handler failure behavior, and HA-oriented recovery gaps."
     }
   ],
   "summary": {
-    "one_sentence": "Modernize the active SocialPredict backend slice by finishing the migration from legacy runtime/config globals and duplicated runtime helpers to explicit runtime/bootstrap, observability, and application-policy seams, decoupling domain logic from legacy persistence models, and then aligning auth/API behavior with a cleaner contract.",
+    "one_sentence": "Modernize the active SocialPredict backend slice by finishing the migration from legacy runtime/config globals and duplicated runtime helpers to explicit runtime/bootstrap, observability, application-policy, and failure-handling seams, decoupling domain logic from legacy persistence models, and then aligning auth/API behavior with a cleaner contract.",
     "business_outcomes": [
       "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
       "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
@@ -89,11 +116,11 @@
       "Preserve 100% financial and accounting correctness by treating economics policy as an immutable, accounting-sensitive input rather than a live mutable control surface.",
       "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership and clarifying health/readiness and observability boundaries."
     ],
-    "proposed_direction": "Treat the current work as a prerequisite-architecture program in four waves: util breakup, completion of the existing runtime/bootstrap and configuration boundary split, legacy-model decoupling, and finally scoped API/auth/OpenAPI alignment."
+    "proposed_direction": "Treat the current work as a prerequisite-architecture program in four waves: runtime-boundary cleanup with owned failure recovery, completion of the existing runtime/bootstrap and configuration boundary split, legacy-model decoupling, and finally scoped API/auth/OpenAPI error-contract alignment."
   },
   "problem": {
-    "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the runtime story is still transitional: `setup` still behaves as a package-global seam, `internal/service/config` still aliases `setup` types, the backend still carries duplicated logging packages with inconsistent conventions, some consumers still traverse the whole config tree, and internal domain code remains too persistence-shaped through direct dependence on `socialpredict/models`. Those seams make the system harder to reason about, harder to test safely, and more likely to resist later high-availability extraction or service isolation.",
-    "why_now": "The active queue already assumes these prerequisites. Attempting to normalize auth contracts and API semantics before runtime/config/model boundaries are cleaned up would freeze unstable internals into the public contract and create avoidable rework.",
+    "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the runtime story is still transitional: `setup` still behaves as a package-global seam, `internal/service/config` still aliases `setup` types, the backend still carries duplicated logging packages with inconsistent conventions, some consumers still traverse the whole config tree, and internal domain code remains too persistence-shaped through direct dependence on `socialpredict/models`. Error handling is equally transitional: newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary, while many legacy handlers still emit raw `http.Error` strings, `internal/service/auth` owns a separate `HTTPError`, the legacy `backend/errors` package is only a thin helper wrapper, rate limiting still emits plain-text 429s before handlers run, and the server does not own panic-recovery middleware or request correlation. Those seams make the system harder to reason about, harder to test safely, and more likely to resist later high-availability extraction or service isolation.",
+    "why_now": "The active queue already assumes these prerequisites, and the current error-handling production note is still written as a greenfield implementation plan instead of a migration from the live mixed contract. Attempting to normalize auth contracts and API semantics before runtime/config/model/failure boundaries are cleaned up would freeze unstable internals into the public contract and create avoidable rework.",
     "out_of_scope": [
       "Full microservice decomposition or container rollout in this pass.",
       "Broad frontend or infrastructure redesign.",
@@ -116,14 +143,19 @@
       "Validate runtime/bootstrap config once at startup and inject immutable snapshots for the process lifetime.",
       "Runtime diagnostic logging, health/readiness signals, metrics, and tracing are separate operational concerns with separate owners and sequencing.",
       "Standardize on one owned backend logging adapter with stable vocabulary and safe redaction before expanding richer observability surfaces.",
+      "Own pre-handler failures and unhandled panics at the server or middleware boundary instead of relying on scattered `http.Error` calls or default library behavior.",
       "Application-policy configuration should live behind an owned internal boundary instead of a singleton package.",
       "Repository-owned translation between persistence models and internal domain types.",
-      "Explicit, testable contract shaping at the HTTP boundary."
+      "Explicit, testable contract shaping at the HTTP boundary.",
+      "Separate processed business failures from transport/runtime failures in the public contract.",
+      "Avoid generic automatic retry layers around accounting-sensitive write paths unless idempotency and transaction semantics are explicit."
     ],
     "quality_attributes": [
+      "Availability",
       "Changeability",
       "Testability",
       "Fault isolation",
+      "Recoverability",
       "Operational predictability",
       "Financial correctness",
       "Security consistency",
@@ -131,16 +163,21 @@
     ]
   },
   "current_state": {
-    "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, and setup handlers already consume that seam, but the runtime/config boundary is still incomplete because `setup` remains a transitional global seam, `internal/service/config` still aliases `setup` types, some consumers still depend on full-tree config access, and several internal packages still import `socialpredict/models` directly.",
+    "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, and setup handlers already consume that seam, but the runtime/config boundary is still incomplete because `setup` remains a transitional global seam, `internal/service/config` still aliases `setup` types, some consumers still depend on full-tree config access, and several internal packages still import `socialpredict/models` directly. Error handling is also split-brain: `handlers/envelope.go` defines a shared `{ ok, result, reason }` vocabulary used by some newer auth, market, bet, setup, stats, metrics, and CMS handlers, while many legacy handlers and middleware still emit raw strings or empty responses.",
     "pain_points": [
       "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
       "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
       "`backend/setup` is still a transitional singleton seam with embedded YAML, `sync.Once`, `init()` loading, and package-level accessors instead of being reduced to a source-asset/translation role.",
       "`internal/service/config` still aliases `setup` types and loads through `setup.LoadEconomicsConfig`, so the owned boundary is present but not complete.",
       "The backend still has two overlapping logging packages: `backend/logger` is the stronger live adapter, while `backend/logging` remains duplicate legacy overlap with reflection-heavy debug helpers and one remaining active import.",
+      "`backend/errors` is only a thin legacy package that writes `{ \"error\": ... }` JSON or logs strings; it is not the real production error-handling backbone.",
+      "`internal/service/auth` still defines and propagates its own `HTTPError`, which keeps HTTP-specific concerns inside an internal service seam.",
+      "`security.RateLimitMiddleware` and `LoginRateLimitMiddleware` emit plain-text 429 responses before route handlers run, bypassing the shared public `reason` vocabulary.",
+      "`server.buildHandler` and the security middleware stack do not own request correlation or panic recovery, so SocialPredict relies on scattered handler logic plus the standard library's default panic handling behavior.",
       "Some handlers and services still consume too much configuration surface area through whole-tree access or raw `setup` shapes instead of narrow immutable policy slices.",
       "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
-      "The API document and API-issues notes still describe a contract direction that depends on unresolved internal cleanup.",
+      "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
+      "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
       "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
     ],
     "constraints": [
@@ -151,7 +188,7 @@
     ]
   },
   "target_state": {
-    "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, runtime diagnostic logging, and health/readiness wiring; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; repositories and adapters own translation from legacy persistence models into internal domain types; and API/auth contract changes happen only after those seams are stable.",
+    "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, runtime diagnostic logging, request correlation, panic recovery, and health/readiness wiring; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; repositories and adapters own translation from legacy persistence models into internal domain types; a shared failure boundary owns how domain/auth/runtime faults become public responses; and API/auth contract changes happen only after those seams are stable.",
     "boundaries": [
       {
         "name": "Runtime Bootstrap and Infrastructure",
@@ -212,6 +249,34 @@
         "reason": "Application-policy configuration is a shared policy input and should behave like an owned service boundary rather than a magic package or a thin wrapper around `setup`."
       },
       {
+        "name": "Failure Translation and Recovery Boundary",
+        "kind": "integration_boundary",
+        "purpose": "Own request correlation, panic recovery, middleware-generated failures, and translation from internal/auth/domain/runtime errors into public transport responses.",
+        "owns": [
+          "Request correlation at HTTP ingress",
+          "Panic recovery and sanitized 500 behavior",
+          "Pre-handler failures such as rate limiting and method-not-allowed responses",
+          "Shared failure writers for envelope and legacy plain-text routes during migration",
+          "Failure logging and metrics vocabulary shared across middleware and handlers"
+        ],
+        "does_not_own": [
+          "Business rules",
+          "Generic automatic retry of accounting-sensitive writes",
+          "Domain sentinel error definitions",
+          "External monitoring platform choice"
+        ],
+        "upstream_dependencies": [
+          "Runtime Bootstrap and Infrastructure",
+          "Domain Core"
+        ],
+        "downstream_dependencies": [
+          "API and Auth Contract Boundary",
+          "HTTP Server Boundary",
+          "OpenAPI Contract"
+        ],
+        "reason": "High availability in the monolith depends on owning how faults are contained and surfaced before and after handlers, rather than leaving recovery to scattered `http.Error` calls or default server behavior."
+      },
+      {
         "name": "Domain Core",
         "kind": "bounded_context",
         "purpose": "Hold market, bet, math, analytics, user, and auth-adjacent policy without direct dependence on transport or persistence structs.",
@@ -261,21 +326,24 @@
       {
         "name": "API and Auth Contract Boundary",
         "kind": "integration_boundary",
-        "purpose": "Own route-visible JSON envelopes, auth workflow semantics, sanitized reasons, and OpenAPI synchronization once the prerequisite seams are stable.",
+        "purpose": "Own route-visible JSON envelopes, auth workflow semantics, sanitized reasons, route-family contract selection, and OpenAPI synchronization once the prerequisite seams are stable.",
         "owns": [
           "HTTP response envelopes",
           "Stable `reason` values",
           "Auth-visible endpoint behavior",
+          "Route-by-route migration from plain-text failures to the shared reason vocabulary",
           "OpenAPI parity"
         ],
         "does_not_own": [
           "Runtime bootstrap",
+          "Panic recovery internals",
           "Persistence translation",
           "Configuration singleton behavior"
         ],
         "upstream_dependencies": [
           "Domain Core",
-          "Configuration Service Slice"
+          "Configuration Service Slice",
+          "Failure Translation and Recovery Boundary"
         ],
         "downstream_dependencies": [
           "OpenAPI Contract",
@@ -305,6 +373,16 @@
         "notes": "Package unification to `backend/logger` comes before richer tracing or expanded metrics surface area."
       },
       {
+        "name": "Server Failure Handling Seam",
+        "participants": [
+          "Runtime Bootstrap and Infrastructure",
+          "Failure Translation and Recovery Boundary",
+          "HTTP Server Boundary"
+        ],
+        "contract": "The server wraps application routes with owned request-correlation and panic-recovery middleware, and uses shared failure writers for method-not-allowed, rate-limited, and internal runtime failures whenever the route contract advertises an envelope.",
+        "notes": "This seam replaces empty 405s, plain-text 429s, and implicit panic handling as the long-term runtime failure story."
+      },
+      {
         "name": "Configuration Access Seam",
         "participants": [
           "Configuration Service Slice",
@@ -325,11 +403,22 @@
       {
         "name": "HTTP Envelope and Auth Semantics Seam",
         "participants": [
+          "Failure Translation and Recovery Boundary",
           "API and Auth Contract Boundary",
           "Domain Core"
         ],
-        "contract": "Handlers map policy outcomes to `{ ok, result, reason }` or transport failures at the HTTP boundary with sanitized, stable semantics.",
-        "notes": "This seam should tighten must-change-password enforcement while deferring the broader login token redesign."
+        "contract": "Handlers map policy outcomes to `{ ok, result, reason }` or explicit legacy plain-text failures at the HTTP boundary with sanitized, stable semantics, and middleware-generated failures use the same public vocabulary for migrated route families.",
+        "notes": "This seam should tighten must-change-password enforcement, remove `internal/service/auth` as the long-term owner of HTTP error strings, and defer the broader login token redesign."
+      },
+      {
+        "name": "Auth Failure Translation Seam",
+        "participants": [
+          "Domain Core",
+          "Failure Translation and Recovery Boundary",
+          "API and Auth Contract Boundary"
+        ],
+        "contract": "Authentication and authorization code returns typed internal outcomes that the HTTP boundary translates into stable public reasons, rather than letting an internal service type own route-visible status and message policy.",
+        "notes": "`internal/service/auth.HTTPError` is an acceptable migration bridge but not the target architecture."
       }
     ],
     "ubiquitous_language": [
@@ -502,6 +591,14 @@
           "Client application"
         ],
         "goal": "Receive stable JSON semantics for processed business outcomes and clearer transport-failure distinctions."
+      },
+      {
+        "name": "Keep the process available when handler or middleware code fails unexpectedly",
+        "actors": [
+          "Operator",
+          "Client application"
+        ],
+        "goal": "Contain panics and pre-handler failures behind owned recovery and failure-writing seams so faults are observable and sanitized without expanding side effects."
       }
     ],
     "domain_rules": [
@@ -529,6 +626,16 @@
         "rule": "Health/readiness signals, metrics, and tracing are separate operational surfaces and should not be collapsed into one generic observability abstraction.",
         "owner_boundary": "Runtime Bootstrap and Infrastructure",
         "reason": "Each signal answers different operational questions and needs clear ownership."
+      },
+      {
+        "rule": "Unexpected runtime failures and panics must be recovered at the server boundary, logged with request correlation, and surfaced as sanitized 5xx responses when the response has not already been committed.",
+        "owner_boundary": "Failure Translation and Recovery Boundary",
+        "reason": "High-availability behavior depends on controlled containment and diagnosis of faults, not on default panic handling or leaked internal strings."
+      },
+      {
+        "rule": "Middleware-generated failures for routes that advertise `ReasonResponse` must use the same public `reason` vocabulary as handlers; legacy plain-text responses are explicit migration exceptions, not silent drift.",
+        "owner_boundary": "Failure Translation and Recovery Boundary",
+        "reason": "Clients cannot depend on the contract if rate limiting, 405s, or auth bootstrap failures bypass the shared failure semantics."
       },
       {
         "rule": "Configuration values remain sourced from `backend/setup/setup.yaml` during this slice, but runtime access to those values moves behind an owned service boundary.",
@@ -566,6 +673,16 @@
         "reason": "This aligns the current slice with the intended contract cleanup without overextending into a broader redesign."
       },
       {
+        "rule": "`internal/service/auth` must not remain the long-term owner of route-visible HTTP status and message policy; it should return typed internal outcomes while the transport boundary maps them to public reasons.",
+        "owner_boundary": "API and Auth Contract Boundary",
+        "reason": "An internal service seam should not freeze HTTP concerns into its core API."
+      },
+      {
+        "rule": "Generic retry, circuit-breaker, or auto-replay logic must not be introduced around market, bet, user-account, or auth write paths without explicit idempotency and accounting review.",
+        "owner_boundary": "Failure Translation and Recovery Boundary",
+        "reason": "Hidden retries can duplicate financial side effects and are a worse failure mode than a surfaced transient error."
+      },
+      {
         "rule": "Users flagged with `mustChangePassword` may use login and change-password flows but should be blocked from other authenticated actions until the state is cleared.",
         "owner_boundary": "API and Auth Contract Boundary",
         "reason": "This is the locked auth decision for the active slice."
@@ -591,6 +708,20 @@
         "why": "One owned backend logging package reduces duplicated runtime vocabulary and makes later request correlation, redaction, and health/readiness hardening coherent.",
         "risks": [
           "A partial migration can leave `backend/logging` as a permanent compatibility shim and preserve split operational conventions."
+        ]
+      },
+      {
+        "name": "Error Translation Boundary",
+        "why": "Shared translation tables at middleware and handler edges let the system converge on stable public reasons without imposing a universal in-process error hierarchy.",
+        "risks": [
+          "Mapping tables can drift if new route families keep inventing local helpers or ad hoc strings."
+        ]
+      },
+      {
+        "name": "Fail Fast with Safe Recovery",
+        "why": "Owning panic recovery and sanitized 5xx behavior improves process resilience and diagnosis without attempting dangerous hidden retries for write-heavy flows.",
+        "risks": [
+          "Panics after partial writes will still produce imperfect client responses and need explicit logging to remain diagnosable."
         ]
       },
       {
@@ -664,13 +795,13 @@
     },
     {
       "id": "DP-005",
-      "title": "Use the envelope direction only in the scoped W04 contract pass",
+      "title": "Use the envelope direction through owned runtime recovery first, then route-family convergence in W04",
       "status": "accepted",
-      "context": "The desired `{ ok, result, reason }` shape is valuable but should not be spread before prerequisite cleanup.",
-      "decision": "Apply the envelope in the hotspot API/auth scope after W01-W03 prerequisites are in place.",
+      "context": "The desired `{ ok, result, reason }` shape is valuable, but the live backend already mixes envelope routes, plain-text routes, middleware 429s, and status-only router failures.",
+      "decision": "Use W01 to establish owned runtime failure writers for pre-handler and unexpected failures where the route contract supports them, then use W04 for route-family convergence of handler and auth behavior onto the stable public reason vocabulary.",
       "consequences": [
-        "W04 can align contract behavior with more stable internals.",
-        "Earlier waves avoid accidental contract churn."
+        "The runtime boundary stops being a contract blind spot while W04 still remains the main route-by-route alignment pass.",
+        "Envelope adoption becomes an explicit migration story instead of a late all-or-nothing rewrite."
       ]
     },
     {
@@ -727,14 +858,58 @@
         "The architecture stays incremental and boundary-first instead of restarting with a parallel platform initiative.",
         "Operational capabilities can improve without outrunning the ongoing runtime/config modernization work."
       ]
+    },
+    {
+      "id": "DP-011",
+      "title": "Treat error handling as boundary translation and recovery, not a new universal error hierarchy",
+      "status": "accepted",
+      "context": "The live backend already mixes envelope helpers, domain sentinel errors, auth-local `HTTPError`, and legacy plain-text `http.Error` responses, while `backend/errors` is only a thin legacy helper package.",
+      "decision": "Keep typed domain and auth outcomes close to their owned boundaries, use shared translation at middleware and handler edges to produce public `reason` values or explicit legacy plain-text responses, and treat `backend/errors` as deletion-only compatibility scope rather than the future architecture.",
+      "consequences": [
+        "Migration can proceed route family by route family instead of through a flag-day rewrite.",
+        "The design avoids inventing a large error-type taxonomy that the current codebase does not need."
+      ]
+    },
+    {
+      "id": "DP-012",
+      "title": "Own panic recovery and middleware-generated failures at the server boundary",
+      "status": "accepted",
+      "context": "The current server stack has no application-owned recovery middleware, router 405 handling writes an empty response, and security rate limiting emits plain-text 429s before handlers run.",
+      "decision": "Introduce request correlation and panic-recovery middleware plus shared failure writers for method-not-allowed, rate-limited, and sanitized internal-failure responses at the server or middleware boundary.",
+      "consequences": [
+        "HA-oriented fault containment and diagnosis improve without changing domain behavior.",
+        "OpenAPI and production notes can describe a credible runtime failure story rather than assuming handlers own every failure."
+      ]
+    },
+    {
+      "id": "DP-013",
+      "title": "Do not add generic retry or circuit-breaker behavior to accounting-sensitive write flows",
+      "status": "accepted",
+      "context": "The existing error-handling note proposes generic recovery strategies, but market, bet, user-account, and auth writes are not generally idempotent and can have irreversible financial side effects.",
+      "decision": "Reject middleware-level or generic error-layer retries for write-heavy business flows unless a separate design explicitly proves idempotency, transaction scope, and accounting safety.",
+      "consequences": [
+        "Some transient infrastructure failures will surface to clients instead of being hidden.",
+        "The system avoids duplicating financial side effects under the banner of graceful recovery."
+      ]
+    },
+    {
+      "id": "DP-014",
+      "title": "Treat PlainTextErrorResponse as an explicit migration state, not the target contract",
+      "status": "accepted",
+      "context": "The current OpenAPI document already advertises both `ReasonResponse` and `PlainTextErrorResponse`, which reflects the live backend more accurately than the greenfield production note.",
+      "decision": "Document route families as either envelope-based or legacy plain-text during migration, update them explicitly as shared failure writers land, and retire `PlainTextErrorResponse` only when middleware and handler paths for those routes converge.",
+      "consequences": [
+        "Documentation stays grounded in live behavior during the migration.",
+        "Clients and reviewers can see where contract drift still exists instead of assuming universal envelope coverage."
+      ]
     }
   ],
   "workstreams": [
     {
       "name": "W01 Util Breakup and Runtime Boundary Cleanup",
-      "objective": "Remove `backend/util` as a mixed catch-all, eliminate direct hidden runtime access from touched startup/server/handler/auth paths, and unify duplicated runtime helper ownership such as backend logging.",
+      "objective": "Remove `backend/util` as a mixed catch-all, eliminate direct hidden runtime access from touched startup/server/handler/auth paths, own runtime failure behavior such as request correlation and panic recovery, and unify duplicated runtime helper ownership such as backend logging.",
       "depends_on": [],
-      "notes": "This creates the first explicit infrastructure seam, reduces hidden dependency injection-by-global, and should include migration from `backend/logging` to `backend/logger` plus clarification of runtime observability ownership."
+      "notes": "This creates the first explicit infrastructure seam, reduces hidden dependency injection-by-global, and should include migration from `backend/logging` to `backend/logger`, introduction of server-owned recovery/failure middleware, clarification of runtime observability ownership, and a deletion path for `backend/errors`."
     },
     {
       "name": "W02 Configuration Service Extraction",
@@ -754,11 +929,11 @@
     },
     {
       "name": "W04 Scoped API and Auth Alignment",
-      "objective": "Apply sanitized envelope helpers, tighten must-change-password behavior, and align OpenAPI/docs with the implemented post-prerequisite backend behavior.",
+      "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior.",
       "depends_on": [
         "W03 Legacy Model Decoupling"
       ],
-      "notes": "This is a contract-alignment wave, not a public route redesign wave."
+      "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly track which routes still use `PlainTextErrorResponse` and only retire that contract where middleware and handler behavior have converged."
     }
   ],
   "risks": [
@@ -788,6 +963,11 @@
       "mitigation": "Treat W01-W03 as real prerequisites and stop contract cleanup from outrunning boundary cleanup."
     },
     {
+      "severity": "high",
+      "statement": "Relying on the standard library's implicit panic handling instead of application-owned recovery leaves SocialPredict with weak diagnostics, broken connection semantics, and no stable failure response shape under runtime faults.",
+      "mitigation": "Add request-correlation and panic-recovery middleware in W01, and log sanitized failure context through the owned runtime logger."
+    },
+    {
       "severity": "medium",
       "statement": "`configService.Current()` can preserve whole-tree coupling behind a cleaner facade if consumers continue to reach through the full configuration tree.",
       "mitigation": "Treat narrow immutable policy slices and consumer-owned interfaces as explicit W02 exit criteria for handlers and domain services."
@@ -801,6 +981,16 @@
       "severity": "medium",
       "statement": "The current login/token model still has deeper security weaknesses that are only partially mitigated by must-change-password enforcement.",
       "mitigation": "Document the limited-scope-token redesign as deferred and avoid implying that W04 fully resolves auth architecture."
+    },
+    {
+      "severity": "high",
+      "statement": "Generic retry or circuit-breaker middleware added in the name of graceful recovery could duplicate accounting-sensitive writes or create hard-to-reconcile financial side effects.",
+      "mitigation": "Ban generic write-path retries from the error-handling modernization scope and require a separate ADR for any idempotent retry case."
+    },
+    {
+      "severity": "medium",
+      "statement": "The mixed `ReasonResponse` versus `PlainTextErrorResponse` contract can continue to drift if middleware and handler migrations are not tracked together.",
+      "mitigation": "Maintain an explicit route-family migration matrix in docs and OpenAPI updates, and do not claim universal envelope coverage prematurely."
     },
     {
       "severity": "medium",
@@ -850,6 +1040,26 @@
       "blocking": false
     },
     {
+      "question": "Should all `/v0` application routes ultimately converge on `ReasonResponse`, or are there specific route families that should intentionally retain `PlainTextErrorResponse` after the active slice?",
+      "why_it_matters": "The answer determines whether plain-text failures are a temporary bridge or a durable contract branch that middleware and handlers must continue to support.",
+      "blocking": false
+    },
+    {
+      "question": "What request-correlation format and propagation rules should the server, logger, and failure writers use, given that the current backend has no request ID seam?",
+      "why_it_matters": "Panic recovery and HA-oriented diagnosis improve only if runtime fault logs can be tied back to the affected request path.",
+      "blocking": false
+    },
+    {
+      "question": "Should `internal/service/auth` migrate to typed auth outcomes, typed internal errors, or a small explicit failure enum before HTTP mapping occurs?",
+      "why_it_matters": "That choice determines whether auth becomes a cleaner domain/service seam or keeps leaking transport policy through a different wrapper type.",
+      "blocking": false
+    },
+    {
+      "question": "Which middleware-generated failures beyond 429 and 405 need stable public reasons in the active slice, such as 404/404-like not-found behavior or auth bootstrap failure?",
+      "why_it_matters": "The contract remains ambiguous if only handler-generated failures get stable semantics while middleware and router failures keep their own vocabulary.",
+      "blocking": false
+    },
+    {
       "question": "Which currently authenticated endpoints must enforce `mustChangePassword` immediately once W04 starts, and are there any intentionally exempt flows besides login and change-password?",
       "why_it_matters": "The auth cleanup is scoped, but server-side enforcement must still be unambiguous.",
       "blocking": false
@@ -860,11 +1070,14 @@
     "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
     "Migrate the remaining `socialpredict/logging` usage to `socialpredict/logger` and delete `backend/logging` once any minimal test support is ported or replaced.",
     "Define the minimal stable `backend/logger` contract, including redaction expectations and request/correlation vocabulary, before adding richer observability surfaces.",
+    "Rewrite `README/PRODUCTION-NOTES/BACKEND/03-error-handling.md` from a greenfield implementation plan into an evolutionary migration note grounded in the current envelope/plain-text split, auth leakage, and missing recovery middleware.",
+    "Add an ADR for server-owned failure handling covering request correlation, panic recovery, shared 405/429 behavior, and the relationship between middleware failures and `ReasonResponse`.",
     "Define the runtime/bootstrap versus application-policy configuration taxonomy explicitly in implementation guidance and ADRs.",
     "Replace `internal/service/config` aliases with owned types and loader seams before migrating remaining setup consumers.",
     "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
     "Inventory the highest-value legacy-model dependencies in `internal/domain/markets`, `internal/domain/bets`, `internal/domain/math`, and analytics before W03 task breakdown.",
     "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
-    "Draft the initial public `reason` vocabulary for W04 so the API/auth cleanup does not improvise string contracts during implementation."
+    "Inventory `/v0` routes and middleware paths that still emit raw `http.Error`, empty 405s, or plain-text 429s, then rank the highest-value route families for W04 convergence.",
+    "Draft the initial public `reason` vocabulary and route-family migration matrix for W04 so the API/auth cleanup does not improvise string contracts during implementation."
   ]
 }
