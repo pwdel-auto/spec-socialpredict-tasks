@@ -238,11 +238,12 @@
       "id": "WAVE02-LOG-001",
       "title": "WAVE02 Logging: Standardize on backend/logger and delete backend/logging",
       "status": "pending",
-      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md` as the binding design context for WAVE02 logging and observability. Complete the first useful slice by migrating the remaining touched backend code off `socialpredict/logging` and onto `socialpredict/logger`, porting or replacing any minimal test seam that truly needs to survive, and deleting `backend/logging`. Preserve current behavior for the touched flows and avoid leaving a compatibility shim behind.",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md` as the binding design context for WAVE02 logging and observability. Complete the first useful slice by migrating the remaining touched backend code off `socialpredict/logging` and onto `socialpredict/logger`, porting or replacing any minimal test seam that truly needs to survive, and deleting `backend/logging`. Preserve current behavior for the touched flows, avoid leaving a compatibility shim behind, and do not replace the logger boundary with direct OpenTelemetry SDK-coupled application code.",
       "acceptance_criteria": [
         "No touched non-test backend code imports `socialpredict/logging`.",
         "Any necessary test support is moved or replaced without preserving duplicate package ownership.",
-        "`backend/logging` is deleted and focused checks cover the migrated behavior for the touched paths."
+        "`backend/logging` is deleted and focused checks cover the migrated behavior for the touched paths.",
+        "No touched path replaces `backend/logger` with a direct application-level OpenTelemetry logging abstraction."
       ],
       "verification": {
         "owner": "software-action-logging-agent",
@@ -250,7 +251,8 @@
         "focus": [
           "package unification onto backend/logger",
           "deletion of backend/logging without a compatibility shim",
-          "behavior-preserving migration for touched callers"
+          "behavior-preserving migration for touched callers",
+          "preservation of backend/logger as the application-facing adapter"
         ]
       },
       "out_of_scope": [
@@ -274,17 +276,19 @@
       "profile": "",
       "notes": [
         "Treat `backend/logging` as deletion-only scope.",
-        "Do not introduce a new wrapper package or long-lived compatibility layer."
+        "Do not introduce a new wrapper package or long-lived compatibility layer.",
+        "Do not solve this task by wiring business code directly to an OpenTelemetry SDK."
       ]
     },
     {
       "uid": "8e76fa6e-2576-4021-965e-3c96fed3d4d1",
       "id": "WAVE02-LOG-002",
-      "title": "WAVE02 Logging: Define the minimal stable backend/logger contract with redaction guardrails",
+      "title": "WAVE02 Logging: Define the minimal stable backend/logger contract with redaction and OpenTelemetry-aligned guardrails",
       "status": "pending",
-      "prompt": "After package unification, harden `backend/logger` as the sole backend runtime log-emission adapter. Make the surviving logger boundary explicit for startup, server, and middleware use; define the minimal stable helper surface, message-vocabulary expectations, and redaction or no-secret rules in code and tests; and remove ad hoc patterns that would preserve unsafe or reflection-heavy logging behavior. Keep the work small and runtime-focused; do not start a full structured-logging platform.",
+      "prompt": "After package unification, harden `backend/logger` as the sole backend runtime log-emission adapter. Make the surviving logger boundary explicit for startup, server, and middleware use; define the minimal stable helper surface, message or field vocabulary expectations, OpenTelemetry-aligned correlation expectations, and redaction or no-secret rules in code and tests; and remove ad hoc patterns that would preserve unsafe or reflection-heavy logging behavior. Keep the work small and runtime-focused; do not start a full structured-logging platform or couple callers directly to exporter-specific APIs.",
       "acceptance_criteria": [
-        "`backend/logger` exposes a clearer minimal runtime boundary for the touched callers without introducing a second logging abstraction.",
+        "`backend/logger` exposes a clearer minimal runtime boundary for the touched callers without introducing a second logging abstraction or direct SDK-coupled replacement.",
+        "The touched logger contract makes the initial OpenTelemetry-aligned correlation or field vocabulary explicit for the surviving callers.",
         "Touched logging behavior has explicit tests guarding stable runtime usage and safe handling expectations for secrets or sensitive values.",
         "Touched runtime call sites can use the surviving logger package without reintroducing per-package logging dialects."
       ],
@@ -293,6 +297,7 @@
         "sign_off": "required",
         "focus": [
           "minimal stable logger contract",
+          "OpenTelemetry-aligned field and correlation vocabulary",
           "redaction and no-secret guardrails",
           "avoidance of a second logging abstraction"
         ]
@@ -319,7 +324,8 @@
       "profile": "",
       "notes": [
         "Keep logging at runtime and transport boundaries, not in core domain policy.",
-        "Never log secrets, passwords, tokens, or API keys."
+        "Never log secrets, passwords, tokens, or API keys.",
+        "If JSON logs are emitted outside OTLP, prefer top-level `trace_id`, `span_id`, and `trace_flags`."
       ]
     },
     {
@@ -327,10 +333,11 @@
       "id": "WAVE02-LOG-003",
       "title": "WAVE02 Logging: Add lifecycle and request-boundary logging through server and middleware seams",
       "status": "pending",
-      "prompt": "With one logger package and a stable contract, add runtime-boundary logging for startup, shutdown or fatal paths, and request lifecycle or correlation where it belongs: `main.go`, `server`, and middleware or security seams. Keep handlers and domain services thin, prefer one vocabulary, and avoid scattering logger construction through business code. Preserve existing endpoint behavior while making deploy, restart, and request diagnostics more deterministic.",
+      "prompt": "With one logger package and a stable contract, add runtime-boundary logging for startup, shutdown or fatal paths, and request lifecycle or correlation where it belongs: `main.go`, `server`, and middleware or security seams. Keep handlers and domain services thin, prefer one vocabulary, use OpenTelemetry-compatible correlation shape at the boundary, and avoid scattering logger construction through business code. Preserve existing endpoint behavior while making deploy, restart, and request diagnostics more deterministic.",
       "acceptance_criteria": [
         "Touched startup, server, and middleware paths emit runtime diagnostics through `backend/logger` rather than raw `log` calls or ad hoc local patterns.",
         "Request or correlation context is added at the boundary layer instead of being pushed into domain logic or unrelated handlers.",
+        "Any touched serialized correlation fields are compatible with later OpenTelemetry trace-log correlation instead of inventing a second naming scheme.",
         "Focused tests cover the new boundary logging behavior or helpers deterministically for the touched paths."
       ],
       "verification": {
@@ -338,7 +345,7 @@
         "sign_off": "required",
         "focus": [
           "runtime-boundary placement of logging",
-          "request or correlation context handling",
+          "request or correlation context handling compatible with later tracing",
           "deterministic verification for touched logging helpers"
         ]
       },
@@ -364,7 +371,8 @@
       "profile": "",
       "notes": [
         "Prefer middleware and runtime-boundary injection over handler-local logger construction.",
-        "Keep stdout or stderr-first emission suitable for process and container aggregation."
+        "Keep stdout or stderr-first emission suitable for process and container aggregation.",
+        "Do not start a full tracing rollout in this task."
       ]
     },
     {
@@ -372,7 +380,7 @@
       "id": "WAVE02-LOG-004",
       "title": "WAVE02 Logging: Harden health and readiness semantics without conflating metrics",
       "status": "pending",
-      "prompt": "After runtime logging boundaries are stable, harden the backend's operator-facing health signals. Clarify `/health` and any new readiness or liveness behavior so orchestration and deploy diagnostics can rely on explicit semantics, while keeping `/v0/system/metrics` separate as an application route. Reuse existing runtime and DB seams where practical, keep the implementation deterministic, and avoid inventing a broad observability subsystem.",
+      "prompt": "After runtime logging boundaries are stable, harden the backend's operator-facing health signals. Clarify `/health` and any new readiness or liveness behavior so orchestration and deploy diagnostics can rely on explicit semantics, while keeping `/v0/system/metrics` separate as an application route. Reuse existing runtime and DB seams where practical, keep the implementation deterministic, and avoid inventing a broad observability subsystem or smuggling generic telemetry-backend status into health probes.",
       "acceptance_criteria": [
         "Touched server or runtime code exposes explicit, deterministic health or readiness semantics appropriate for orchestration.",
         "Health and readiness handling remains separate from application metrics routes and does not repurpose `/v0/system/metrics` as an infrastructure probe.",
@@ -389,6 +397,7 @@
       },
       "out_of_scope": [
         "Prometheus or external metrics backend rollout",
+        "OpenTelemetry Collector rollout",
         "distributed tracing rollout",
         "public API taxonomy redesign"
       ],
@@ -408,19 +417,20 @@
       "profile": "",
       "notes": [
         "Keep `/health` simple and orchestration-friendly.",
-        "Do not collapse health and metrics into one generic observability abstraction."
+        "Do not collapse health and metrics into one generic observability abstraction.",
+        "Do not treat health endpoints as a proxy for telemetry pipeline status."
       ]
     },
     {
       "uid": "668dbea3-f70a-46c2-9683-877f2e45f480",
       "id": "WAVE02-LOG-005",
-      "title": "WAVE02 Logging: Clarify metrics ownership and leave tracing as a precise follow-up seam",
+      "title": "WAVE02 Logging: Clarify metrics ownership and leave OpenTelemetry tracing or export as a precise follow-up seam",
       "status": "pending",
-      "prompt": "Finish the logging and observability wave by tightening the boundary around existing metrics handling after logger unification and health or readiness hardening. Keep `/v0/system/metrics` and adjacent metrics code explicitly application-owned, avoid folding it into runtime probes, and add only the smallest implementation seam or documentation-in-code needed to keep future tracing work well-scoped. Do not introduce a top-level `observability/` tree or a speculative tracing framework in this task.",
+      "prompt": "Finish the logging and observability wave by tightening the boundary around existing metrics handling after logger unification and health or readiness hardening. Keep `/v0/system/metrics` and adjacent metrics code explicitly application-owned, avoid folding it into runtime probes, and add only the smallest implementation seam or documentation-in-code needed to keep future OpenTelemetry tracing or export work well-scoped. Do not introduce a top-level `observability/` tree, treat a stdout exporter format as a contract, or roll out a speculative tracing framework in this task.",
       "acceptance_criteria": [
         "Touched metrics routes or handlers have clearer ownership and do not blur runtime health or readiness with application metrics.",
         "No touched path introduces a new top-level observability package family or a speculative tracing implementation.",
-        "The touched code and tests leave a precise, limited seam for later tracing or richer metrics work instead of preserving ad hoc coupling."
+        "The touched code and tests leave a precise, limited seam for later OpenTelemetry tracing or richer metrics work instead of preserving ad hoc coupling."
       ],
       "verification": {
         "owner": "software-action-verifier-agent",
@@ -428,7 +438,7 @@
         "focus": [
           "metrics ownership clarity",
           "absence of an observability mega-tree or speculative tracing rollout",
-          "precise follow-up seam for later work"
+          "precise OpenTelemetry-compatible follow-up seam for later work"
         ]
       },
       "out_of_scope": [
@@ -452,7 +462,8 @@
       "profile": "",
       "notes": [
         "This is the WAVE02 stop-and-review point before any richer tracing rollout.",
-        "Treat tracing as later than package unification, logger hardening, and health or readiness clarification."
+        "Treat tracing as later than package unification, logger hardening, and health or readiness clarification.",
+        "Do not treat an OpenTelemetry stdout exporter format as the production logging contract."
       ]
     }
   ]

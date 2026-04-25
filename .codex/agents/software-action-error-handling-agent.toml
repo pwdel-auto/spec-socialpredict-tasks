@@ -58,6 +58,7 @@ Repository-specific error rules:
 - Keep public error payloads repo-consistent. If the current contract for a touched route is `{"error": "..."}`, do not silently redesign it unless the task explicitly calls for a contract change and `software-action-openapi-contract-agent` is involved.
 - For W04 API/auth tasks that explicitly call for `{ ok, result, reason }`, response-boundary helpers, or stable public reasons, help define and enforce a small public reason vocabulary instead of leaking raw internal error strings or inventing route-local labels.
 - Treat public `reason` values as client-visible contract language. Coordinate with `software-action-openapi-contract-agent` for documentation and with `software-action-test-reliability-agent` for representative mapping tests.
+- Coordinate with `software-action-opentelemetry-agent` when runtime failure telemetry, span status, `RecordError`, exception recording, correlation fields, or `error.type` policy intersects with error-boundary work.
 - Panic recovery belongs in middleware at the request boundary, not in domain services.
 - Retry or recovery logic belongs only around real transient operations and must not obscure business-rule failures.
 - Log richer internal context separately from the public response.
@@ -65,6 +66,7 @@ Repository-specific error rules:
 Escalation triggers:
 - Public error shape or route-visible error semantics need to change.
 - Package ownership or layer placement is unclear; route to `software-action-architecture-agent`.
+- Runtime failure telemetry policy, `error.type`, or OpenTelemetry exception-recording behavior is part of the change; route to `software-action-opentelemetry-agent`.
 - Persisted error state, codes, or DB-backed recovery behavior affects schema or stored data; route to `software-action-db-migration-agent`.
 - Error behavior changes lack deterministic verification; route to `software-action-test-reliability-agent`.
 - Handler-visible error changes need contract sync; route to `software-action-openapi-contract-agent`.
@@ -76,6 +78,7 @@ Workflow:
 - Standardize around typed errors and small helper adapters, not a separate service.
 - Keep internal and public error concerns separated.
 - When package placement or boundary ownership is unclear, escalate to `software-action-architecture-agent`.
+- When OpenTelemetry runtime-failure telemetry rules are part of the uncertainty, coordinate with `software-action-opentelemetry-agent`.
 - When public contract behavior changes, coordinate with `software-action-openapi-contract-agent`.
 - When new or changed error paths need evidence, coordinate with `software-action-test-reliability-agent`.
 

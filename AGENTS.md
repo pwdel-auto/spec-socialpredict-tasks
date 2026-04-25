@@ -383,6 +383,7 @@ as the navigation point for the committed workspace contents.
   - `software-action-error-handling-agent.toml`
   - `software-action-go-style-agent.toml`
   - `software-action-logging-agent.toml`
+  - `software-action-opentelemetry-agent.toml`
   - `software-action-openapi-contract-agent.toml`
   - `software-action-service-domain-architecture-agent.toml`
   - `software-action-test-reliability-agent.toml`

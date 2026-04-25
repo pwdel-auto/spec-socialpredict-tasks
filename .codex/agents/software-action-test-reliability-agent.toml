@@ -51,6 +51,7 @@ Repository-specific testing rules:
 - Keep tests isolated from external services.
 - Add regression coverage when touching pricing, balances, payouts, auth, migrations, or integer-conversion edge cases.
 - For W04 API/auth changes, include representative tests for stable public `reason` mapping and `{ ok, result, reason }` response-boundary behavior when the task changes or establishes those contracts.
+- When OpenTelemetry work is touched, prefer deterministic verification of provider setup or shutdown, middleware propagation, boundary instrumentation behavior, and stable correlation semantics over timing-fragile exporter-output assertions.
 - Watch for flaky setup, hidden DB coupling, or tests that depend on real time or external state more than necessary.
 
 Skill policy:
@@ -69,6 +70,7 @@ Workflow:
 - Prioritize deterministic backend/API verification.
 - Repeat tests until results are deterministic or escalate as flaky risk.
 - Record command evidence for verifier review.
+- When telemetry behavior is the main scope, coordinate expected signal semantics with `software-action-opentelemetry-agent` instead of inferring them from exporter output alone.
 
 Reporting contract:
 - If canonical report paths are provided in the task context, append verification facts to `conversation.ndjson` and important verification decisions to `decisions.ndjson` when practical.

@@ -58,12 +58,14 @@ Repository-specific logging rules:
 - Add structure and correlation incrementally; do not require a full structured-logging framework before improving call-site consistency.
 - Keep health, metrics, and tracing package placement explicit and extraction-safe.
 - Coordinate with `software-action-error-handling-agent` when logging changes intersect with panic recovery, sanitized errors, or public-versus-internal failure detail.
+- Coordinate with `software-action-opentelemetry-agent` when observability work intersects with provider wiring, propagators, semantic conventions, log bridges, metrics views, trace correlation shape, or exporter posture.
 - Coordinate with `software-action-openapi-contract-agent` when observability work changes route-visible behavior or documented endpoints.
 
 Escalation triggers:
 - Package ownership or layer placement is unclear; route to `software-action-architecture-agent`.
 - Logging changes imply public endpoint or contract drift; route to `software-action-openapi-contract-agent`.
 - Logging changes intersect with error sanitization or panic-recovery policy; route to `software-action-error-handling-agent`.
+- Logging or observability changes imply OpenTelemetry provider, propagator, bridge, semantic-convention, or exporter decisions; route to `software-action-opentelemetry-agent`.
 - New observability behavior lacks deterministic verification; route to `software-action-test-reliability-agent`.
 - Persisted observability state or schema-backed telemetry appears; route to `software-action-db-migration-agent`.
 
@@ -74,6 +76,7 @@ Workflow:
 - Prefer light, repo-consistent extensions to `backend/logger/simplelogging.go` over broad framework swaps unless explicitly requested.
 - Keep request-boundary observability concerns separated from core business logic.
 - When package placement or service-boundary ownership is unclear, escalate to `software-action-architecture-agent`.
+- When OpenTelemetry provider wiring, bridges, semantic conventions, or trace or metric rollout policy is the uncertain part, coordinate with `software-action-opentelemetry-agent`.
 - When public routes or docs are affected, coordinate with `software-action-openapi-contract-agent`.
 - When logging intersects with error policy, coordinate with `software-action-error-handling-agent`.
 
