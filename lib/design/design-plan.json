@@ -4,7 +4,7 @@
     "title": "Active Backend Modernization Slice: Configuration Ownership, Runtime Observability, Failure Recovery, Request-Boundary Security Hardening, Database Runtime Hardening, Legacy Model Decoupling, and API Contract Alignment",
     "status": "draft",
     "created_at": "2026-04-17T11:56:27Z",
-    "updated_at": "2026-04-26T14:07:06Z",
+    "updated_at": "2026-04-26T16:54:12Z",
     "source_context": {
         "task_repo": ".",
         "target_repo": "../socialpredict",
@@ -70,7 +70,9 @@
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-database-caching.md",
             "../socialpredict/backend/logger/simplelogging.go",
             "../socialpredict/backend/logging/loggingutils.go",
@@ -222,6 +224,7 @@
             "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
             "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
             "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
+            "The current nginx/Traefik deployment topology proxies backend application traffic under `/api/`, while the backend serves Swagger at `/swagger/` and the embedded UI fetches `/openapi.yaml` by absolute root path, so API docs publishing is not yet an explicit owned contract across local versus proxied environments.",
             "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
         ],
         "constraints": [
@@ -234,7 +237,7 @@
         ]
     },
     "target_state": {
-        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, health/readiness wiring, and deployment-sensitive security settings such as JWT key presence, CORS posture, trusted-proxy assumptions, and header/HSTS ownership; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; a shared request-boundary security adapter owns validation, sanitization, rate limiting, and reusable security middleware support without becoming a second security platform; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable.",
+        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, health/readiness wiring, and deployment-sensitive security settings such as JWT key presence, CORS posture, trusted-proxy assumptions, and header/HSTS ownership; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; a shared request-boundary security adapter owns validation, sanitization, rate limiting, and reusable security middleware support without becoming a second security platform; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable, with backend-served docs and OpenAPI exposure paths made explicit across local and proxied environments.",
         "boundaries": [
             {
                 "name": "Runtime Bootstrap and Infrastructure",
@@ -487,6 +490,16 @@
                 ],
                 "contract": "The server wraps application routes with owned request-correlation and panic-recovery middleware, uses shared failure writers for method-not-allowed, rate-limited, auth-bootstrap, and internal runtime failures whenever the route contract advertises an envelope, and records unexpected failures once with stable correlation and failure classification.",
                 "notes": "This seam replaces empty 405s, plain-text 429s, ad hoc auth bootstrap failures, and implicit panic handling as the long-term runtime failure story, while keeping OpenTelemetry-style failure telemetry separate from the public response body."
+            },
+            {
+                "name": "API Docs Publishing Seam",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "HTTP Server Boundary",
+                    "API and Auth Contract Boundary"
+                ],
+                "contract": "Backend-served docs endpoints such as `/swagger/` and `/openapi.yaml` remain the canonical API docs surface, while ingress or proxy layers publish them at explicit external paths instead of accidentally hiding them behind `/api/` prefix routing or duplicating them in the frontend.",
+                "notes": "Local backend-root paths can stay simple, but staging and production should choose an explicit external docs route or host and, if needed, an explicit access restriction policy. The frontend should link or proxy, not own a separate Swagger copy."
             },
             {
                 "name": "Request Validation and Sanitization Seam",
@@ -1299,6 +1312,11 @@
         },
         {
             "severity": "medium",
+            "statement": "If staging and production continue to proxy the backend only under `/api/` while Swagger UI still fetches `/openapi.yaml` from the root path, the docs surface can break or drift across environments even when the backend contract itself is correct.",
+            "mitigation": "Treat API docs publishing as an explicit ingress/proxy contract and expose backend-served docs paths intentionally instead of relying on implicit prefix routing."
+        },
+        {
+            "severity": "medium",
             "statement": "If expected business rejections are recorded as telemetry errors by default, traces and metrics will over-report faults and blur the distinction between policy outcomes and runtime failures.",
             "mitigation": "Keep public `reason` values separate from telemetry fields, classify runtime errors contextually, and define one-time exception-recording rules at the failure boundary."
         },
@@ -1367,6 +1385,11 @@
         {
             "question": "Should all `/v0` application routes ultimately converge on `ReasonResponse`, or are there specific route families that should intentionally retain `PlainTextErrorResponse` after the active slice?",
             "why_it_matters": "The answer determines whether plain-text failures are a temporary bridge or a durable contract branch that middleware and handlers must continue to support.",
+            "blocking": false
+        },
+        {
+            "question": "What explicit staging/production publishing path should expose backend-served docs such as Swagger UI and `openapi.yaml`: root `/swagger/` and `/openapi.yaml`, a dedicated docs host, or an internal/admin-only route?",
+            "why_it_matters": "The backend docs surface already works at the backend root, but the current `/api/` proxy topology can hide or break it unless ingress ownership is decided deliberately.",
             "blocking": false
         },
         {
@@ -1454,6 +1477,7 @@
         "Use the software-planner pass to translate this design into smaller queue slices without changing the architectural decisions above.",
         "Back the next queue slice with the rewritten database-layer production note and keep the database-caching note explicitly deferred.",
         "Add an ADR or equivalent design note for runtime security posture covering JWT signing-key presence, trusted-proxy assumptions, CORS defaults, and HSTS/TLS ownership.",
+        "Decide and document the explicit staging/production publishing path for backend-served docs such as `/swagger/` and `/openapi.yaml`, including whether access should be public, proxied, or restricted.",
         "Decide the expected startup-failure posture for migrations and schema incompatibility before implementation starts so W04 does not inherit warning-only behavior by default.",
         "Define the first narrow accounting-sensitive units of work, likely starting with place-bet, sell-position, and market-resolution style flows.",
         "Inventory the remaining request-boundary raw `*gorm.DB` call sites and rank which ones should move behind existing service or repository seams first.",
