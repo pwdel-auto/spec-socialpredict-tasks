@@ -1149,6 +1149,242 @@
         "This is the WAVE05 stop-and-review point before broader auth or API convergence work.",
         "Keep security hardening threaded through existing seams instead of reopening a separate platform buildout."
       ]
+    },
+    {
+      "uid": "4e2d1e16-7b98-4a04-990e-70af6fdaa60a",
+      "id": "WAVE06-API-001",
+      "title": "WAVE06 API: Publish the route-family migration matrix and touched public reason vocabulary",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md`, and `../socialpredict/backend/docs/API-ISSUES.md` as the binding design context for WAVE06 API alignment. Start the wave by making the mixed contract explicit instead of improvising it during code cleanup. Add an initial route-family migration matrix for the touched `/v0` families plus infra docs routes, classify which paths are envelope-based, mixed raw-success plus `ReasonResponse`, or legacy plain-text, capture the touched public `reason` vocabulary, and make every touched `PlainTextErrorResponse` usage explicit migration state. Keep `backend/server/server.go` as the source of truth and align `backend/docs/openapi.yaml`, route/spec checks, and API follow-up notes to that matrix without introducing a universal wrapper, `/v1`, header-based versioning, or generated-client workflow.",
+      "acceptance_criteria": [
+        "The touched docs and OpenAPI contract include a route-family migration matrix that matches live route behavior for the chosen families and infra docs routes.",
+        "Touched public `reason` values are explicit and kept separate from runtime or telemetry vocabulary, and touched `PlainTextErrorResponse` usage is documented as migration state rather than target contract.",
+        "Focused contract validation keeps the matrix slice aligned with `server.go`, touched handlers or DTOs, and `openapi.yaml`."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "route-family migration matrix accuracy",
+          "OpenAPI parity for the touched families and infra docs routes",
+          "explicit `PlainTextErrorResponse` migration-state documentation"
+        ]
+      },
+      "out_of_scope": [
+        "HATEOAS or broader hypermedia rollout",
+        "XML or broader content negotiation",
+        "universal `APIResponse` wrappers, `/v1`, or header-based versioning"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/openapi_test.go",
+        "../socialpredict/backend/server/server_contract_test.go",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0ba7f17a-9086-4ebc-8a2b-75da87826d2b"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Track middleware and handler response families together in the matrix.",
+        "Keep the source-of-truth order explicit: `server.go` -> touched handlers or DTOs -> `openapi.yaml` -> `API-ISSUES.md`."
+      ]
+    },
+    {
+      "uid": "a8738d53-e5b3-494c-8ca1-6a9c30126f2f",
+      "id": "WAVE06-API-002",
+      "title": "WAVE06 API: Introduce boundary-safe auth outcomes for the first protected route family",
+      "status": "pending",
+      "prompt": "With the migration matrix in place, start retiring auth transport leakage in code rather than just documenting it. Replace `internal/service/auth.HTTPError` usage on one coherent protected route family, such as the current-user/profile, admin, or create-market slice, with typed internal outcomes or an equivalent boundary-safe translation seam that keeps HTTP mapping at the handler or boundary helper. Preserve the existing `POST /v0/login` token response and the intentional `/v0/changepassword` exception when `mustChangePassword` is set, keep public `reason` values separate from telemetry classification, and update OpenAPI or notes only for the touched routes instead of claiming wave-wide completion.",
+      "acceptance_criteria": [
+        "The chosen auth path no longer requires `internal/service/auth.HTTPError` as the internal contract for the touched protected route family, and HTTP mapping stays at the boundary.",
+        "The touched protected routes preserve the existing login token contract plus the intentional login and change-password `mustChangePassword` exception behavior.",
+        "Focused route tests and OpenAPI or note updates cover the migrated auth failure reasons without leaking raw transport strings or overstating broader retirement."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "boundary-safe auth outcomes for the chosen route family",
+          "removal of `HTTPError` transport leakage from the touched auth path",
+          "preserved login and change-password `mustChangePassword` exceptions"
+        ]
+      },
+      "out_of_scope": [
+        "token redesign, MFA, RBAC, or session-platform work",
+        "full authenticated-route sweep in one task",
+        "turning public `reason` values into telemetry fields"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/docs/API-ISSUES.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "4e2d1e16-7b98-4a04-990e-70af6fdaa60a"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose one coherent protected family instead of scattering single-callsite changes across the tree.",
+        "Preserve the existing login and change-password exception behavior intentionally while retiring transport leakage in the touched slice."
+      ]
+    },
+    {
+      "uid": "78131017-967a-43e2-9fd0-fc523891b1ce",
+      "id": "WAVE06-API-003",
+      "title": "WAVE06 API: Converge the first client-visible legacy route family on shared failure writers",
+      "status": "pending",
+      "prompt": "After the first auth-translation seam lands, migrate one client-visible legacy route family that still returns raw JSON success with plain-text or ad hoc `http.Error` failures, such as search markets or a public-user reporting slice, onto the shared failure-writer direction. Keep success payloads truthful to the current family unless the route already advertises an envelope, update the route-family migration matrix and OpenAPI route-by-route, and only retire `PlainTextErrorResponse` for the paths whose handler and middleware behavior have actually converged. Do not attempt a flag-day public route redesign or a universal response wrapper.",
+      "acceptance_criteria": [
+        "The chosen legacy route family no longer emits touched ad hoc plain-text failures where the shared boundary-failure path now applies.",
+        "Success payloads for the chosen family remain stable and truthful to the current route contract instead of being force-wrapped.",
+        "Focused tests, the migration matrix, and OpenAPI updates reflect the migrated family and make remaining `PlainTextErrorResponse` families explicit elsewhere."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared failure-writer behavior for the migrated family",
+          "stable success-shape preservation without wrapper drift",
+          "accurate remaining `PlainTextErrorResponse` inventory"
+        ]
+      },
+      "out_of_scope": [
+        "broad public route taxonomy rewrite",
+        "universal success-wrapper middleware",
+        "repo-wide parameter normalization"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "a8738d53-e5b3-494c-8ca1-6a9c30126f2f"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer a route family with existing contract tests or clear client visibility.",
+        "Migrate middleware and handler behavior together for the chosen family."
+      ]
+    },
+    {
+      "uid": "da866ab1-b53d-48f6-82d6-eb0d58d2a723",
+      "id": "WAVE06-API-004",
+      "title": "WAVE06 API: Make Swagger and OpenAPI publishing explicit across proxy environments",
+      "status": "pending",
+      "prompt": "Once the active contract inventory is explicit, make backend-served docs an owned publishing contract across local, staging, and production. Preserve `/swagger/` and `/openapi.yaml` as the canonical backend endpoints, update the repo's proxy or deployment templates and operator-facing notes so those paths are published deliberately instead of being hidden behind `/api/` prefix routing, and keep the backend as the single Swagger or OpenAPI source of truth. Do not solve this by cloning Swagger into the frontend, inventing a new docs platform, or starting generated-client rollout.",
+      "acceptance_criteria": [
+        "The chosen staging or production publishing path for `/swagger/` and `/openapi.yaml` is explicit in the touched proxy or deployment config and operator docs rather than implicit prefix routing.",
+        "Backend tests and touched docs agree on the canonical backend docs endpoints and their intended external publishing behavior.",
+        "The task keeps backend-served docs as the single contract surface and does not introduce a frontend-owned Swagger copy or new platform layer."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit proxy publishing for `/swagger/` and `/openapi.yaml`",
+          "agreement between backend tests and operator-facing docs",
+          "continued backend ownership of the docs surface"
+        ]
+      },
+      "out_of_scope": [
+        "generated clients or generator-first contract ownership",
+        "frontend-owned Swagger duplication",
+        "`/v1` or broader version-platform rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server/server_contract_test.go",
+        "../socialpredict/backend/docs/README.md",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
+        "../socialpredict/data/nginx/vhosts/dev/default.conf.template",
+        "../socialpredict/data/nginx/vhosts/prod/default.conf.template",
+        "../socialpredict/data/traefik/config/traefik.template"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "78131017-967a-43e2-9fd0-fc523891b1ce"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose one explicit external docs path or hostname and document any access-restriction decision.",
+        "Do not let `/api/` proxy rules accidentally own the docs contract."
+      ]
+    },
+    {
+      "uid": "f8cf6368-bd2e-4dbc-9548-6431f21e7b25",
+      "id": "WAVE06-API-005",
+      "title": "WAVE06 API: Stop and review remaining auth leakage, PlainTextErrorResponse families, and deferred platform ideas",
+      "status": "pending",
+      "prompt": "Finish WAVE06 with an API-specific stop-and-review point. Remove or document any touched remaining auth transport leakage or plain-text boundary failures that still bypass the current shared contract, refresh the route-family migration matrix with what this wave actually changed, and leave a precise next seam for the remaining `PlainTextErrorResponse` families or auth call sites. Keep `FUTURE/02-long-term-api-design.md` explicitly deferred, and do not pull HATEOAS, XML content negotiation, universal `APIResponse` wrappers, header-based versioning, `/v1`, generated-client-first workflow, or an API service or platform layer back into the active queue.",
+      "acceptance_criteria": [
+        "The remaining touched auth transport leaks and remaining `PlainTextErrorResponse` route families are either removed or explicitly inventoried with a precise next migration seam.",
+        "`API-ISSUES.md` and the active API notes accurately distinguish WAVE06 outcomes, remaining migration state, and the chosen docs-publishing contract.",
+        "The wave ends with a concrete next API or auth slice rather than a revived platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining auth and `PlainTextErrorResponse` inventory",
+          "active-note accuracy versus touched code and proxy config",
+          "continued deferral of long-term API-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating FUTURE API-platform topics",
+        "greenfield route redesign or universal wrapper rollout",
+        "generated-client, content-negotiation, or versioning buildout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "da866ab1-b53d-48f6-82d6-eb0d58d2a723"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE06 stop-and-review point before any broader API platform or versioning discussion.",
+        "Keep the next slice framed as a concrete route family or auth seam."
+      ]
     }
   ]
 }
