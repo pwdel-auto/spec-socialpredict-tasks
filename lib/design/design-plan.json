@@ -1,1156 +1,1310 @@
 {
-  "schema_version": "1.0",
-  "plan_uid": "9f8c16f4-a20e-4ba0-a98a-1f7ffc377292",
-  "title": "Active Backend Modernization Slice: Runtime Boundary Cleanup, Fault-Tolerant Failure Handling, Configuration Service Extraction, Legacy Model Decoupling, and API Contract Alignment",
-  "status": "draft",
-  "created_at": "2026-04-17T11:56:27Z",
-  "updated_at": "2026-04-26T02:40:00Z",
-  "source_context": {
-    "task_repo": ".",
-    "target_repo": "../socialpredict",
-    "scope": [
-      "../socialpredict/backend/util/**",
-      "../socialpredict/backend/setup/**",
-      "../socialpredict/backend/internal/app/**",
-      "../socialpredict/backend/internal/domain/**",
-      "../socialpredict/backend/internal/repository/**",
-      "../socialpredict/backend/errors/**",
-      "../socialpredict/backend/internal/service/auth/**",
-      "../socialpredict/backend/server/**",
-      "../socialpredict/backend/logger/**",
-      "../socialpredict/backend/logging/**",
-      "../socialpredict/backend/security/**",
-      "../socialpredict/backend/handlers/envelope.go",
-      "../socialpredict/backend/handlers/markets/**",
-      "../socialpredict/backend/handlers/users/**",
-      "../socialpredict/backend/handlers/bets/**",
-      "../socialpredict/backend/handlers/setup/**",
-      "../socialpredict/backend/handlers/stats/**",
-      "../socialpredict/backend/handlers/metrics/**",
-      "../socialpredict/backend/handlers/admin/adduser.go",
-      "../socialpredict/backend/docs/API-ISSUES.md",
-      "../socialpredict/backend/docs/openapi.yaml"
+    "schema_version": "1.0",
+    "plan_uid": "9f8c16f4-a20e-4ba0-a98a-1f7ffc377292",
+    "title": "Active Backend Modernization Slice: Configuration Ownership, Runtime Observability, Failure Recovery, Database Runtime Hardening, Legacy Model Decoupling, and API Contract Alignment",
+    "status": "draft",
+    "created_at": "2026-04-17T11:56:27Z",
+    "updated_at": "2026-04-26T04:21:07Z",
+    "source_context": {
+        "task_repo": ".",
+        "target_repo": "../socialpredict",
+        "scope": [
+            "../socialpredict/backend/util/**",
+            "../socialpredict/backend/setup/**",
+            "../socialpredict/backend/internal/app/**",
+            "../socialpredict/backend/internal/domain/**",
+            "../socialpredict/backend/internal/repository/**",
+            "../socialpredict/backend/migration/**",
+            "../socialpredict/backend/seed/**",
+            "../socialpredict/backend/errors/**",
+            "../socialpredict/backend/internal/service/auth/**",
+            "../socialpredict/backend/server/**",
+            "../socialpredict/backend/logger/**",
+            "../socialpredict/backend/logging/**",
+            "../socialpredict/backend/security/**",
+            "../socialpredict/backend/handlers/envelope.go",
+            "../socialpredict/backend/handlers/markets/**",
+            "../socialpredict/backend/handlers/users/**",
+            "../socialpredict/backend/handlers/bets/**",
+            "../socialpredict/backend/handlers/setup/**",
+            "../socialpredict/backend/handlers/stats/**",
+            "../socialpredict/backend/handlers/metrics/**",
+            "../socialpredict/backend/handlers/admin/adduser.go",
+            "../socialpredict/backend/docs/API-ISSUES.md",
+            "../socialpredict/backend/docs/openapi.yaml"
+        ],
+        "source_documents": [
+            "TASKS.json",
+            "../socialpredict/backend/docs/API-ISSUES.md",
+            "../socialpredict/backend/docs/README.md",
+            "../socialpredict/backend/README/BACKEND/API/API-DESIGN-REPORT.md",
+            "../socialpredict/backend/README/BACKEND/API/API-DOCS.md",
+            "../socialpredict/backend/internal/app/container.go",
+            "../socialpredict/backend/internal/app/env/devloader.go",
+            "../socialpredict/backend/internal/app/runtime/config.go",
+            "../socialpredict/backend/internal/app/runtime/db.go",
+            "../socialpredict/backend/main.go",
+            "../socialpredict/backend/migration/migrate.go",
+            "../socialpredict/backend/seed/seed.go",
+            "../socialpredict/backend/server/server.go",
+            "../socialpredict/backend/errors/httperror.go",
+            "../socialpredict/backend/errors/normalerror.go",
+            "../socialpredict/backend/handlers/envelope.go",
+            "../socialpredict/backend/handlers/markets/failure_helpers.go",
+            "../socialpredict/backend/handlers/markets/handler.go",
+            "../socialpredict/backend/handlers/markets/createmarket.go",
+            "../socialpredict/backend/handlers/users/publicuser.go",
+            "../socialpredict/backend/handlers/users/profile_helpers.go",
+            "../socialpredict/backend/handlers/bets/selling/sellpositionhandler.go",
+            "../socialpredict/backend/internal/service/auth/auth.go",
+            "../socialpredict/backend/internal/service/auth/authutils.go",
+            "../socialpredict/backend/internal/service/auth/loggin.go",
+            "../socialpredict/backend/internal/service/config/service.go",
+            "../socialpredict/backend/setup/setup.go",
+            "../socialpredict/backend/handlers/setup/setuphandler.go",
+            "../socialpredict/backend/handlers/stats/statshandler.go",
+            "../socialpredict/backend/internal/domain/bets/service.go",
+            "../socialpredict/backend/internal/domain/analytics/service.go",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-database-caching.md",
+            "../socialpredict/backend/logger/simplelogging.go",
+            "../socialpredict/backend/logging/loggingutils.go",
+            "../socialpredict/backend/security/ratelimit.go",
+            "../socialpredict/backend/security/security.go",
+            "../socialpredict/backend/docs/openapi.yaml",
+            "../socialpredict/backend/handlers/markets/resolvemarket.go",
+            "https://opentelemetry.io/docs/specs/status/",
+            "https://opentelemetry.io/status/",
+            "https://opentelemetry.io/docs/specs/otel/compatibility/logging_trace_context/",
+            "https://opentelemetry.io/docs/specs/semconv/general/recording-errors/",
+            "https://opentelemetry.io/docs/specs/otel/logs/sdk_exporters/stdout/"
+        ],
+        "related_task_uids": [
+            "019d99d7-3d71-70aa-9f0b-d0f4da7524f0",
+            "019d99d7-3d71-70aa-9f0b-d0f553db0d37",
+            "019d9996-f8a9-75b8-a4a3-7348db798872",
+            "019d9996-f8a9-75b8-a4a3-7349b2560d4f",
+            "019d9996-f8a9-736b-93d9-de583bb6112a",
+            "019d9996-f8a9-736b-93d9-de592fcac393",
+            "019d9996-f8a9-736b-93d9-de5a3e5e447f",
+            "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc",
+            "019d9996-f8a9-71b8-a7c0-81a1c4b0374c",
+            "019d9996-f8a9-71b8-a7c0-81a2945b5cb4",
+            "019d9996-f8a9-71b8-a7c0-81a3c332d436"
+        ]
+    },
+    "authors": [
+        {
+            "agent": "software-designer-01-evans-agent",
+            "design_posture": "evans",
+            "notes": "Established problem framing, language cleanup, and bounded-context candidates for the active modernization slice."
+        },
+        {
+            "agent": "software-designer-02-fowler-agent",
+            "design_posture": "fowler",
+            "notes": "Converted the slice into an evolutionary architecture path with explicit sequencing, migration seams, and reversibility concerns."
+        },
+        {
+            "agent": "software-designer-03-martin-agent",
+            "design_posture": "martin",
+            "notes": "Tightened dependency direction, policy-vs-detail boundaries, and framework/runtime isolation expectations for implementation."
+        },
+        {
+            "agent": "codex",
+            "design_posture": "fowler",
+            "notes": "Grounded the plan against the live backend's mixed error-handling paths, pre-handler failure behavior, OpenTelemetry-aligned observability posture, and the database runtime/startup ownership direction captured in the rewritten database-layer note."
+        }
     ],
-    "source_documents": [
-      "TASKS.json",
-      "../socialpredict/backend/docs/API-ISSUES.md",
-      "../socialpredict/backend/docs/README.md",
-      "../socialpredict/backend/README/BACKEND/API/API-DESIGN-REPORT.md",
-      "../socialpredict/backend/README/BACKEND/API/API-DOCS.md",
-      "../socialpredict/backend/internal/app/container.go",
-      "../socialpredict/backend/internal/app/env/devloader.go",
-      "../socialpredict/backend/internal/app/runtime/config.go",
-      "../socialpredict/backend/internal/app/runtime/db.go",
-      "../socialpredict/backend/main.go",
-      "../socialpredict/backend/server/server.go",
-      "../socialpredict/backend/errors/httperror.go",
-      "../socialpredict/backend/errors/normalerror.go",
-      "../socialpredict/backend/handlers/envelope.go",
-      "../socialpredict/backend/handlers/markets/failure_helpers.go",
-      "../socialpredict/backend/handlers/markets/handler.go",
-      "../socialpredict/backend/handlers/markets/createmarket.go",
-      "../socialpredict/backend/handlers/users/publicuser.go",
-      "../socialpredict/backend/handlers/users/profile_helpers.go",
-      "../socialpredict/backend/handlers/bets/selling/sellpositionhandler.go",
-      "../socialpredict/backend/internal/service/auth/auth.go",
-      "../socialpredict/backend/internal/service/auth/authutils.go",
-      "../socialpredict/backend/internal/service/auth/loggin.go",
-      "../socialpredict/backend/internal/service/config/service.go",
-      "../socialpredict/backend/setup/setup.go",
-      "../socialpredict/backend/handlers/setup/setuphandler.go",
-      "../socialpredict/backend/handlers/stats/statshandler.go",
-      "../socialpredict/backend/internal/domain/bets/service.go",
-      "../socialpredict/backend/internal/domain/analytics/service.go",
-      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md",
-      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md",
-      "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md",
-      "../socialpredict/backend/logger/simplelogging.go",
-      "../socialpredict/backend/logging/loggingutils.go",
-      "../socialpredict/backend/security/ratelimit.go",
-      "../socialpredict/backend/security/security.go",
-      "../socialpredict/backend/docs/openapi.yaml",
-      "../socialpredict/backend/handlers/markets/resolvemarket.go",
-      "https://opentelemetry.io/docs/specs/status/",
-      "https://opentelemetry.io/status/",
-      "https://opentelemetry.io/docs/specs/otel/compatibility/logging_trace_context/",
-      "https://opentelemetry.io/docs/specs/semconv/general/recording-errors/",
-      "https://opentelemetry.io/docs/specs/otel/logs/sdk_exporters/stdout/"
+    "summary": {
+        "one_sentence": "Modernize the active SocialPredict backend slice by establishing explicit configuration, runtime observability, failure-recovery, and database-runtime ownership seams; tightening accounting-sensitive transaction direction; decoupling domain logic from legacy persistence models; and only then aligning auth/API behavior with a cleaner contract.",
+        "business_outcomes": [
+            "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
+            "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
+            "Make backend behavior more predictable for operators and clients by clarifying ownership boundaries, auth behavior, and API contracts.",
+            "Preserve 100% financial and accounting correctness by treating economics policy as an immutable, accounting-sensitive input rather than a live mutable control surface.",
+            "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership, OpenTelemetry-aligned correlation, and health/readiness boundaries.",
+            "Make multi-replica startup safer by clarifying migration and seed ownership, readiness semantics, and database-runtime lifecycle responsibilities before adding caching or other optimization layers."
+        ],
+        "proposed_direction": "Treat the current work as a prerequisite-architecture program in six waves: configuration ownership, runtime observability ownership, failure recovery and translation, database runtime hardening plus accounting-sensitive transaction direction, legacy-model decoupling, and finally scoped API/auth/OpenAPI contract alignment."
+    },
+    "problem": {
+        "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the modernization story is still transitional across four connected areas. Configuration ownership is incomplete because `setup` still behaves as a package-global seam and `internal/service/config` still aliases `setup` types. Runtime observability is under-specified because `backend/logger` remains mostly string-oriented, request correlation is not standardized, and the backend still carries duplicated logging conventions. Error handling is mixed because newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary while legacy handlers, middleware, and auth flows still leak raw `http.Error` strings or transport-shaped internal types. Database runtime ownership is now the next major gap: startup DB reachability, migration invocation, and seed bootstrapping are still broad per-process startup responsibilities, `internal/app/runtime/db.go` still exposes `SetDB` and `GetDB`, `/health` does not reflect real DB readiness after startup, some handlers still take raw `*gorm.DB`, and accounting-sensitive write flows still need clearer atomic transaction and concurrency direction. Those seams make the system harder to reason about, harder to operate safely under replicas, and more likely to resist later high-availability extraction or service isolation.",
+        "why_now": "The active queue already assumes these prerequisites, and the rewritten production notes now align on configuration, logging/observability, error handling, and database architecture as evolutionary migrations grounded in the live backend. If database runtime ownership, startup-writer semantics, and accounting-sensitive transaction direction stay vague while later API/auth and optimization work continues, SocialPredict will freeze unsafe startup behavior and partial-write risk into long-lived seams and create avoidable rework.",
+        "out_of_scope": [
+            "Full microservice decomposition or container rollout in this pass.",
+            "Broad frontend or infrastructure redesign.",
+            "Public route reorganization.",
+            "Limited-scope login token redesign beyond current enforcement and response-shape cleanup.",
+            "Bets-to-Trades rename.",
+            "Caching or Redis rollout as part of the active database-layer slice."
+        ]
+    },
+    "design_drivers": {
+        "business_constraints": [
+            "Preserve existing behavior while modernizing architecture in small steps.",
+            "Keep current external setup endpoints and current public route organization stable during prerequisite waves.",
+            "Avoid a flag-day rewrite because the platform is already live and operational assumptions must remain intact.",
+            "Maintain 100% financial and accounting correctness while configuration and accounting-sensitive flows are modernized.",
+            "Keep Postgres as the system of record for authoritative accounting state while caching remains deferred."
+        ],
+        "architecture_drivers": [
+            "Extraction readiness for future service/container boundaries.",
+            "Dependency direction from handlers to policy to repositories rather than hidden globals.",
+            "Runtime/bootstrap configuration and application-policy configuration are different concerns with different owners.",
+            "Validate runtime/bootstrap config once at startup and inject immutable snapshots for the process lifetime.",
+            "Runtime/bootstrap should own DB pool, SSL, connection-lifecycle, readiness, and migration-invocation concerns rather than leaving them scattered across startup helpers and handlers.",
+            "Runtime diagnostic logging, health/readiness signals, metrics, and tracing are separate operational concerns with separate owners and sequencing.",
+            "Standardize on one owned backend logging adapter with stable vocabulary and safe redaction before expanding richer observability surfaces.",
+            "Use OpenTelemetry as the canonical telemetry model, correlation vocabulary, and preferred export direction while keeping `backend/logger` as the application-facing adapter.",
+            "Own pre-handler failures and unhandled panics at the server or middleware boundary instead of relying on scattered `http.Error` calls or default library behavior.",
+            "Application-policy configuration should live behind an owned internal boundary instead of a singleton package.",
+            "Repositories should remain edge translators between persistence models and internal domain types rather than regressing into generic `models.*` CRUD facades.",
+            "Shared startup mutations such as migrations and one-time seeds need single-writer startup semantics rather than per-replica default execution.",
+            "Accounting-sensitive flows need explicit atomic transaction and concurrency direction; compensation and metrics are not a substitute for correctness.",
+            "Explicit, testable contract shaping at the HTTP boundary.",
+            "Separate processed business failures from transport/runtime failures in the public contract.",
+            "Keep public HTTP failure reasons separate from internal telemetry fields such as `error.type` and span status.",
+            "Avoid generic automatic retry layers around accounting-sensitive write paths unless idempotency and transaction semantics are explicit.",
+            "Caching and Redis-related work are later optimizations and should not outrun correctness and runtime ownership."
+        ],
+        "quality_attributes": [
+            "Availability",
+            "Changeability",
+            "Testability",
+            "Fault isolation",
+            "Recoverability",
+            "Operational predictability",
+            "Financial correctness",
+            "Security consistency",
+            "Contract clarity"
+        ]
+    },
+    "current_state": {
+        "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, repositories already exist under `internal/repository`, and setup handlers already consume a service seam, but several ownership stories are still transitional. Configuration still leans on `setup` and aliased `setup` types. Error handling is split between envelope routes, legacy raw responses, auth-local transport errors, and middleware-generated plain-text failures. Runtime observability is still string-oriented and only partly standardized around `backend/logger`. Database runtime ownership is also incomplete: startup DB checks, migration invocation, and seed bootstrapping are still broad per-process startup behaviors; `/health` is not true DB readiness after startup; `SetDB`/`GetDB` still preserve process-global fallback state; and accounting-sensitive flows still need clearer atomic transaction and concurrency boundaries.",
+        "pain_points": [
+            "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
+            "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
+            "Runtime DB bootstrap owns DSN construction and opening but not yet a clear production contract for pool sizing, connection lifetime, SSL posture, readiness semantics, or graceful shutdown.",
+            "Every process still behaves like a startup coordinator by opening the DB, waiting for readiness, invoking migrations, and running seed paths before serving traffic.",
+            "`main.go` logs migration failure as a warning and `migration.MigrateDB` still allows a fallback `AutoMigrate` baseline path, which is too permissive for HA startup discipline.",
+            "Startup DB pinging exists, but `/health` still returns a hard-coded `ok`, so the runtime does not expose a strong post-startup readiness contract tied to actual DB condition.",
+            "`backend/setup` is still a transitional singleton seam with embedded YAML, `sync.Once`, `init()` loading, and package-level accessors instead of being reduced to a source-asset/translation role.",
+            "`internal/service/config` still aliases `setup` types and loads through `setup.LoadEconomicsConfig`, so the owned boundary is present but not complete.",
+            "The backend still has two overlapping logging packages: `backend/logger` is the stronger live adapter, while `backend/logging` remains duplicate legacy overlap with reflection-heavy debug helpers and one remaining active import.",
+            "`backend/logger` is still a string-oriented convenience layer and does not yet define an OpenTelemetry-aligned event, correlation, or export contract.",
+            "`backend/errors` is only a thin legacy package that writes `{ \"error\": ... }` JSON or logs strings; it is not the real production error-handling backbone.",
+            "`internal/service/auth` still defines and propagates its own `HTTPError`, which keeps HTTP-specific concerns inside an internal service seam.",
+            "`security.RateLimitMiddleware` and `LoginRateLimitMiddleware` emit plain-text 429 responses before route handlers run, bypassing the shared public `reason` vocabulary.",
+            "`server.buildHandler` and the security middleware stack do not own request correlation or panic recovery, so SocialPredict relies on scattered handler logic plus the standard library's default panic handling behavior.",
+            "The backend has no explicit rule for which handled business rejections should count as telemetry errors versus expected negative outcomes, making later tracing and metrics likely to drift.",
+            "Some request-boundary code still takes raw `*gorm.DB` directly, including stats and admin flows, which keeps the persistence boundary inconsistent even though repositories already exist.",
+            "Compensation-style money-moving behavior still exists in live bet flows, which is weaker than an explicit atomic transaction boundary for accounting-sensitive operations.",
+            "Some handlers and services still consume too much configuration surface area through whole-tree access or raw `setup` shapes instead of narrow immutable policy slices.",
+            "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
+            "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
+            "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
+            "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
+        ],
+        "constraints": [
+            "The existing container and internal service pattern is real and should be extended rather than replaced.",
+            "`backend/setup/setup.yaml` is the current source asset and should remain the source of truth during this slice.",
+            "The current backend still uses Gorilla Mux, GORM, and embedded assets; this slice should isolate those details better but not replace them.",
+            "Historical docs under `backend/README/BACKEND/API` are informative but not fully current.",
+            "Caching and Redis-related work are intentionally lower priority than runtime DB ownership and accounting-sensitive correctness."
+        ]
+    },
+    "target_state": {
+        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, and health/readiness wiring; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable.",
+        "boundaries": [
+            {
+                "name": "Runtime Bootstrap and Infrastructure",
+                "kind": "module",
+                "purpose": "Own process startup concerns such as env loading, runtime/bootstrap configuration validation, DB initialization, DB lifecycle, migration invocation, readiness checks, and controlled seed bootstrapping.",
+                "owns": [
+                    "Environment loading",
+                    "Runtime/bootstrap configuration",
+                    "DB configuration normalization",
+                    "DB connection creation",
+                    "DB pool sizing and connection-lifecycle policy",
+                    "DB SSL/TLS posture",
+                    "Runtime diagnostic logging",
+                    "Telemetry export wiring",
+                    "Health/readiness wiring",
+                    "Single-writer startup semantics for shared startup mutations",
+                    "Startup sequencing"
+                ],
+                "does_not_own": [
+                    "Business logic",
+                    "Economics or accounting policy",
+                    "HTTP contract shaping",
+                    "Long-lived domain helpers under a generic util namespace",
+                    "A second backend logging dialect",
+                    "Reflection-heavy production debug dumping as durable architecture"
+                ],
+                "upstream_dependencies": [],
+                "downstream_dependencies": [
+                    "Application Container",
+                    "Migration Runner",
+                    "Seed Bootstrap"
+                ],
+                "reason": "This separates process/runtime details and supporting operational capabilities from domain policy, removes hidden global access paths, and gives HA-critical startup behavior one explicit owner."
+            },
+            {
+                "name": "Configuration Service Slice",
+                "kind": "service",
+                "purpose": "Provide owned typed access to application-policy configuration such as economics and frontend policy, while reducing `backend/setup` to a source-asset/translation seam during migration.",
+                "owns": [
+                    "Owned application-policy configuration types",
+                    "Immutable application-policy snapshots",
+                    "Configuration loading from setup assets during migration",
+                    "Configuration access interfaces and narrow policy views",
+                    "Configuration-related handler/service seams"
+                ],
+                "does_not_own": [
+                    "Runtime/bootstrap env and infrastructure settings",
+                    "Global singleton access",
+                    "Direct package-level runtime state spread across unrelated consumers",
+                    "A generic top-level config subsystem for every concern in the system"
+                ],
+                "upstream_dependencies": [
+                    "Runtime Bootstrap and Infrastructure"
+                ],
+                "downstream_dependencies": [
+                    "Application Container",
+                    "Stats Handlers",
+                    "Setup Handlers",
+                    "Admin AddUser Flow",
+                    "Seed Bootstrap"
+                ],
+                "reason": "Application-policy configuration is a shared policy input and should behave like an owned service boundary rather than a magic package or a thin wrapper around `setup`."
+            },
+            {
+                "name": "Failure Translation and Recovery Boundary",
+                "kind": "integration_boundary",
+                "purpose": "Own request correlation, panic recovery, middleware-generated failures, and translation from internal/auth/domain/runtime errors into public transport responses.",
+                "owns": [
+                    "Request correlation at HTTP ingress",
+                    "Panic recovery and sanitized 500 behavior",
+                    "Pre-handler failures such as rate limiting and method-not-allowed responses",
+                    "Shared failure writers for envelope and legacy plain-text routes during migration",
+                    "OpenTelemetry-aligned failure logging, metrics, and span vocabulary shared across middleware and handlers"
+                ],
+                "does_not_own": [
+                    "Business rules",
+                    "Generic automatic retry of accounting-sensitive writes",
+                    "Domain sentinel error definitions",
+                    "External monitoring platform choice"
+                ],
+                "upstream_dependencies": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Domain Core"
+                ],
+                "downstream_dependencies": [
+                    "API and Auth Contract Boundary",
+                    "HTTP Server Boundary",
+                    "OpenAPI Contract"
+                ],
+                "reason": "High availability in the monolith depends on owning how faults are contained and surfaced before and after handlers, rather than leaving recovery to scattered `http.Error` calls or default server behavior."
+            },
+            {
+                "name": "Domain Core",
+                "kind": "bounded_context",
+                "purpose": "Hold market, bet, math, analytics, user, and auth-adjacent policy without direct dependence on transport or persistence structs.",
+                "owns": [
+                    "Business rules",
+                    "Workflow policy",
+                    "Calculation policy",
+                    "Authorization policy checks tied to business state"
+                ],
+                "does_not_own": [
+                    "HTTP request/response details",
+                    "GORM models as native policy objects",
+                    "Package-level runtime globals"
+                ],
+                "upstream_dependencies": [
+                    "Configuration Service Slice"
+                ],
+                "downstream_dependencies": [
+                    "Repository and Legacy Model Adapter Boundary",
+                    "API/Auth Boundary"
+                ],
+                "reason": "The platform cannot become professionally reliable if domain policy stays coupled to framework and persistence details."
+            },
+            {
+                "name": "Repository and Legacy Model Adapter Boundary",
+                "kind": "module",
+                "purpose": "Translate between legacy `socialpredict/models` persistence structs and internal domain-facing types or adapters without turning persistence access into a new generic CRUD facade.",
+                "owns": [
+                    "GORM-backed repositories",
+                    "Persistence translation",
+                    "Legacy-model containment",
+                    "Adapter seams",
+                    "Transaction-scoped persistence behavior where a use case explicitly requires it"
+                ],
+                "does_not_own": [
+                    "HTTP behavior",
+                    "Pure business policy"
+                ],
+                "upstream_dependencies": [
+                    "Domain Core"
+                ],
+                "downstream_dependencies": [
+                    "Legacy models",
+                    "Database runtime"
+                ],
+                "reason": "Translation should be pushed to the edges so internal policy code stops treating persistence models as its domain language while repositories remain supporting adapters rather than the center of the architecture."
+            },
+            {
+                "name": "API and Auth Contract Boundary",
+                "kind": "integration_boundary",
+                "purpose": "Own route-visible JSON envelopes, auth workflow semantics, sanitized reasons, route-family contract selection, and OpenAPI synchronization once the prerequisite seams are stable.",
+                "owns": [
+                    "HTTP response envelopes",
+                    "Stable `reason` values",
+                    "Auth-visible endpoint behavior",
+                    "Route-by-route migration from plain-text failures to the shared reason vocabulary",
+                    "OpenAPI parity"
+                ],
+                "does_not_own": [
+                    "Runtime bootstrap",
+                    "Panic recovery internals",
+                    "Persistence translation",
+                    "Configuration singleton behavior"
+                ],
+                "upstream_dependencies": [
+                    "Domain Core",
+                    "Configuration Service Slice",
+                    "Failure Translation and Recovery Boundary"
+                ],
+                "downstream_dependencies": [
+                    "OpenAPI Contract",
+                    "Client integrations"
+                ],
+                "reason": "Contract cleanup should codify stable behavior, not compensate for unresolved internal architecture."
+            }
+        ],
+        "integration_seams": [
+            {
+                "name": "Bootstrap to Container Wiring",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Application Container"
+                ],
+                "contract": "Startup code constructs DB/config dependencies once and passes them into a composition root instead of exposing package-level globals.",
+                "notes": "This seam is the main replacement for `util.GetDB()` and other package-level runtime access patterns in startup flows."
+            },
+            {
+                "name": "Shared Startup Writer Seam",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Migration Runner",
+                    "Seed Bootstrap"
+                ],
+                "contract": "Schema changes and one-time startup mutations are treated as single-writer work rather than every-replica default behavior; request-serving replicas wait for safe startup state or remain unready.",
+                "notes": "The exact mechanism can later be a migration job, leader-only mode, or an explicit DB-backed lock, but the architectural rule is one startup writer for shared mutations."
+            },
+            {
+                "name": "Runtime Observability Seam",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Application Container",
+                    "HTTP Server Boundary"
+                ],
+                "contract": "Runtime logging, health/readiness signals, and request-correlation behavior use one owned backend logger adapter, align with OpenTelemetry semantic conventions and trace-context field names, and are introduced at startup, server, or middleware boundaries rather than through duplicate helper packages.",
+                "notes": "Package unification to `backend/logger` comes before richer tracing or expanded metrics surface area; OTLP and Collector are the target export direction, but application code stays behind `backend/logger`."
+            },
+            {
+                "name": "Server Failure Handling Seam",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Failure Translation and Recovery Boundary",
+                    "HTTP Server Boundary"
+                ],
+                "contract": "The server wraps application routes with owned request-correlation and panic-recovery middleware, uses shared failure writers for method-not-allowed, rate-limited, and internal runtime failures whenever the route contract advertises an envelope, and records unexpected failures once with stable correlation and failure classification.",
+                "notes": "This seam replaces empty 405s, plain-text 429s, and implicit panic handling as the long-term runtime failure story, while keeping OpenTelemetry-style failure telemetry separate from the public response body."
+            },
+            {
+                "name": "Accounting Unit of Work Seam",
+                "participants": [
+                    "Domain Core",
+                    "Repository and Legacy Model Adapter Boundary",
+                    "Runtime Bootstrap and Infrastructure"
+                ],
+                "contract": "Accounting-sensitive workflows explicitly define which writes must commit together, what concurrency protection they require, and where transaction scope begins and ends; compensation plus metrics are not treated as the primary correctness model.",
+                "notes": "This seam is most urgent for bet placement, sell-position, and market-resolution style flows."
+            },
+            {
+                "name": "Configuration Access Seam",
+                "participants": [
+                    "Configuration Service Slice",
+                    "Domain Core"
+                ],
+                "contract": "Consumers obtain owned typed policy views through explicit interfaces or container-provided services, not `setup.EconomicsConfig()` or `LoadEconomicsConfig()` globals, raw `setup` types, or broad whole-tree traversal.",
+                "notes": "Setup handlers, stats, seed, admin, and current domain consumers such as bets and analytics are the main migration hotspots."
+            },
+            {
+                "name": "Domain to Legacy Model Translation Seam",
+                "participants": [
+                    "Domain Core",
+                    "Repository and Legacy Model Adapter Boundary"
+                ],
+                "contract": "Repositories and narrow adapters own conversion between legacy persistence models and internal domain-facing types.",
+                "notes": "This seam must be introduced before deep API/auth contract cleanup to avoid baking persistence-shaped behavior into public flows."
+            },
+            {
+                "name": "HTTP Envelope and Auth Semantics Seam",
+                "participants": [
+                    "Failure Translation and Recovery Boundary",
+                    "API and Auth Contract Boundary",
+                    "Domain Core"
+                ],
+                "contract": "Handlers map policy outcomes to `{ ok, result, reason }` or explicit legacy plain-text failures at the HTTP boundary with sanitized, stable semantics, middleware-generated failures use the same public vocabulary for migrated route families, and public `reason` values stay distinct from telemetry fields such as `error.type`.",
+                "notes": "This seam should tighten must-change-password enforcement, remove `internal/service/auth` as the long-term owner of HTTP error strings, defer the broader login token redesign, and avoid treating every business rejection as a failed span."
+            },
+            {
+                "name": "Auth Failure Translation Seam",
+                "participants": [
+                    "Domain Core",
+                    "Failure Translation and Recovery Boundary",
+                    "API and Auth Contract Boundary"
+                ],
+                "contract": "Authentication and authorization code returns typed internal outcomes that the HTTP boundary translates into stable public reasons, rather than letting an internal service type own route-visible status and message policy.",
+                "notes": "`internal/service/auth.HTTPError` is an acceptable migration bridge but not the target architecture."
+            }
+        ],
+        "ubiquitous_language": [
+            {
+                "term": "Runtime Boundary",
+                "definition": "A seam where process startup, DB/config initialization, or environmental details are introduced into the system.",
+                "synonyms_to_avoid": [
+                    "util helper",
+                    "global convenience"
+                ],
+                "confused_with": [
+                    "Domain boundary",
+                    "Service boundary"
+                ]
+            },
+            {
+                "term": "Configuration Service",
+                "definition": "The owned internal slice that loads and serves typed application-policy configuration such as economics and frontend policy to the rest of the backend.",
+                "synonyms_to_avoid": [
+                    "setup singleton",
+                    "global config package"
+                ],
+                "confused_with": [
+                    "YAML asset",
+                    "environment variables"
+                ]
+            },
+            {
+                "term": "Runtime/Bootstrap Configuration",
+                "definition": "Process and infrastructure detail introduced at startup, such as DB connectivity and env-driven runtime settings, validated once and owned by bootstrap/infrastructure code.",
+                "synonyms_to_avoid": [
+                    "business config"
+                ],
+                "confused_with": [
+                    "Application-policy configuration",
+                    "YAML source asset"
+                ]
+            },
+            {
+                "term": "Runtime Diagnostic Logging",
+                "definition": "Backend log emission used to understand process and request behavior at runtime, owned by runtime/bootstrap, server, middleware, and selected adapter boundaries.",
+                "synonyms_to_avoid": [
+                    "domain event log",
+                    "debug dump"
+                ],
+                "confused_with": [
+                    "Metrics",
+                    "Tracing"
+                ]
+            },
+            {
+                "term": "Health/Readiness Signal",
+                "definition": "Operator-facing runtime signal that answers whether the process is alive, healthy, and ready to receive traffic.",
+                "synonyms_to_avoid": [
+                    "business metric"
+                ],
+                "confused_with": [
+                    "Application metrics route",
+                    "Tracing"
+                ]
+            },
+            {
+                "term": "Logging Dialect",
+                "definition": "A package-level logging convention and vocabulary that shapes how runtime truth is emitted and interpreted in production.",
+                "synonyms_to_avoid": [
+                    "temporary helper package"
+                ],
+                "confused_with": [
+                    "Logger implementation detail",
+                    "Observability platform"
+                ]
+            },
+            {
+                "term": "Application-Policy Configuration",
+                "definition": "Accounting-sensitive and product-policy inputs such as economics, incentives, balances, debt limits, fee rules, and approved frontend policy values.",
+                "synonyms_to_avoid": [
+                    "ops toggle",
+                    "environment setting"
+                ],
+                "confused_with": [
+                    "Runtime/bootstrap configuration",
+                    "deployment config"
+                ]
+            },
+            {
+                "term": "Immutable Snapshot",
+                "definition": "A validated configuration view fixed for the lifetime of a running process or explicitly versioned workflow scope.",
+                "synonyms_to_avoid": [
+                    "live mutable config"
+                ],
+                "confused_with": [
+                    "hot reload",
+                    "singleton state"
+                ]
+            },
+            {
+                "term": "Transitional Seam",
+                "definition": "A temporary compatibility boundary kept only long enough to migrate consumers safely off a legacy access pattern.",
+                "synonyms_to_avoid": [
+                    "final architecture"
+                ],
+                "confused_with": [
+                    "owned boundary",
+                    "source of truth"
+                ]
+            },
+            {
+                "term": "Legacy Model",
+                "definition": "A persistence-oriented struct from `socialpredict/models` that should not be treated as the internal domain language.",
+                "synonyms_to_avoid": [
+                    "domain model"
+                ],
+                "confused_with": [
+                    "boundary type",
+                    "DTO"
+                ]
+            },
+            {
+                "term": "Boundary Type",
+                "definition": "A typed representation owned by a seam or layer to keep policy code decoupled from transport or persistence structs.",
+                "synonyms_to_avoid": [
+                    "duplicate model"
+                ],
+                "confused_with": [
+                    "legacy model",
+                    "OpenAPI schema"
+                ]
+            },
+            {
+                "term": "Envelope",
+                "definition": "The route-visible JSON wrapper that communicates processed-success or processed-failure outcomes through `ok`, `result`, and `reason`.",
+                "synonyms_to_avoid": [
+                    "HTTP error code",
+                    "raw handler error"
+                ],
+                "confused_with": [
+                    "transport failure",
+                    "server crash"
+                ]
+            }
+        ],
+        "use_cases": [
+            {
+                "name": "Boot the backend with explicit runtime dependencies",
+                "actors": [
+                    "Backend process"
+                ],
+                "goal": "Start the system without hidden DB/config globals leaking across handlers and services.",
+                "notes": "This is the main W01/W02 operational use case."
+            },
+            {
+                "name": "Serve setup and stats data through owned configuration seams",
+                "actors": [
+                    "Authenticated client",
+                    "Operator"
+                ],
+                "goal": "Expose setup/config-derived data through stable endpoints backed by explicit services rather than singleton packages."
+            },
+            {
+                "name": "Execute market, bet, analytics, and auth-related policy without direct legacy-model coupling",
+                "actors": [
+                    "Authenticated user",
+                    "System workflow"
+                ],
+                "goal": "Run core business logic against owned policy shapes while repositories contain persistence translation."
+            },
+            {
+                "name": "Return consistent auth and business-rule outcomes at the HTTP boundary",
+                "actors": [
+                    "Client application"
+                ],
+                "goal": "Receive stable JSON semantics for processed business outcomes and clearer transport-failure distinctions."
+            },
+            {
+                "name": "Keep the process available when handler or middleware code fails unexpectedly",
+                "actors": [
+                    "Operator",
+                    "Client application"
+                ],
+                "goal": "Contain panics and pre-handler failures behind owned recovery and failure-writing seams so faults are observable and sanitized without expanding side effects."
+            }
+        ],
+        "domain_rules": [
+            {
+                "rule": "Startup acquires process-level dependencies once and passes them through explicit seams instead of exposing package-level global accessors.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Hidden runtime globals undermine testability and boundary ownership."
+            },
+            {
+                "rule": "Logging is a runtime and infrastructure adapter concern, not a core domain-policy concern.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Operational signals should be introduced at startup, server, middleware, migration, seed, and adapter boundaries rather than spread through the policy core."
+            },
+            {
+                "rule": "OpenTelemetry is the canonical telemetry model for runtime logs, metrics, traces, and correlation, but application code reaches it through `backend/logger` and runtime wiring rather than direct SDK coupling.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "The backend needs one durable application-facing adapter even if signal maturity, exporter choice, or collector topology changes over time."
+            },
+            {
+                "rule": "The backend standardizes on `backend/logger` as the sole runtime log-emission package; `backend/logging` is transitional deletion-only scope and no new `socialpredict/logging` imports are allowed.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Two logging dialects create conflicting runtime truth and slow later observability hardening."
+            },
+            {
+                "rule": "If SocialPredict emits migration-time JSON logs outside OTLP, request correlation fields should use top-level `trace_id`, `span_id`, and `trace_flags` names compatible with OpenTelemetry guidance.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Correlation should not require a second vocabulary migration once richer tracing and log correlation land."
+            },
+            {
+                "rule": "Secrets, tokens, passwords, and API keys must never be logged.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Safe redaction is a hard production invariant."
+            },
+            {
+                "rule": "Health/readiness signals, metrics, and tracing are separate operational surfaces and should not be collapsed into one generic observability abstraction.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Each signal answers different operational questions and needs clear ownership."
+            },
+            {
+                "rule": "Unexpected runtime failures and panics must be recovered at the server boundary, logged with request correlation, and surfaced as sanitized 5xx responses when the response has not already been committed.",
+                "owner_boundary": "Failure Translation and Recovery Boundary",
+                "reason": "High-availability behavior depends on controlled containment and diagnosis of faults, not on default panic handling or leaked internal strings."
+            },
+            {
+                "rule": "Middleware-generated failures for routes that advertise `ReasonResponse` must use the same public `reason` vocabulary as handlers; legacy plain-text responses are explicit migration exceptions, not silent drift.",
+                "owner_boundary": "Failure Translation and Recovery Boundary",
+                "reason": "Clients cannot depend on the contract if rate limiting, 405s, or auth bootstrap failures bypass the shared failure semantics."
+            },
+            {
+                "rule": "Public API `reason` values are route-visible contract terms and must not be treated as the same thing as telemetry fields such as `error.type` or span status.",
+                "owner_boundary": "Failure Translation and Recovery Boundary",
+                "reason": "Client semantics and operator telemetry answer different questions and drift when one vocabulary is reused for both."
+            },
+            {
+                "rule": "Expected business rejections should not automatically be recorded as runtime telemetry errors; unexpected runtime failures should be correlated, classified, and recorded once.",
+                "owner_boundary": "Failure Translation and Recovery Boundary",
+                "reason": "The backend needs reliable diagnosis of real faults without inflating business-policy outcomes into infrastructure failure signals."
+            },
+            {
+                "rule": "Configuration values remain sourced from `backend/setup/setup.yaml` during this slice, but runtime access to those values moves behind an owned service boundary.",
+                "owner_boundary": "Configuration Service Slice",
+                "reason": "The source asset is stable, but the access pattern is not."
+            },
+            {
+                "rule": "Runtime/bootstrap configuration is validated once at startup, injected as an immutable snapshot for the process lifetime, and rolled forward by controlled restart or deployment rather than live mutation.",
+                "owner_boundary": "Runtime Bootstrap and Infrastructure",
+                "reason": "Deterministic startup and replica consistency matter more than hot-reload convenience in a high-availability architecture."
+            },
+            {
+                "rule": "Economics and other accounting-sensitive policy inputs must not be hot-reloaded during live operation.",
+                "owner_boundary": "Configuration Service Slice",
+                "reason": "Financial and accounting correctness is binary and must not drift across replicas or requests."
+            },
+            {
+                "rule": "Only configuration-owned seams may expose the full policy tree; domain and handler consumers should depend on the smallest immutable policy slice or interface they need.",
+                "owner_boundary": "Configuration Service Slice",
+                "reason": "Whole-tree access preserves coupling behind a nicer facade and weakens dependency direction."
+            },
+            {
+                "rule": "Accounting-relevant economics values should be copied into durable workflow or domain state where replay and correctness require historical stability.",
+                "owner_boundary": "Configuration Service Slice",
+                "reason": "Some policy values must remain tied to the accounting scope they governed, not merely read from the current runtime snapshot forever."
+            },
+            {
+                "rule": "Internal domain and math code should not treat `socialpredict/models` as its native policy language once adapter seams exist.",
+                "owner_boundary": "Repository and Legacy Model Adapter Boundary",
+                "reason": "Persistence coupling is the main structural blocker to cleaner domain behavior."
+            },
+            {
+                "rule": "When the backend processes a request correctly but the business outcome is negative, the API should communicate that through the envelope rather than by leaking raw internal error strings.",
+                "owner_boundary": "API and Auth Contract Boundary",
+                "reason": "This aligns the current slice with the intended contract cleanup without overextending into a broader redesign."
+            },
+            {
+                "rule": "`internal/service/auth` must not remain the long-term owner of route-visible HTTP status and message policy; it should return typed internal outcomes while the transport boundary maps them to public reasons.",
+                "owner_boundary": "API and Auth Contract Boundary",
+                "reason": "An internal service seam should not freeze HTTP concerns into its core API."
+            },
+            {
+                "rule": "Generic retry, circuit-breaker, or auto-replay logic must not be introduced around market, bet, user-account, or auth write paths without explicit idempotency and accounting review.",
+                "owner_boundary": "Failure Translation and Recovery Boundary",
+                "reason": "Hidden retries can duplicate financial side effects and are a worse failure mode than a surfaced transient error."
+            },
+            {
+                "rule": "Users flagged with `mustChangePassword` may use login and change-password flows but should be blocked from other authenticated actions until the state is cleared.",
+                "owner_boundary": "API and Auth Contract Boundary",
+                "reason": "This is the locked auth decision for the active slice."
+            }
+        ],
+        "patterns": [
+            {
+                "name": "Composition Root",
+                "why": "The existing container pattern is already present and should become the explicit owner of runtime dependency assembly.",
+                "risks": [
+                    "A half-migrated container can become a thin wrapper around globals instead of replacing them."
+                ]
+            },
+            {
+                "name": "Immutable Configuration Snapshot",
+                "why": "High-availability rollout safety and accounting-sensitive behavior require validated startup snapshots rather than live mutable economics policy.",
+                "risks": [
+                    "If consumers still depend on whole-tree reads or singleton state, the snapshot remains conceptual rather than real."
+                ]
+            },
+            {
+                "name": "Single Logging Adapter",
+                "why": "One owned backend logging package reduces duplicated runtime vocabulary and makes later request correlation, redaction, and health/readiness hardening coherent.",
+                "risks": [
+                    "A partial migration can leave `backend/logging` as a permanent compatibility shim and preserve split operational conventions."
+                ]
+            },
+            {
+                "name": "Error Translation Boundary",
+                "why": "Shared translation tables at middleware and handler edges let the system converge on stable public reasons without imposing a universal in-process error hierarchy.",
+                "risks": [
+                    "Mapping tables can drift if new route families keep inventing local helpers or ad hoc strings."
+                ]
+            },
+            {
+                "name": "Fail Fast with Safe Recovery",
+                "why": "Owning panic recovery and sanitized 5xx behavior improves process resilience and diagnosis without attempting dangerous hidden retries for write-heavy flows.",
+                "risks": [
+                    "Panics after partial writes will still produce imperfect client responses and need explicit logging to remain diagnosable."
+                ]
+            },
+            {
+                "name": "Adapter / Anti-Corruption Seam",
+                "why": "Legacy `models` usage should be contained at repository or boundary edges rather than spread through policy code.",
+                "risks": [
+                    "Too many ad hoc adapters could recreate duplication without clarifying ownership."
+                ]
+            },
+            {
+                "name": "Strangler-style Evolution",
+                "why": "The active queue correctly sequences incremental extraction-ready cleanup instead of a rewrite.",
+                "risks": [
+                    "Compatibility shims can become permanent if ownership is not tightened after each wave."
+                ]
+            },
+            {
+                "name": "Thin HTTP Boundary",
+                "why": "Contract cleanup in W06 depends on handlers becoming explicit mappers of policy outcomes instead of hidden policy owners.",
+                "risks": [
+                    "If handlers continue to mix config loading, DB access, and response shaping, the envelope change will remain superficial."
+                ]
+            }
+        ]
+    },
+    "decision_log": [
+        {
+            "id": "DP-001",
+            "title": "Treat the active slice as a prerequisite architecture program before contract cleanup",
+            "status": "accepted",
+            "context": "The API-issues backlog points at auth and envelope cleanup, but the code still contains global runtime boundaries and persistence leakage.",
+            "decision": "Sequence the work as configuration ownership, runtime observability ownership, failure-recovery ownership, database runtime hardening with accounting-sensitive transaction direction, legacy-model decoupling, and only then targeted API/auth/OpenAPI alignment.",
+            "consequences": [
+                "The public contract is not stabilized around unstable internal seams.",
+                "The active work stays reversible and structurally coherent."
+            ]
+        },
+        {
+            "id": "DP-002",
+            "title": "Keep setup.yaml as the source asset while replacing setup as a singleton runtime boundary",
+            "status": "accepted",
+            "context": "The current configuration data is embedded and already used by multiple flows.",
+            "decision": "Retain `backend/setup/setup.yaml` as the source data for this slice, but treat `setup` as a temporary source-asset and translation seam only; the owned runtime access boundary moves under `internal/service/config` with owned types and immutable snapshots.",
+            "consequences": [
+                "Migration risk stays lower because source data does not churn.",
+                "Runtime ownership becomes clearer because access patterns move out of the singleton package.",
+                "The long-term design no longer permits `setup` package behavior to remain the runtime boundary."
+            ]
+        },
+        {
+            "id": "DP-003",
+            "title": "Treat util as a temporary mixed package to be decomposed by responsibility",
+            "status": "accepted",
+            "context": "`backend/util` currently mixes infrastructure and domain-adjacent concerns.",
+            "decision": "Break util apart by owned concern rather than renaming or rebranding it as another generic helper package.",
+            "consequences": [
+                "Infrastructure bootstrap code will get a real home.",
+                "User/domain-owned helpers can move toward more meaningful boundaries."
+            ]
+        },
+        {
+            "id": "DP-004",
+            "title": "Push legacy-model translation to repositories and explicit adapters",
+            "status": "accepted",
+            "context": "Internal domain packages still depend directly on `socialpredict/models`.",
+            "decision": "Introduce boundary types and adapters so repositories and explicit seams own translation rather than policy packages.",
+            "consequences": [
+                "Domain code becomes less persistence-shaped.",
+                "Tests can target policy behavior with less incidental GORM/model coupling."
+            ]
+        },
+        {
+            "id": "DP-005",
+            "title": "Use the envelope direction through owned runtime recovery first, then route-family convergence in W06",
+            "status": "accepted",
+            "context": "The desired `{ ok, result, reason }` shape is valuable, but the live backend already mixes envelope routes, plain-text routes, middleware 429s, and status-only router failures.",
+            "decision": "Use W03 to establish owned runtime failure writers for pre-handler and unexpected failures where the route contract supports them, then use W06 for route-family convergence of handler and auth behavior onto the stable public reason vocabulary.",
+            "consequences": [
+                "The runtime boundary stops being a contract blind spot while W06 still remains the main route-by-route alignment pass.",
+                "Envelope adoption becomes an explicit migration story instead of a late all-or-nothing rewrite."
+            ]
+        },
+        {
+            "id": "DP-006",
+            "title": "Enforce mustChangePassword by restricting authenticated actions rather than redesigning login tokens in this slice",
+            "status": "accepted",
+            "context": "The current login flow is structurally weak, but the active scope defers the broader token redesign.",
+            "decision": "For now, preserve login and change-password access while blocking other authenticated actions when `mustChangePassword` is set.",
+            "consequences": [
+                "Security consistency improves without broad auth redesign.",
+                "The limited-scope-token problem remains a deferred follow-up."
+            ]
+        },
+        {
+            "id": "DP-007",
+            "title": "Split configuration into runtime/bootstrap concerns and application-policy concerns",
+            "status": "accepted",
+            "context": "The revised production note distinguishes infrastructure/runtime settings from economics and frontend policy, and the code already has explicit startup seams plus a transitional config-service boundary.",
+            "decision": "Treat runtime/bootstrap configuration as a startup/composition-root concern and application-policy configuration as an owned internal boundary concern with different owners, rules, and mutability expectations.",
+            "consequences": [
+                "The architecture avoids collapsing all settings into one mega configuration subsystem.",
+                "Boundary ownership and dependency direction become clearer for future HA-oriented evolution."
+            ]
+        },
+        {
+            "id": "DP-008",
+            "title": "Use immutable validated snapshots and deployment-driven rollout for economics policy",
+            "status": "accepted",
+            "context": "Economics and accounting-sensitive behavior must remain consistent across replicas and over the workflow scope they govern.",
+            "decision": "Validate configuration at startup, inject immutable snapshots for the process lifetime, reject hot reload for economics/accounting-sensitive policy, and copy accounting-relevant values into durable state where correctness requires historical stability.",
+            "consequences": [
+                "Replica drift and accounting inconsistency risk are reduced.",
+                "Operational rollout stays simpler because policy changes move through deploy/restart rather than live mutation."
+            ]
+        },
+        {
+            "id": "DP-009",
+            "title": "Standardize backend runtime logging on backend/logger and delete backend/logging",
+            "status": "accepted",
+            "context": "The backend currently has two overlapping logging packages, but `backend/logger` already has live usage and tests while `backend/logging` remains legacy overlap with one remaining active import.",
+            "decision": "Treat `backend/logger` as the sole backend runtime log-emission adapter and application-facing logging boundary, migrate remaining `socialpredict/logging` usage, and delete `backend/logging`; do not introduce new logging package families or direct SDK-coupled replacements while standardization is incomplete.",
+            "consequences": [
+                "Runtime vocabulary and package ownership become clearer for HA-oriented operations.",
+                "Future request correlation, redaction, health/readiness hardening, and OpenTelemetry export choices can build on one adapter instead of two dialects."
+            ]
+        },
+        {
+            "id": "DP-010",
+            "title": "Treat observability as a supporting runtime capability, not a separate platform program",
+            "status": "accepted",
+            "context": "The rewritten logging note rejects a greenfield observability platform and instead sequences logger unification, health/readiness hardening, metrics, and tracing as supporting runtime improvements.",
+            "decision": "Keep logging, health/readiness, metrics, and tracing under runtime-boundary ownership and evolve them incrementally from the current backend surface rather than creating a top-level observability mega-tree; use OpenTelemetry as the canonical telemetry model and OTLP/Collector as the preferred export direction when richer signal export is introduced.",
+            "consequences": [
+                "The architecture stays incremental and boundary-first instead of restarting with a parallel platform initiative.",
+                "Operational capabilities can improve without outrunning the ongoing runtime/config modernization work."
+            ]
+        },
+        {
+            "id": "DP-011",
+            "title": "Treat error handling as boundary translation and recovery, not a new universal error hierarchy",
+            "status": "accepted",
+            "context": "The live backend already mixes envelope helpers, domain sentinel errors, auth-local `HTTPError`, and legacy plain-text `http.Error` responses, while `backend/errors` is only a thin legacy helper package.",
+            "decision": "Keep typed domain and auth outcomes close to their owned boundaries, use shared translation at middleware and handler edges to produce public `reason` values or explicit legacy plain-text responses, and treat `backend/errors` as deletion-only compatibility scope rather than the future architecture.",
+            "consequences": [
+                "Migration can proceed route family by route family instead of through a flag-day rewrite.",
+                "The design avoids inventing a large error-type taxonomy that the current codebase does not need."
+            ]
+        },
+        {
+            "id": "DP-012",
+            "title": "Own panic recovery and middleware-generated failures at the server boundary",
+            "status": "accepted",
+            "context": "The current server stack has no application-owned recovery middleware, router 405 handling writes an empty response, and security rate limiting emits plain-text 429s before handlers run.",
+            "decision": "Introduce request correlation and panic-recovery middleware plus shared failure writers for method-not-allowed, rate-limited, and sanitized internal-failure responses at the server or middleware boundary.",
+            "consequences": [
+                "HA-oriented fault containment and diagnosis improve without changing domain behavior.",
+                "OpenAPI and production notes can describe a credible runtime failure story rather than assuming handlers own every failure."
+            ]
+        },
+        {
+            "id": "DP-013",
+            "title": "Do not add generic retry or circuit-breaker behavior to accounting-sensitive write flows",
+            "status": "accepted",
+            "context": "The existing error-handling note proposes generic recovery strategies, but market, bet, user-account, and auth writes are not generally idempotent and can have irreversible financial side effects.",
+            "decision": "Reject middleware-level or generic error-layer retries for write-heavy business flows unless a separate design explicitly proves idempotency, transaction scope, and accounting safety.",
+            "consequences": [
+                "Some transient infrastructure failures will surface to clients instead of being hidden.",
+                "The system avoids duplicating financial side effects under the banner of graceful recovery."
+            ]
+        },
+        {
+            "id": "DP-014",
+            "title": "Treat PlainTextErrorResponse as an explicit migration state, not the target contract",
+            "status": "accepted",
+            "context": "The current OpenAPI document already advertises both `ReasonResponse` and `PlainTextErrorResponse`, which reflects the live backend more accurately than the greenfield production note.",
+            "decision": "Document route families as either envelope-based or legacy plain-text during migration, update them explicitly as shared failure writers land, and retire `PlainTextErrorResponse` only when middleware and handler paths for those routes converge.",
+            "consequences": [
+                "Documentation stays grounded in live behavior during the migration.",
+                "Clients and reviewers can see where contract drift still exists instead of assuming universal envelope coverage."
+            ]
+        },
+        {
+            "id": "DP-015",
+            "title": "Adopt OpenTelemetry as the canonical telemetry model behind the owned runtime adapter",
+            "status": "accepted",
+            "context": "The logging and error-handling notes now align on OpenTelemetry for correlation and failure telemetry, but the live backend still needs one stable code-facing adapter while signal maturity and export topology continue to evolve.",
+            "decision": "Use OpenTelemetry semantic conventions, trace-context field names, and OTLP/Collector as the target telemetry direction, while keeping `backend/logger` and runtime wiring as the durable application-facing boundary instead of coupling business code directly to SDK-specific APIs or stdout exporter formats.",
+            "consequences": [
+                "Request correlation, runtime logging, and richer tracing can evolve without forcing a second application-facing logging rewrite.",
+                "The backend avoids treating an implementation-specific stdout exporter format as a production contract."
+            ]
+        },
+        {
+            "id": "DP-016",
+            "title": "Keep public failure reasons separate from OpenTelemetry error telemetry",
+            "status": "accepted",
+            "context": "The live backend already exposes stable `reason` values on some routes, while OpenTelemetry error recording is context-sensitive and should not blindly classify every negative business result as an infrastructure fault.",
+            "decision": "Keep HTTP status plus stable public `reason` values as the client contract, while runtime telemetry uses correlated spans, stable `error.type` classification, and one-time exception or failure recording; expected business rejections are not automatically telemetry errors.",
+            "consequences": [
+                "Clients get a durable, reviewable failure contract that is independent of telemetry backend choices.",
+                "Operator-facing telemetry stays useful for diagnosing real runtime faults without inflating expected business outcomes into false error signals."
+            ]
+        },
+        {
+            "id": "DP-017",
+            "title": "Keep database runtime ownership in runtime/bootstrap instead of introducing a central DAL",
+            "status": "accepted",
+            "context": "The rewritten database-layer note shows that the live backend already has `internal/app/runtime`, `main.go`, a composition root, and repositories under `internal/repository`, but still has transitional startup and global-DB behavior.",
+            "decision": "Treat DB configuration, pool/lifecycle policy, readiness semantics, and migration/seed invocation as runtime/bootstrap responsibilities; keep repositories as edge translators and do not introduce a new central `database/` or `dal/` architecture.",
+            "consequences": [
+                "The backend extends the live shape instead of building a second architecture beside it.",
+                "Ownership of DB lifecycle and startup behavior becomes easier to reason about and easier to hand to the planner."
+            ]
+        },
+        {
+            "id": "DP-018",
+            "title": "Treat shared startup mutations as single-writer work",
+            "status": "accepted",
+            "context": "Every process currently opens the DB, waits for readiness, invokes migrations, and runs seed paths before serving, which is too broad for HA replica startup.",
+            "decision": "Schema-changing and one-time startup mutations such as migrations and startup-owned seeds must not be every-replica default behavior; request-serving replicas should wait for safe startup state or remain unready.",
+            "consequences": [
+                "Migration failure and schema incompatibility become startup safety concerns rather than best-effort warnings.",
+                "The design can later choose a migration job, leader-only mode, or DB-backed lock without changing the architectural requirement."
+            ]
+        },
+        {
+            "id": "DP-019",
+            "title": "Require explicit atomic unit-of-work direction for accounting-sensitive flows",
+            "status": "accepted",
+            "context": "Live bet and related flows still show compensation-style behavior, while balances and other economically sensitive writes can become inconsistent under partial commit or overlap.",
+            "decision": "For accounting-sensitive workflows such as place-bet, sell-position, and resolve-market flows, define explicit transaction scope and concurrency policy; compensation plus metrics is not the primary correctness strategy.",
+            "consequences": [
+                "The backend can preserve economic correctness more deliberately in the next database wave.",
+                "Planner work can focus on narrow transaction-bearing flows instead of generic database abstractions."
+            ]
+        },
+        {
+            "id": "DP-020",
+            "title": "Defer caching and Redis-related work until ownership and correctness are stronger",
+            "status": "accepted",
+            "context": "The new database-caching starter draft is intentionally lower priority than startup ownership, readiness, and accounting-sensitive correctness.",
+            "decision": "Keep Postgres as the authoritative system of record for accounting state and defer Redis/caching work until runtime DB ownership, readiness semantics, and atomic write direction are explicit.",
+            "consequences": [
+                "Optimization work does not outrun correctness and operational safety.",
+                "Future caching work can target read-heavy or coordination-friendly surfaces without re-litigating source-of-truth ownership."
+            ]
+        }
     ],
-    "related_task_uids": [
-      "019d99d7-3d71-70aa-9f0b-d0f4da7524f0",
-      "019d99d7-3d71-70aa-9f0b-d0f553db0d37",
-      "019d9996-f8a9-75b8-a4a3-7348db798872",
-      "019d9996-f8a9-75b8-a4a3-7349b2560d4f",
-      "019d9996-f8a9-736b-93d9-de583bb6112a",
-      "019d9996-f8a9-736b-93d9-de592fcac393",
-      "019d9996-f8a9-736b-93d9-de5a3e5e447f",
-      "019d9996-f8a9-71b8-a7c0-81a0fe4d4ffc",
-      "019d9996-f8a9-71b8-a7c0-81a1c4b0374c",
-      "019d9996-f8a9-71b8-a7c0-81a2945b5cb4",
-      "019d9996-f8a9-71b8-a7c0-81a3c332d436"
+    "workstreams": [
+        {
+            "name": "W01 Configuration Ownership",
+            "objective": "Separate runtime/bootstrap configuration from application-policy configuration, move consumers onto the config-service seam, and reduce `setup` as a singleton runtime boundary.",
+            "depends_on": [],
+            "notes": "This corresponds to the active configuration wave and keeps `setup.yaml` as the source asset while reducing `setup` as the runtime access boundary."
+        },
+        {
+            "name": "W02 Runtime Observability Ownership",
+            "objective": "Standardize runtime logging on `backend/logger`, clarify OpenTelemetry-aligned correlation posture, and tighten the health/readiness ownership story at the runtime boundary.",
+            "depends_on": [
+                "W01 Configuration Ownership"
+            ],
+            "notes": "This wave is about owned runtime observability behavior, not a greenfield observability platform."
+        },
+        {
+            "name": "W03 Failure Recovery and Translation Ownership",
+            "objective": "Own request correlation, panic recovery, middleware-generated failures, and public failure-translation boundaries before broader API/auth cleanup.",
+            "depends_on": [
+                "W02 Runtime Observability Ownership"
+            ],
+            "notes": "This corresponds to the active error-handling wave and keeps public `reason` values separate from telemetry fields."
+        },
+        {
+            "name": "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction",
+            "objective": "Clarify runtime DB ownership, startup-writer semantics, readiness behavior, remaining request-boundary DB leaks, and explicit atomic transaction direction for accounting-sensitive workflows while keeping caching deferred.",
+            "depends_on": [
+                "W03 Failure Recovery and Translation Ownership"
+            ],
+            "notes": "This wave should not create a new `database/` or `dal/` architecture; it should extend `internal/app/runtime`, the composition root, and existing repositories."
+        },
+        {
+            "name": "W05 Legacy Model Decoupling",
+            "objective": "Introduce boundary types and adapters so internal domain/math code no longer depends directly on legacy persistence models where cleanly avoidable.",
+            "depends_on": [
+                "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction"
+            ],
+            "notes": "This remains the main structural gate before broad API/auth contract cleanup."
+        },
+        {
+            "name": "W06 Scoped API and Auth Alignment",
+            "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, keep public `reason` values separate from telemetry fields, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior.",
+            "depends_on": [
+                "W05 Legacy Model Decoupling"
+            ],
+            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly track which routes still use `PlainTextErrorResponse`, only retire that contract where middleware and handler behavior have converged, and avoid turning every business rejection into a telemetry error."
+        }
+    ],
+    "risks": [
+        {
+            "severity": "high",
+            "statement": "A thin compatibility shim around `setup` or `util` could survive and become the new long-lived hidden boundary instead of a transition seam.",
+            "mitigation": "Make ownership explicit in W01/W02 and move touched consumers directly onto the new seams wherever practical."
+        },
+        {
+            "severity": "medium",
+            "statement": "Two backend logging packages create competing runtime vocabulary and can undermine operational diagnosis across replicas and deploy/restart events.",
+            "mitigation": "Complete package unification onto `backend/logger`, ban new `socialpredict/logging` imports, and treat `backend/logging` as deletion-only scope."
+        },
+        {
+            "severity": "high",
+            "statement": "If economics or other accounting-sensitive policy can vary across instances or be hot-reloaded live, replica drift can eliminate financial and accounting correctness.",
+            "mitigation": "Use startup-validated immutable snapshots, deployment-driven rollout, and durable persistence of accounting-relevant values where workflow correctness requires historical stability."
+        },
+        {
+            "severity": "high",
+            "statement": "Legacy-model decoupling can sprawl into a flag-day rewrite if boundary types are introduced without containment discipline.",
+            "mitigation": "Limit translation ownership to repositories and explicit adapters, and sequence the work through narrow domain slices."
+        },
+        {
+            "severity": "medium",
+            "statement": "W06 could become a superficial response-shape pass if handlers still own too much config loading, DB access, or policy behavior.",
+            "mitigation": "Treat W01-W03 as real prerequisites and stop contract cleanup from outrunning boundary cleanup."
+        },
+        {
+            "severity": "high",
+            "statement": "Relying on the standard library's implicit panic handling instead of application-owned recovery leaves SocialPredict with weak diagnostics, broken connection semantics, and no stable failure response shape under runtime faults.",
+            "mitigation": "Add request-correlation in W02, add panic-recovery middleware in W03, and log sanitized failure context through the owned runtime logger."
+        },
+        {
+            "severity": "medium",
+            "statement": "`configService.Current()` can preserve whole-tree coupling behind a cleaner facade if consumers continue to reach through the full configuration tree.",
+            "mitigation": "Treat narrow immutable policy slices and consumer-owned interfaces as explicit W01 exit criteria for handlers and domain services."
+        },
+        {
+            "severity": "medium",
+            "statement": "Ad hoc debug helpers or reflection-based dumps in runtime logging can violate redaction expectations and raise operational noise.",
+            "mitigation": "Keep one owned logging adapter, define redaction and message-vocabulary rules early, and do not preserve reflection-heavy production dump helpers."
+        },
+        {
+            "severity": "medium",
+            "statement": "If application code couples directly to OpenTelemetry SDK details or an implementation-specific stdout exporter format, SocialPredict can lock transient telemetry choices into long-lived business seams.",
+            "mitigation": "Keep `backend/logger` and runtime wiring as the stable application-facing boundary, treat OTLP/Collector as the export target rather than a code-level dependency, and avoid treating stdout exporter format as contract."
+        },
+        {
+            "severity": "medium",
+            "statement": "The current login/token model still has deeper security weaknesses that are only partially mitigated by must-change-password enforcement.",
+            "mitigation": "Document the limited-scope-token redesign as deferred and avoid implying that W06 fully resolves auth architecture."
+        },
+        {
+            "severity": "high",
+            "statement": "Generic retry or circuit-breaker middleware added in the name of graceful recovery could duplicate accounting-sensitive writes or create hard-to-reconcile financial side effects.",
+            "mitigation": "Ban generic write-path retries from the error-handling modernization scope and require a separate ADR for any idempotent retry case."
+        },
+        {
+            "severity": "medium",
+            "statement": "The mixed `ReasonResponse` versus `PlainTextErrorResponse` contract can continue to drift if middleware and handler migrations are not tracked together.",
+            "mitigation": "Maintain an explicit route-family migration matrix in docs and OpenAPI updates, and do not claim universal envelope coverage prematurely."
+        },
+        {
+            "severity": "medium",
+            "statement": "If expected business rejections are recorded as telemetry errors by default, traces and metrics will over-report faults and blur the distinction between policy outcomes and runtime failures.",
+            "mitigation": "Keep public `reason` values separate from telemetry fields, classify runtime errors contextually, and define one-time exception-recording rules at the failure boundary."
+        },
+        {
+            "severity": "medium",
+            "statement": "Historical backend/API documents are partially stale and can distort design decisions if treated as current truth.",
+            "mitigation": "Use current code plus active task scope as the main source of truth and treat older docs as contextual only."
+        },
+        {
+            "severity": "high",
+            "statement": "If every replica continues to run migrations and startup-owned seed writes by default, multi-replica rollout can race shared-state mutation and make startup behavior unsafe.",
+            "mitigation": "Adopt single-writer startup semantics for shared mutations and treat schema incompatibility or failed migration as a startup safety concern."
+        },
+        {
+            "severity": "high",
+            "statement": "If accounting-sensitive flows continue to rely on compensation-style behavior without explicit transaction and concurrency policy, partial commit can leave economic state inconsistent.",
+            "mitigation": "Define narrow atomic units of work for economically sensitive workflows and choose deliberate concurrency protection on the primary system of record."
+        },
+        {
+            "severity": "medium",
+            "statement": "Introducing caching or Redis before runtime DB ownership and correctness are explicit can hide weak boundaries and optimize the wrong surfaces.",
+            "mitigation": "Keep caching deferred until startup ownership, readiness behavior, and accounting-sensitive correctness are clearer."
+        }
+    ],
+    "open_questions": [
+        {
+            "question": "What is the narrowest owned home for the non-bootstrap helpers currently in `backend/util`, especially API key generation and model/user-specific checks?",
+            "why_it_matters": "W01 can remove one junk drawer only to create another if those helpers are not assigned to real owners.",
+            "blocking": true
+        },
+        {
+            "question": "Should the new configuration service expose one consolidated interface or separate economics/frontend interfaces to reduce accidental coupling?",
+            "why_it_matters": "That choice affects how much of the system takes a large shared dependency versus smaller focused seams.",
+            "blocking": false
+        },
+        {
+            "question": "Which economics values must be persisted into market, bet, or accounting state versus safely read from the injected runtime snapshot?",
+            "why_it_matters": "Financial and accounting correctness may require some policy values to remain historically stable for the workflow scope they governed.",
+            "blocking": true
+        },
+        {
+            "question": "What is the minimal stable runtime logger contract for `backend/logger`, especially around redaction, OpenTelemetry-aligned field vocabulary, and request/correlation context?",
+            "why_it_matters": "Logger unification only helps if the surviving package becomes a clear operational boundary rather than a renamed convenience wrapper or a thin pass-through to transient SDK details.",
+            "blocking": false
+        },
+        {
+            "question": "What, if anything, from `backend/logging/mocklogging.go` must survive the deletion of `backend/logging`, and where should that testing seam live without recreating package duplication?",
+            "why_it_matters": "The migration should not preserve duplicate package ownership just to keep one legacy mock alive.",
+            "blocking": false
+        },
+        {
+            "question": "How should `/health` evolve into explicit readiness/liveness semantics without conflating infrastructure health with application metrics routes like `/v0/system/metrics`?",
+            "why_it_matters": "High-availability rollout and orchestration depend on clear runtime signal boundaries.",
+            "blocking": false
+        },
+        {
+            "question": "Which internal packages genuinely need dedicated boundary types, and which can be decoupled with narrower repository-return types or adapters?",
+            "why_it_matters": "This determines whether W03 stays surgical or turns into type proliferation.",
+            "blocking": true
+        },
+        {
+            "question": "What stable `reason` vocabulary should W06 treat as public contract, especially for validation, authorization, and business-rule failures?",
+            "why_it_matters": "The envelope only helps if clients can depend on stable semantics rather than ad hoc strings.",
+            "blocking": false
+        },
+        {
+            "question": "Should all `/v0` application routes ultimately converge on `ReasonResponse`, or are there specific route families that should intentionally retain `PlainTextErrorResponse` after the active slice?",
+            "why_it_matters": "The answer determines whether plain-text failures are a temporary bridge or a durable contract branch that middleware and handlers must continue to support.",
+            "blocking": false
+        },
+        {
+            "question": "What request-correlation format and propagation rules should the server, logger, and failure writers use, given that the current backend has no request ID seam?",
+            "why_it_matters": "Panic recovery and HA-oriented diagnosis improve only if runtime fault logs can be tied back to the affected request path and later tracing can reuse the same OpenTelemetry-compatible correlation fields.",
+            "blocking": false
+        },
+        {
+            "question": "What is the minimum viable OpenTelemetry export posture for the active slice: correlation-ready stdout JSON only, direct OTLP, or Collector-first wiring?",
+            "why_it_matters": "The backend should leave a precise telemetry seam without prematurely coupling business code to an export topology it is not ready to own yet.",
+            "blocking": false
+        },
+        {
+            "question": "Should `internal/service/auth` migrate to typed auth outcomes, typed internal errors, or a small explicit failure enum before HTTP mapping occurs?",
+            "why_it_matters": "That choice determines whether auth becomes a cleaner domain/service seam or keeps leaking transport policy through a different wrapper type.",
+            "blocking": false
+        },
+        {
+            "question": "Which public `reason` values, if any, should also count as runtime telemetry errors, and which should remain expected business outcomes only?",
+            "why_it_matters": "The boundary stays clear only if SocialPredict explicitly decides how business rejections relate to spans, metrics, and logs instead of inferring it ad hoc per handler.",
+            "blocking": false
+        },
+        {
+            "question": "Which middleware-generated failures beyond 429 and 405 need stable public reasons in the active slice, such as 404/404-like not-found behavior or auth bootstrap failure?",
+            "why_it_matters": "The contract remains ambiguous if only handler-generated failures get stable semantics while middleware and router failures keep their own vocabulary.",
+            "blocking": false
+        },
+        {
+            "question": "Which currently authenticated endpoints must enforce `mustChangePassword` immediately once W06 starts, and are there any intentionally exempt flows besides login and change-password?",
+            "why_it_matters": "The auth cleanup is scoped, but server-side enforcement must still be unambiguous.",
+            "blocking": false
+        },
+        {
+            "question": "What exact mechanism should enforce single-writer startup semantics for migrations and any remaining startup-owned seeds: dedicated job, leader-only mode, or explicit DB-backed lock?",
+            "why_it_matters": "The architecture now requires one startup writer for shared mutations, but the enforcement mechanism still affects rollout safety and operational ergonomics.",
+            "blocking": true
+        },
+        {
+            "question": "Which accounting-sensitive workflows must be atomic in one transaction, and which repository operations need a shared transaction scope to support them?",
+            "why_it_matters": "The database wave should focus on the smallest high-risk flows first rather than introducing a generic transaction framework everywhere.",
+            "blocking": true
+        },
+        {
+            "question": "What concurrency-control mechanism best fits SocialPredict's balance-sensitive and market-sensitive write flows: row-level locking, optimistic locking, or conditional atomic updates?",
+            "why_it_matters": "Correctness under overlapping requests depends on a deliberate primary-DB concurrency policy.",
+            "blocking": true
+        },
+        {
+            "question": "What exact runtime readiness conditions should gate traffic after startup, given that startup DB pinging exists but `/health` does not yet reflect real DB readiness?",
+            "why_it_matters": "HA rollout safety depends on distinguishing process liveness from safe request-serving readiness.",
+            "blocking": false
+        },
+        {
+            "question": "Which DB pool, SSL/TLS, and connection-lifecycle settings should become the minimum production contract for `internal/app/runtime/db.go`?",
+            "why_it_matters": "The runtime DB seam already exists, but it still lacks an explicit production posture for connection management and deployment safety.",
+            "blocking": false
+        },
+        {
+            "question": "When can `SetDB` and `GetDB` be reduced to test-only compatibility or removed entirely?",
+            "why_it_matters": "The process-global DB fallback weakens explicit ownership and is directly in scope for the database-runtime wave.",
+            "blocking": false
+        }
+    ],
+    "next_steps": [
+        "Use the software-planner pass to translate this design into smaller queue slices without changing the architectural decisions above.",
+        "Back the next queue slice with the rewritten database-layer production note and keep the database-caching note explicitly deferred.",
+        "Decide the expected startup-failure posture for migrations and schema incompatibility before implementation starts so W04 does not inherit warning-only behavior by default.",
+        "Define the first narrow accounting-sensitive units of work, likely starting with place-bet, sell-position, and market-resolution style flows.",
+        "Inventory the remaining request-boundary raw `*gorm.DB` call sites and rank which ones should move behind existing service or repository seams first.",
+        "Define the minimum production contract for `internal/app/runtime/db.go`, including pool sizing, connection lifetime, SSL/TLS posture, and readiness semantics.",
+        "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
+        "Migrate the remaining `socialpredict/logging` usage to `socialpredict/logger` and delete `backend/logging` once any minimal test support is ported or replaced.",
+        "Define the minimal stable `backend/logger` contract, including redaction expectations, OpenTelemetry-aligned correlation fields, and application-facing adapter rules, before adding richer observability surfaces.",
+        "Decide the first acceptable OpenTelemetry export posture for the active slice without binding business code directly to a stdout exporter or SDK-specific surface.",
+        "Add an ADR for server-owned failure handling covering request correlation, panic recovery, shared 405/429 behavior, and the relationship between middleware failures and `ReasonResponse`.",
+        "Add an ADR or equivalent design note covering how public `reason` values relate to OpenTelemetry telemetry fields such as `error.type`, span error status, and one-time exception recording.",
+        "Define the runtime/bootstrap versus application-policy configuration taxonomy explicitly in implementation guidance and ADRs.",
+        "Replace `internal/service/config` aliases with owned types and loader seams before migrating remaining setup consumers.",
+        "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
+        "Inventory the highest-value legacy-model dependencies in `internal/domain/markets`, `internal/domain/bets`, `internal/domain/math`, and analytics before W05 task breakdown.",
+        "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
+        "Inventory `/v0` routes and middleware paths that still emit raw `http.Error`, empty 405s, or plain-text 429s, then rank the highest-value route families for W06 convergence.",
+        "Draft the initial public `reason` vocabulary and route-family migration matrix for W06 so the API/auth cleanup does not improvise string contracts during implementation."
     ]
-  },
-  "authors": [
-    {
-      "agent": "software-designer-01-evans-agent",
-      "design_posture": "evans",
-      "notes": "Established problem framing, language cleanup, and bounded-context candidates for the active modernization slice."
-    },
-    {
-      "agent": "software-designer-02-fowler-agent",
-      "design_posture": "fowler",
-      "notes": "Converted the slice into an evolutionary architecture path with explicit sequencing, migration seams, and reversibility concerns."
-    },
-    {
-      "agent": "software-designer-03-martin-agent",
-      "design_posture": "martin",
-      "notes": "Tightened dependency direction, policy-vs-detail boundaries, and framework/runtime isolation expectations for implementation."
-    },
-    {
-      "agent": "codex",
-      "design_posture": "fowler",
-      "notes": "Grounded the plan against the live backend's mixed error-handling paths, pre-handler failure behavior, HA-oriented recovery gaps, and the OpenTelemetry-aligned observability posture."
-    }
-  ],
-  "summary": {
-    "one_sentence": "Modernize the active SocialPredict backend slice by finishing the migration from legacy runtime/config globals and duplicated runtime helpers to explicit runtime/bootstrap, OpenTelemetry-aligned observability, application-policy, and failure-handling seams, decoupling domain logic from legacy persistence models, and then aligning auth/API behavior with a cleaner contract.",
-    "business_outcomes": [
-      "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
-      "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
-      "Make backend behavior more predictable for operators and clients by clarifying ownership boundaries, auth behavior, and API contracts.",
-      "Preserve 100% financial and accounting correctness by treating economics policy as an immutable, accounting-sensitive input rather than a live mutable control surface.",
-      "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership, OpenTelemetry-aligned correlation, and health/readiness boundaries."
-    ],
-    "proposed_direction": "Treat the current work as a prerequisite-architecture program in four waves: runtime-boundary cleanup with owned failure recovery and OpenTelemetry-aligned telemetry seams behind `backend/logger`, completion of the existing runtime/bootstrap and configuration boundary split, legacy-model decoupling, and finally scoped API/auth/OpenAPI error-contract alignment."
-  },
-  "problem": {
-    "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the runtime story is still transitional: `setup` still behaves as a package-global seam, `internal/service/config` still aliases `setup` types, the backend still carries duplicated logging packages with inconsistent conventions, some consumers still traverse the whole config tree, and internal domain code remains too persistence-shaped through direct dependence on `socialpredict/models`. Error handling is equally transitional: newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary, while many legacy handlers still emit raw `http.Error` strings, `internal/service/auth` owns a separate `HTTPError`, the legacy `backend/errors` package is only a thin helper wrapper, rate limiting still emits plain-text 429s before handlers run, and the server does not own panic-recovery middleware or request correlation. Observability is also under-specified: `backend/logger` is still mostly a string-oriented convenience layer, the backend has no explicit OpenTelemetry-aligned correlation or failure-telemetry rules, and there is no clear export posture that preserves one runtime vocabulary while allowing richer tracing and metrics later. Those seams make the system harder to reason about, harder to test safely, and more likely to resist later high-availability extraction or service isolation.",
-    "why_now": "The active queue already assumes these prerequisites, and the rewritten production notes now align on configuration, logging/observability, and error handling as evolutionary migrations grounded in the live backend. If runtime logging, failure recovery, and API/auth cleanup continue without a consistent OpenTelemetry posture, SocialPredict will freeze ad hoc correlation fields and failure-reporting vocabulary into long-lived seams and create avoidable rework.",
-    "out_of_scope": [
-      "Full microservice decomposition or container rollout in this pass.",
-      "Broad frontend or infrastructure redesign.",
-      "Public route reorganization.",
-      "Limited-scope login token redesign beyond current enforcement and response-shape cleanup.",
-      "Bets-to-Trades rename."
-    ]
-  },
-  "design_drivers": {
-    "business_constraints": [
-      "Preserve existing behavior while modernizing architecture in small steps.",
-      "Keep current external setup endpoints and current public route organization stable during prerequisite waves.",
-      "Avoid a flag-day rewrite because the platform is already live and operational assumptions must remain intact.",
-      "Maintain 100% financial and accounting correctness while configuration and accounting-sensitive flows are modernized."
-    ],
-    "architecture_drivers": [
-      "Extraction readiness for future service/container boundaries.",
-      "Dependency direction from handlers to policy to repositories rather than hidden globals.",
-      "Runtime/bootstrap configuration and application-policy configuration are different concerns with different owners.",
-      "Validate runtime/bootstrap config once at startup and inject immutable snapshots for the process lifetime.",
-      "Runtime diagnostic logging, health/readiness signals, metrics, and tracing are separate operational concerns with separate owners and sequencing.",
-      "Standardize on one owned backend logging adapter with stable vocabulary and safe redaction before expanding richer observability surfaces.",
-      "Use OpenTelemetry as the canonical telemetry model, correlation vocabulary, and preferred export direction while keeping `backend/logger` as the application-facing adapter.",
-      "Own pre-handler failures and unhandled panics at the server or middleware boundary instead of relying on scattered `http.Error` calls or default library behavior.",
-      "Application-policy configuration should live behind an owned internal boundary instead of a singleton package.",
-      "Repository-owned translation between persistence models and internal domain types.",
-      "Explicit, testable contract shaping at the HTTP boundary.",
-      "Separate processed business failures from transport/runtime failures in the public contract.",
-      "Keep public HTTP failure reasons separate from internal telemetry fields such as `error.type` and span status.",
-      "Avoid generic automatic retry layers around accounting-sensitive write paths unless idempotency and transaction semantics are explicit."
-    ],
-    "quality_attributes": [
-      "Availability",
-      "Changeability",
-      "Testability",
-      "Fault isolation",
-      "Recoverability",
-      "Operational predictability",
-      "Financial correctness",
-      "Security consistency",
-      "Contract clarity"
-    ]
-  },
-  "current_state": {
-    "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, and setup handlers already consume that seam, but the runtime/config boundary is still incomplete because `setup` remains a transitional global seam, `internal/service/config` still aliases `setup` types, some consumers still depend on full-tree config access, and several internal packages still import `socialpredict/models` directly. Error handling is also split-brain: `handlers/envelope.go` defines a shared `{ ok, result, reason }` vocabulary used by some newer auth, market, bet, setup, stats, metrics, and CMS handlers, while many legacy handlers and middleware still emit raw strings or empty responses. Runtime observability is similarly transitional: `backend/logger` is still string-oriented, request correlation is not yet standardized, and the backend has no explicit OpenTelemetry-aligned rule set for failure telemetry or export direction.",
-    "pain_points": [
-      "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
-      "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
-      "`backend/setup` is still a transitional singleton seam with embedded YAML, `sync.Once`, `init()` loading, and package-level accessors instead of being reduced to a source-asset/translation role.",
-      "`internal/service/config` still aliases `setup` types and loads through `setup.LoadEconomicsConfig`, so the owned boundary is present but not complete.",
-      "The backend still has two overlapping logging packages: `backend/logger` is the stronger live adapter, while `backend/logging` remains duplicate legacy overlap with reflection-heavy debug helpers and one remaining active import.",
-      "`backend/logger` is still a string-oriented convenience layer and does not yet define an OpenTelemetry-aligned event, correlation, or export contract.",
-      "`backend/errors` is only a thin legacy package that writes `{ \"error\": ... }` JSON or logs strings; it is not the real production error-handling backbone.",
-      "`internal/service/auth` still defines and propagates its own `HTTPError`, which keeps HTTP-specific concerns inside an internal service seam.",
-      "`security.RateLimitMiddleware` and `LoginRateLimitMiddleware` emit plain-text 429 responses before route handlers run, bypassing the shared public `reason` vocabulary.",
-      "`server.buildHandler` and the security middleware stack do not own request correlation or panic recovery, so SocialPredict relies on scattered handler logic plus the standard library's default panic handling behavior.",
-      "The backend has no explicit rule for which handled business rejections should count as telemetry errors versus expected negative outcomes, making later tracing and metrics likely to drift.",
-      "Some handlers and services still consume too much configuration surface area through whole-tree access or raw `setup` shapes instead of narrow immutable policy slices.",
-      "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
-      "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
-      "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
-      "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
-    ],
-    "constraints": [
-      "The existing container and internal service pattern is real and should be extended rather than replaced.",
-      "`backend/setup/setup.yaml` is the current source asset and should remain the source of truth during this slice.",
-      "The current backend still uses Gorilla Mux, GORM, and embedded assets; this slice should isolate those details better but not replace them.",
-      "Historical docs under `backend/README/BACKEND/API` are informative but not fully current."
-    ]
-  },
-  "target_state": {
-    "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, and health/readiness wiring; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; repositories and adapters own translation from legacy persistence models into internal domain types; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable.",
-    "boundaries": [
-      {
-        "name": "Runtime Bootstrap and Infrastructure",
-        "kind": "module",
-        "purpose": "Own process startup concerns such as env loading, runtime/bootstrap configuration validation, DB initialization, migration invocation, readiness checks, and seed bootstrapping.",
-        "owns": [
-          "Environment loading",
-          "Runtime/bootstrap configuration",
-          "DB configuration normalization",
-          "DB connection creation",
-          "Runtime diagnostic logging",
-          "Telemetry export wiring",
-          "Health/readiness wiring",
-          "Startup sequencing"
-        ],
-        "does_not_own": [
-          "Business logic",
-          "Economics or accounting policy",
-          "HTTP contract shaping",
-          "Long-lived domain helpers under a generic util namespace",
-          "A second backend logging dialect",
-          "Reflection-heavy production debug dumping as durable architecture"
-        ],
-        "upstream_dependencies": [],
-        "downstream_dependencies": [
-          "Application Container",
-          "Migration Runner",
-          "Seed Bootstrap"
-        ],
-        "reason": "This separates process/runtime details and supporting operational capabilities from domain policy and removes hidden global access paths."
-      },
-      {
-        "name": "Configuration Service Slice",
-        "kind": "service",
-        "purpose": "Provide owned typed access to application-policy configuration such as economics and frontend policy, while reducing `backend/setup` to a source-asset/translation seam during migration.",
-        "owns": [
-          "Owned application-policy configuration types",
-          "Immutable application-policy snapshots",
-          "Configuration loading from setup assets during migration",
-          "Configuration access interfaces and narrow policy views",
-          "Configuration-related handler/service seams"
-        ],
-        "does_not_own": [
-          "Runtime/bootstrap env and infrastructure settings",
-          "Global singleton access",
-          "Direct package-level runtime state spread across unrelated consumers",
-          "A generic top-level config subsystem for every concern in the system"
-        ],
-        "upstream_dependencies": [
-          "Runtime Bootstrap and Infrastructure"
-        ],
-        "downstream_dependencies": [
-          "Application Container",
-          "Stats Handlers",
-          "Setup Handlers",
-          "Admin AddUser Flow",
-          "Seed Bootstrap"
-        ],
-        "reason": "Application-policy configuration is a shared policy input and should behave like an owned service boundary rather than a magic package or a thin wrapper around `setup`."
-      },
-      {
-        "name": "Failure Translation and Recovery Boundary",
-        "kind": "integration_boundary",
-        "purpose": "Own request correlation, panic recovery, middleware-generated failures, and translation from internal/auth/domain/runtime errors into public transport responses.",
-        "owns": [
-          "Request correlation at HTTP ingress",
-          "Panic recovery and sanitized 500 behavior",
-          "Pre-handler failures such as rate limiting and method-not-allowed responses",
-          "Shared failure writers for envelope and legacy plain-text routes during migration",
-          "OpenTelemetry-aligned failure logging, metrics, and span vocabulary shared across middleware and handlers"
-        ],
-        "does_not_own": [
-          "Business rules",
-          "Generic automatic retry of accounting-sensitive writes",
-          "Domain sentinel error definitions",
-          "External monitoring platform choice"
-        ],
-        "upstream_dependencies": [
-          "Runtime Bootstrap and Infrastructure",
-          "Domain Core"
-        ],
-        "downstream_dependencies": [
-          "API and Auth Contract Boundary",
-          "HTTP Server Boundary",
-          "OpenAPI Contract"
-        ],
-        "reason": "High availability in the monolith depends on owning how faults are contained and surfaced before and after handlers, rather than leaving recovery to scattered `http.Error` calls or default server behavior."
-      },
-      {
-        "name": "Domain Core",
-        "kind": "bounded_context",
-        "purpose": "Hold market, bet, math, analytics, user, and auth-adjacent policy without direct dependence on transport or persistence structs.",
-        "owns": [
-          "Business rules",
-          "Workflow policy",
-          "Calculation policy",
-          "Authorization policy checks tied to business state"
-        ],
-        "does_not_own": [
-          "HTTP request/response details",
-          "GORM models as native policy objects",
-          "Package-level runtime globals"
-        ],
-        "upstream_dependencies": [
-          "Configuration Service Slice"
-        ],
-        "downstream_dependencies": [
-          "Repository and Legacy Model Adapter Boundary",
-          "API/Auth Boundary"
-        ],
-        "reason": "The platform cannot become professionally reliable if domain policy stays coupled to framework and persistence details."
-      },
-      {
-        "name": "Repository and Legacy Model Adapter Boundary",
-        "kind": "module",
-        "purpose": "Translate between legacy `socialpredict/models` persistence structs and internal domain-facing types or adapters.",
-        "owns": [
-          "GORM-backed repositories",
-          "Persistence translation",
-          "Legacy-model containment",
-          "Adapter seams"
-        ],
-        "does_not_own": [
-          "HTTP behavior",
-          "Pure business policy"
-        ],
-        "upstream_dependencies": [
-          "Domain Core"
-        ],
-        "downstream_dependencies": [
-          "Legacy models",
-          "Database runtime"
-        ],
-        "reason": "Translation should be pushed to the edges so internal policy code stops treating persistence models as its domain language."
-      },
-      {
-        "name": "API and Auth Contract Boundary",
-        "kind": "integration_boundary",
-        "purpose": "Own route-visible JSON envelopes, auth workflow semantics, sanitized reasons, route-family contract selection, and OpenAPI synchronization once the prerequisite seams are stable.",
-        "owns": [
-          "HTTP response envelopes",
-          "Stable `reason` values",
-          "Auth-visible endpoint behavior",
-          "Route-by-route migration from plain-text failures to the shared reason vocabulary",
-          "OpenAPI parity"
-        ],
-        "does_not_own": [
-          "Runtime bootstrap",
-          "Panic recovery internals",
-          "Persistence translation",
-          "Configuration singleton behavior"
-        ],
-        "upstream_dependencies": [
-          "Domain Core",
-          "Configuration Service Slice",
-          "Failure Translation and Recovery Boundary"
-        ],
-        "downstream_dependencies": [
-          "OpenAPI Contract",
-          "Client integrations"
-        ],
-        "reason": "Contract cleanup should codify stable behavior, not compensate for unresolved internal architecture."
-      }
-    ],
-    "integration_seams": [
-      {
-        "name": "Bootstrap to Container Wiring",
-        "participants": [
-          "Runtime Bootstrap and Infrastructure",
-          "Application Container"
-        ],
-        "contract": "Startup code constructs DB/config dependencies once and passes them into a composition root instead of exposing package-level globals.",
-        "notes": "This seam is the main replacement for `util.GetDB()` and other package-level runtime access patterns in startup flows."
-      },
-      {
-        "name": "Runtime Observability Seam",
-        "participants": [
-          "Runtime Bootstrap and Infrastructure",
-          "Application Container",
-          "HTTP Server Boundary"
-        ],
-        "contract": "Runtime logging, health/readiness signals, and request-correlation behavior use one owned backend logger adapter, align with OpenTelemetry semantic conventions and trace-context field names, and are introduced at startup, server, or middleware boundaries rather than through duplicate helper packages.",
-        "notes": "Package unification to `backend/logger` comes before richer tracing or expanded metrics surface area; OTLP and Collector are the target export direction, but application code stays behind `backend/logger`."
-      },
-      {
-        "name": "Server Failure Handling Seam",
-        "participants": [
-          "Runtime Bootstrap and Infrastructure",
-          "Failure Translation and Recovery Boundary",
-          "HTTP Server Boundary"
-        ],
-        "contract": "The server wraps application routes with owned request-correlation and panic-recovery middleware, uses shared failure writers for method-not-allowed, rate-limited, and internal runtime failures whenever the route contract advertises an envelope, and records unexpected failures once with stable correlation and failure classification.",
-        "notes": "This seam replaces empty 405s, plain-text 429s, and implicit panic handling as the long-term runtime failure story, while keeping OpenTelemetry-style failure telemetry separate from the public response body."
-      },
-      {
-        "name": "Configuration Access Seam",
-        "participants": [
-          "Configuration Service Slice",
-          "Domain Core"
-        ],
-        "contract": "Consumers obtain owned typed policy views through explicit interfaces or container-provided services, not `setup.EconomicsConfig()` or `LoadEconomicsConfig()` globals, raw `setup` types, or broad whole-tree traversal.",
-        "notes": "Setup handlers, stats, seed, admin, and current domain consumers such as bets and analytics are the main migration hotspots."
-      },
-      {
-        "name": "Domain to Legacy Model Translation Seam",
-        "participants": [
-          "Domain Core",
-          "Repository and Legacy Model Adapter Boundary"
-        ],
-        "contract": "Repositories and narrow adapters own conversion between legacy persistence models and internal domain-facing types.",
-        "notes": "This seam must be introduced before deep API/auth contract cleanup to avoid baking persistence-shaped behavior into public flows."
-      },
-      {
-        "name": "HTTP Envelope and Auth Semantics Seam",
-        "participants": [
-          "Failure Translation and Recovery Boundary",
-          "API and Auth Contract Boundary",
-          "Domain Core"
-        ],
-        "contract": "Handlers map policy outcomes to `{ ok, result, reason }` or explicit legacy plain-text failures at the HTTP boundary with sanitized, stable semantics, middleware-generated failures use the same public vocabulary for migrated route families, and public `reason` values stay distinct from telemetry fields such as `error.type`.",
-        "notes": "This seam should tighten must-change-password enforcement, remove `internal/service/auth` as the long-term owner of HTTP error strings, defer the broader login token redesign, and avoid treating every business rejection as a failed span."
-      },
-      {
-        "name": "Auth Failure Translation Seam",
-        "participants": [
-          "Domain Core",
-          "Failure Translation and Recovery Boundary",
-          "API and Auth Contract Boundary"
-        ],
-        "contract": "Authentication and authorization code returns typed internal outcomes that the HTTP boundary translates into stable public reasons, rather than letting an internal service type own route-visible status and message policy.",
-        "notes": "`internal/service/auth.HTTPError` is an acceptable migration bridge but not the target architecture."
-      }
-    ],
-    "ubiquitous_language": [
-      {
-        "term": "Runtime Boundary",
-        "definition": "A seam where process startup, DB/config initialization, or environmental details are introduced into the system.",
-        "synonyms_to_avoid": [
-          "util helper",
-          "global convenience"
-        ],
-        "confused_with": [
-          "Domain boundary",
-          "Service boundary"
-        ]
-      },
-      {
-        "term": "Configuration Service",
-        "definition": "The owned internal slice that loads and serves typed application-policy configuration such as economics and frontend policy to the rest of the backend.",
-        "synonyms_to_avoid": [
-          "setup singleton",
-          "global config package"
-        ],
-        "confused_with": [
-          "YAML asset",
-          "environment variables"
-        ]
-      },
-      {
-        "term": "Runtime/Bootstrap Configuration",
-        "definition": "Process and infrastructure detail introduced at startup, such as DB connectivity and env-driven runtime settings, validated once and owned by bootstrap/infrastructure code.",
-        "synonyms_to_avoid": [
-          "business config"
-        ],
-        "confused_with": [
-          "Application-policy configuration",
-          "YAML source asset"
-        ]
-      },
-      {
-        "term": "Runtime Diagnostic Logging",
-        "definition": "Backend log emission used to understand process and request behavior at runtime, owned by runtime/bootstrap, server, middleware, and selected adapter boundaries.",
-        "synonyms_to_avoid": [
-          "domain event log",
-          "debug dump"
-        ],
-        "confused_with": [
-          "Metrics",
-          "Tracing"
-        ]
-      },
-      {
-        "term": "Health/Readiness Signal",
-        "definition": "Operator-facing runtime signal that answers whether the process is alive, healthy, and ready to receive traffic.",
-        "synonyms_to_avoid": [
-          "business metric"
-        ],
-        "confused_with": [
-          "Application metrics route",
-          "Tracing"
-        ]
-      },
-      {
-        "term": "Logging Dialect",
-        "definition": "A package-level logging convention and vocabulary that shapes how runtime truth is emitted and interpreted in production.",
-        "synonyms_to_avoid": [
-          "temporary helper package"
-        ],
-        "confused_with": [
-          "Logger implementation detail",
-          "Observability platform"
-        ]
-      },
-      {
-        "term": "Application-Policy Configuration",
-        "definition": "Accounting-sensitive and product-policy inputs such as economics, incentives, balances, debt limits, fee rules, and approved frontend policy values.",
-        "synonyms_to_avoid": [
-          "ops toggle",
-          "environment setting"
-        ],
-        "confused_with": [
-          "Runtime/bootstrap configuration",
-          "deployment config"
-        ]
-      },
-      {
-        "term": "Immutable Snapshot",
-        "definition": "A validated configuration view fixed for the lifetime of a running process or explicitly versioned workflow scope.",
-        "synonyms_to_avoid": [
-          "live mutable config"
-        ],
-        "confused_with": [
-          "hot reload",
-          "singleton state"
-        ]
-      },
-      {
-        "term": "Transitional Seam",
-        "definition": "A temporary compatibility boundary kept only long enough to migrate consumers safely off a legacy access pattern.",
-        "synonyms_to_avoid": [
-          "final architecture"
-        ],
-        "confused_with": [
-          "owned boundary",
-          "source of truth"
-        ]
-      },
-      {
-        "term": "Legacy Model",
-        "definition": "A persistence-oriented struct from `socialpredict/models` that should not be treated as the internal domain language.",
-        "synonyms_to_avoid": [
-          "domain model"
-        ],
-        "confused_with": [
-          "boundary type",
-          "DTO"
-        ]
-      },
-      {
-        "term": "Boundary Type",
-        "definition": "A typed representation owned by a seam or layer to keep policy code decoupled from transport or persistence structs.",
-        "synonyms_to_avoid": [
-          "duplicate model"
-        ],
-        "confused_with": [
-          "legacy model",
-          "OpenAPI schema"
-        ]
-      },
-      {
-        "term": "Envelope",
-        "definition": "The route-visible JSON wrapper that communicates processed-success or processed-failure outcomes through `ok`, `result`, and `reason`.",
-        "synonyms_to_avoid": [
-          "HTTP error code",
-          "raw handler error"
-        ],
-        "confused_with": [
-          "transport failure",
-          "server crash"
-        ]
-      }
-    ],
-    "use_cases": [
-      {
-        "name": "Boot the backend with explicit runtime dependencies",
-        "actors": [
-          "Backend process"
-        ],
-        "goal": "Start the system without hidden DB/config globals leaking across handlers and services.",
-        "notes": "This is the main W01/W02 operational use case."
-      },
-      {
-        "name": "Serve setup and stats data through owned configuration seams",
-        "actors": [
-          "Authenticated client",
-          "Operator"
-        ],
-        "goal": "Expose setup/config-derived data through stable endpoints backed by explicit services rather than singleton packages."
-      },
-      {
-        "name": "Execute market, bet, analytics, and auth-related policy without direct legacy-model coupling",
-        "actors": [
-          "Authenticated user",
-          "System workflow"
-        ],
-        "goal": "Run core business logic against owned policy shapes while repositories contain persistence translation."
-      },
-      {
-        "name": "Return consistent auth and business-rule outcomes at the HTTP boundary",
-        "actors": [
-          "Client application"
-        ],
-        "goal": "Receive stable JSON semantics for processed business outcomes and clearer transport-failure distinctions."
-      },
-      {
-        "name": "Keep the process available when handler or middleware code fails unexpectedly",
-        "actors": [
-          "Operator",
-          "Client application"
-        ],
-        "goal": "Contain panics and pre-handler failures behind owned recovery and failure-writing seams so faults are observable and sanitized without expanding side effects."
-      }
-    ],
-    "domain_rules": [
-      {
-        "rule": "Startup acquires process-level dependencies once and passes them through explicit seams instead of exposing package-level global accessors.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Hidden runtime globals undermine testability and boundary ownership."
-      },
-      {
-        "rule": "Logging is a runtime and infrastructure adapter concern, not a core domain-policy concern.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Operational signals should be introduced at startup, server, middleware, migration, seed, and adapter boundaries rather than spread through the policy core."
-      },
-      {
-        "rule": "OpenTelemetry is the canonical telemetry model for runtime logs, metrics, traces, and correlation, but application code reaches it through `backend/logger` and runtime wiring rather than direct SDK coupling.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "The backend needs one durable application-facing adapter even if signal maturity, exporter choice, or collector topology changes over time."
-      },
-      {
-        "rule": "The backend standardizes on `backend/logger` as the sole runtime log-emission package; `backend/logging` is transitional deletion-only scope and no new `socialpredict/logging` imports are allowed.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Two logging dialects create conflicting runtime truth and slow later observability hardening."
-      },
-      {
-        "rule": "If SocialPredict emits migration-time JSON logs outside OTLP, request correlation fields should use top-level `trace_id`, `span_id`, and `trace_flags` names compatible with OpenTelemetry guidance.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Correlation should not require a second vocabulary migration once richer tracing and log correlation land."
-      },
-      {
-        "rule": "Secrets, tokens, passwords, and API keys must never be logged.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Safe redaction is a hard production invariant."
-      },
-      {
-        "rule": "Health/readiness signals, metrics, and tracing are separate operational surfaces and should not be collapsed into one generic observability abstraction.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Each signal answers different operational questions and needs clear ownership."
-      },
-      {
-        "rule": "Unexpected runtime failures and panics must be recovered at the server boundary, logged with request correlation, and surfaced as sanitized 5xx responses when the response has not already been committed.",
-        "owner_boundary": "Failure Translation and Recovery Boundary",
-        "reason": "High-availability behavior depends on controlled containment and diagnosis of faults, not on default panic handling or leaked internal strings."
-      },
-      {
-        "rule": "Middleware-generated failures for routes that advertise `ReasonResponse` must use the same public `reason` vocabulary as handlers; legacy plain-text responses are explicit migration exceptions, not silent drift.",
-        "owner_boundary": "Failure Translation and Recovery Boundary",
-        "reason": "Clients cannot depend on the contract if rate limiting, 405s, or auth bootstrap failures bypass the shared failure semantics."
-      },
-      {
-        "rule": "Public API `reason` values are route-visible contract terms and must not be treated as the same thing as telemetry fields such as `error.type` or span status.",
-        "owner_boundary": "Failure Translation and Recovery Boundary",
-        "reason": "Client semantics and operator telemetry answer different questions and drift when one vocabulary is reused for both."
-      },
-      {
-        "rule": "Expected business rejections should not automatically be recorded as runtime telemetry errors; unexpected runtime failures should be correlated, classified, and recorded once.",
-        "owner_boundary": "Failure Translation and Recovery Boundary",
-        "reason": "The backend needs reliable diagnosis of real faults without inflating business-policy outcomes into infrastructure failure signals."
-      },
-      {
-        "rule": "Configuration values remain sourced from `backend/setup/setup.yaml` during this slice, but runtime access to those values moves behind an owned service boundary.",
-        "owner_boundary": "Configuration Service Slice",
-        "reason": "The source asset is stable, but the access pattern is not."
-      },
-      {
-        "rule": "Runtime/bootstrap configuration is validated once at startup, injected as an immutable snapshot for the process lifetime, and rolled forward by controlled restart or deployment rather than live mutation.",
-        "owner_boundary": "Runtime Bootstrap and Infrastructure",
-        "reason": "Deterministic startup and replica consistency matter more than hot-reload convenience in a high-availability architecture."
-      },
-      {
-        "rule": "Economics and other accounting-sensitive policy inputs must not be hot-reloaded during live operation.",
-        "owner_boundary": "Configuration Service Slice",
-        "reason": "Financial and accounting correctness is binary and must not drift across replicas or requests."
-      },
-      {
-        "rule": "Only configuration-owned seams may expose the full policy tree; domain and handler consumers should depend on the smallest immutable policy slice or interface they need.",
-        "owner_boundary": "Configuration Service Slice",
-        "reason": "Whole-tree access preserves coupling behind a nicer facade and weakens dependency direction."
-      },
-      {
-        "rule": "Accounting-relevant economics values should be copied into durable workflow or domain state where replay and correctness require historical stability.",
-        "owner_boundary": "Configuration Service Slice",
-        "reason": "Some policy values must remain tied to the accounting scope they governed, not merely read from the current runtime snapshot forever."
-      },
-      {
-        "rule": "Internal domain and math code should not treat `socialpredict/models` as its native policy language once adapter seams exist.",
-        "owner_boundary": "Repository and Legacy Model Adapter Boundary",
-        "reason": "Persistence coupling is the main structural blocker to cleaner domain behavior."
-      },
-      {
-        "rule": "When the backend processes a request correctly but the business outcome is negative, the API should communicate that through the envelope rather than by leaking raw internal error strings.",
-        "owner_boundary": "API and Auth Contract Boundary",
-        "reason": "This aligns the current slice with the intended contract cleanup without overextending into a broader redesign."
-      },
-      {
-        "rule": "`internal/service/auth` must not remain the long-term owner of route-visible HTTP status and message policy; it should return typed internal outcomes while the transport boundary maps them to public reasons.",
-        "owner_boundary": "API and Auth Contract Boundary",
-        "reason": "An internal service seam should not freeze HTTP concerns into its core API."
-      },
-      {
-        "rule": "Generic retry, circuit-breaker, or auto-replay logic must not be introduced around market, bet, user-account, or auth write paths without explicit idempotency and accounting review.",
-        "owner_boundary": "Failure Translation and Recovery Boundary",
-        "reason": "Hidden retries can duplicate financial side effects and are a worse failure mode than a surfaced transient error."
-      },
-      {
-        "rule": "Users flagged with `mustChangePassword` may use login and change-password flows but should be blocked from other authenticated actions until the state is cleared.",
-        "owner_boundary": "API and Auth Contract Boundary",
-        "reason": "This is the locked auth decision for the active slice."
-      }
-    ],
-    "patterns": [
-      {
-        "name": "Composition Root",
-        "why": "The existing container pattern is already present and should become the explicit owner of runtime dependency assembly.",
-        "risks": [
-          "A half-migrated container can become a thin wrapper around globals instead of replacing them."
-        ]
-      },
-      {
-        "name": "Immutable Configuration Snapshot",
-        "why": "High-availability rollout safety and accounting-sensitive behavior require validated startup snapshots rather than live mutable economics policy.",
-        "risks": [
-          "If consumers still depend on whole-tree reads or singleton state, the snapshot remains conceptual rather than real."
-        ]
-      },
-      {
-        "name": "Single Logging Adapter",
-        "why": "One owned backend logging package reduces duplicated runtime vocabulary and makes later request correlation, redaction, and health/readiness hardening coherent.",
-        "risks": [
-          "A partial migration can leave `backend/logging` as a permanent compatibility shim and preserve split operational conventions."
-        ]
-      },
-      {
-        "name": "Error Translation Boundary",
-        "why": "Shared translation tables at middleware and handler edges let the system converge on stable public reasons without imposing a universal in-process error hierarchy.",
-        "risks": [
-          "Mapping tables can drift if new route families keep inventing local helpers or ad hoc strings."
-        ]
-      },
-      {
-        "name": "Fail Fast with Safe Recovery",
-        "why": "Owning panic recovery and sanitized 5xx behavior improves process resilience and diagnosis without attempting dangerous hidden retries for write-heavy flows.",
-        "risks": [
-          "Panics after partial writes will still produce imperfect client responses and need explicit logging to remain diagnosable."
-        ]
-      },
-      {
-        "name": "Adapter / Anti-Corruption Seam",
-        "why": "Legacy `models` usage should be contained at repository or boundary edges rather than spread through policy code.",
-        "risks": [
-          "Too many ad hoc adapters could recreate duplication without clarifying ownership."
-        ]
-      },
-      {
-        "name": "Strangler-style Evolution",
-        "why": "The active queue correctly sequences incremental extraction-ready cleanup instead of a rewrite.",
-        "risks": [
-          "Compatibility shims can become permanent if ownership is not tightened after each wave."
-        ]
-      },
-      {
-        "name": "Thin HTTP Boundary",
-        "why": "Contract cleanup in W04 depends on handlers becoming explicit mappers of policy outcomes instead of hidden policy owners.",
-        "risks": [
-          "If handlers continue to mix config loading, DB access, and response shaping, the envelope change will remain superficial."
-        ]
-      }
-    ]
-  },
-  "decision_log": [
-    {
-      "id": "DP-001",
-      "title": "Treat the active slice as a prerequisite architecture program before contract cleanup",
-      "status": "accepted",
-      "context": "The API-issues backlog points at auth and envelope cleanup, but the code still contains global runtime boundaries and persistence leakage.",
-      "decision": "Sequence the work as util breakup, configuration-service extraction, legacy-model decoupling, and only then targeted API/auth/OpenAPI alignment.",
-      "consequences": [
-        "The public contract is not stabilized around unstable internal seams.",
-        "The active work stays reversible and structurally coherent."
-      ]
-    },
-    {
-      "id": "DP-002",
-      "title": "Keep setup.yaml as the source asset while replacing setup as a singleton runtime boundary",
-      "status": "accepted",
-      "context": "The current configuration data is embedded and already used by multiple flows.",
-      "decision": "Retain `backend/setup/setup.yaml` as the source data for this slice, but treat `setup` as a temporary source-asset and translation seam only; the owned runtime access boundary moves under `internal/service/config` with owned types and immutable snapshots.",
-      "consequences": [
-        "Migration risk stays lower because source data does not churn.",
-        "Runtime ownership becomes clearer because access patterns move out of the singleton package.",
-        "The long-term design no longer permits `setup` package behavior to remain the runtime boundary."
-      ]
-    },
-    {
-      "id": "DP-003",
-      "title": "Treat util as a temporary mixed package to be decomposed by responsibility",
-      "status": "accepted",
-      "context": "`backend/util` currently mixes infrastructure and domain-adjacent concerns.",
-      "decision": "Break util apart by owned concern rather than renaming or rebranding it as another generic helper package.",
-      "consequences": [
-        "Infrastructure bootstrap code will get a real home.",
-        "User/domain-owned helpers can move toward more meaningful boundaries."
-      ]
-    },
-    {
-      "id": "DP-004",
-      "title": "Push legacy-model translation to repositories and explicit adapters",
-      "status": "accepted",
-      "context": "Internal domain packages still depend directly on `socialpredict/models`.",
-      "decision": "Introduce boundary types and adapters so repositories and explicit seams own translation rather than policy packages.",
-      "consequences": [
-        "Domain code becomes less persistence-shaped.",
-        "Tests can target policy behavior with less incidental GORM/model coupling."
-      ]
-    },
-    {
-      "id": "DP-005",
-      "title": "Use the envelope direction through owned runtime recovery first, then route-family convergence in W04",
-      "status": "accepted",
-      "context": "The desired `{ ok, result, reason }` shape is valuable, but the live backend already mixes envelope routes, plain-text routes, middleware 429s, and status-only router failures.",
-      "decision": "Use W01 to establish owned runtime failure writers for pre-handler and unexpected failures where the route contract supports them, then use W04 for route-family convergence of handler and auth behavior onto the stable public reason vocabulary.",
-      "consequences": [
-        "The runtime boundary stops being a contract blind spot while W04 still remains the main route-by-route alignment pass.",
-        "Envelope adoption becomes an explicit migration story instead of a late all-or-nothing rewrite."
-      ]
-    },
-    {
-      "id": "DP-006",
-      "title": "Enforce mustChangePassword by restricting authenticated actions rather than redesigning login tokens in this slice",
-      "status": "accepted",
-      "context": "The current login flow is structurally weak, but the active scope defers the broader token redesign.",
-      "decision": "For now, preserve login and change-password access while blocking other authenticated actions when `mustChangePassword` is set.",
-      "consequences": [
-        "Security consistency improves without broad auth redesign.",
-        "The limited-scope-token problem remains a deferred follow-up."
-      ]
-    },
-    {
-      "id": "DP-007",
-      "title": "Split configuration into runtime/bootstrap concerns and application-policy concerns",
-      "status": "accepted",
-      "context": "The revised production note distinguishes infrastructure/runtime settings from economics and frontend policy, and the code already has explicit startup seams plus a transitional config-service boundary.",
-      "decision": "Treat runtime/bootstrap configuration as a startup/composition-root concern and application-policy configuration as an owned internal boundary concern with different owners, rules, and mutability expectations.",
-      "consequences": [
-        "The architecture avoids collapsing all settings into one mega configuration subsystem.",
-        "Boundary ownership and dependency direction become clearer for future HA-oriented evolution."
-      ]
-    },
-    {
-      "id": "DP-008",
-      "title": "Use immutable validated snapshots and deployment-driven rollout for economics policy",
-      "status": "accepted",
-      "context": "Economics and accounting-sensitive behavior must remain consistent across replicas and over the workflow scope they govern.",
-      "decision": "Validate configuration at startup, inject immutable snapshots for the process lifetime, reject hot reload for economics/accounting-sensitive policy, and copy accounting-relevant values into durable state where correctness requires historical stability.",
-      "consequences": [
-        "Replica drift and accounting inconsistency risk are reduced.",
-        "Operational rollout stays simpler because policy changes move through deploy/restart rather than live mutation."
-      ]
-    },
-    {
-      "id": "DP-009",
-      "title": "Standardize backend runtime logging on backend/logger and delete backend/logging",
-      "status": "accepted",
-      "context": "The backend currently has two overlapping logging packages, but `backend/logger` already has live usage and tests while `backend/logging` remains legacy overlap with one remaining active import.",
-      "decision": "Treat `backend/logger` as the sole backend runtime log-emission adapter and application-facing logging boundary, migrate remaining `socialpredict/logging` usage, and delete `backend/logging`; do not introduce new logging package families or direct SDK-coupled replacements while standardization is incomplete.",
-      "consequences": [
-        "Runtime vocabulary and package ownership become clearer for HA-oriented operations.",
-        "Future request correlation, redaction, health/readiness hardening, and OpenTelemetry export choices can build on one adapter instead of two dialects."
-      ]
-    },
-    {
-      "id": "DP-010",
-      "title": "Treat observability as a supporting runtime capability, not a separate platform program",
-      "status": "accepted",
-      "context": "The rewritten logging note rejects a greenfield observability platform and instead sequences logger unification, health/readiness hardening, metrics, and tracing as supporting runtime improvements.",
-      "decision": "Keep logging, health/readiness, metrics, and tracing under runtime-boundary ownership and evolve them incrementally from the current backend surface rather than creating a top-level observability mega-tree; use OpenTelemetry as the canonical telemetry model and OTLP/Collector as the preferred export direction when richer signal export is introduced.",
-      "consequences": [
-        "The architecture stays incremental and boundary-first instead of restarting with a parallel platform initiative.",
-        "Operational capabilities can improve without outrunning the ongoing runtime/config modernization work."
-      ]
-    },
-    {
-      "id": "DP-011",
-      "title": "Treat error handling as boundary translation and recovery, not a new universal error hierarchy",
-      "status": "accepted",
-      "context": "The live backend already mixes envelope helpers, domain sentinel errors, auth-local `HTTPError`, and legacy plain-text `http.Error` responses, while `backend/errors` is only a thin legacy helper package.",
-      "decision": "Keep typed domain and auth outcomes close to their owned boundaries, use shared translation at middleware and handler edges to produce public `reason` values or explicit legacy plain-text responses, and treat `backend/errors` as deletion-only compatibility scope rather than the future architecture.",
-      "consequences": [
-        "Migration can proceed route family by route family instead of through a flag-day rewrite.",
-        "The design avoids inventing a large error-type taxonomy that the current codebase does not need."
-      ]
-    },
-    {
-      "id": "DP-012",
-      "title": "Own panic recovery and middleware-generated failures at the server boundary",
-      "status": "accepted",
-      "context": "The current server stack has no application-owned recovery middleware, router 405 handling writes an empty response, and security rate limiting emits plain-text 429s before handlers run.",
-      "decision": "Introduce request correlation and panic-recovery middleware plus shared failure writers for method-not-allowed, rate-limited, and sanitized internal-failure responses at the server or middleware boundary.",
-      "consequences": [
-        "HA-oriented fault containment and diagnosis improve without changing domain behavior.",
-        "OpenAPI and production notes can describe a credible runtime failure story rather than assuming handlers own every failure."
-      ]
-    },
-    {
-      "id": "DP-013",
-      "title": "Do not add generic retry or circuit-breaker behavior to accounting-sensitive write flows",
-      "status": "accepted",
-      "context": "The existing error-handling note proposes generic recovery strategies, but market, bet, user-account, and auth writes are not generally idempotent and can have irreversible financial side effects.",
-      "decision": "Reject middleware-level or generic error-layer retries for write-heavy business flows unless a separate design explicitly proves idempotency, transaction scope, and accounting safety.",
-      "consequences": [
-        "Some transient infrastructure failures will surface to clients instead of being hidden.",
-        "The system avoids duplicating financial side effects under the banner of graceful recovery."
-      ]
-    },
-    {
-      "id": "DP-014",
-      "title": "Treat PlainTextErrorResponse as an explicit migration state, not the target contract",
-      "status": "accepted",
-      "context": "The current OpenAPI document already advertises both `ReasonResponse` and `PlainTextErrorResponse`, which reflects the live backend more accurately than the greenfield production note.",
-      "decision": "Document route families as either envelope-based or legacy plain-text during migration, update them explicitly as shared failure writers land, and retire `PlainTextErrorResponse` only when middleware and handler paths for those routes converge.",
-      "consequences": [
-        "Documentation stays grounded in live behavior during the migration.",
-        "Clients and reviewers can see where contract drift still exists instead of assuming universal envelope coverage."
-      ]
-    },
-    {
-      "id": "DP-015",
-      "title": "Adopt OpenTelemetry as the canonical telemetry model behind the owned runtime adapter",
-      "status": "accepted",
-      "context": "The logging and error-handling notes now align on OpenTelemetry for correlation and failure telemetry, but the live backend still needs one stable code-facing adapter while signal maturity and export topology continue to evolve.",
-      "decision": "Use OpenTelemetry semantic conventions, trace-context field names, and OTLP/Collector as the target telemetry direction, while keeping `backend/logger` and runtime wiring as the durable application-facing boundary instead of coupling business code directly to SDK-specific APIs or stdout exporter formats.",
-      "consequences": [
-        "Request correlation, runtime logging, and richer tracing can evolve without forcing a second application-facing logging rewrite.",
-        "The backend avoids treating an implementation-specific stdout exporter format as a production contract."
-      ]
-    },
-    {
-      "id": "DP-016",
-      "title": "Keep public failure reasons separate from OpenTelemetry error telemetry",
-      "status": "accepted",
-      "context": "The live backend already exposes stable `reason` values on some routes, while OpenTelemetry error recording is context-sensitive and should not blindly classify every negative business result as an infrastructure fault.",
-      "decision": "Keep HTTP status plus stable public `reason` values as the client contract, while runtime telemetry uses correlated spans, stable `error.type` classification, and one-time exception or failure recording; expected business rejections are not automatically telemetry errors.",
-      "consequences": [
-        "Clients get a durable, reviewable failure contract that is independent of telemetry backend choices.",
-        "Operator-facing telemetry stays useful for diagnosing real runtime faults without inflating expected business outcomes into false error signals."
-      ]
-    }
-  ],
-  "workstreams": [
-    {
-      "name": "W01 Util Breakup and Runtime Boundary Cleanup",
-      "objective": "Remove `backend/util` as a mixed catch-all, eliminate direct hidden runtime access from touched startup/server/handler/auth paths, own runtime failure behavior such as request correlation and panic recovery, unify duplicated runtime helper ownership such as backend logging, and establish the first OpenTelemetry-aligned runtime correlation seams behind `backend/logger`.",
-      "depends_on": [],
-      "notes": "This creates the first explicit infrastructure seam, reduces hidden dependency injection-by-global, and should include migration from `backend/logging` to `backend/logger`, introduction of server-owned recovery/failure middleware, clarification of runtime observability ownership, initial OpenTelemetry-compatible trace correlation vocabulary, and a deletion path for `backend/errors`."
-    },
-    {
-      "name": "W02 Configuration Service Extraction",
-      "objective": "Finish the existing runtime/bootstrap and configuration boundary split by removing `setup` aliasing and global access patterns, and by moving consumers onto owned narrow policy views.",
-      "depends_on": [
-        "W01 Util Breakup and Runtime Boundary Cleanup"
-      ],
-      "notes": "This should preserve current endpoint semantics while completing the existing config-service seam rather than inventing a greenfield config subsystem."
-    },
-    {
-      "name": "W03 Legacy Model Decoupling",
-      "objective": "Introduce boundary types and adapters so internal domain/math code no longer depends directly on legacy persistence models where cleanly avoidable.",
-      "depends_on": [
-        "W02 Configuration Service Extraction"
-      ],
-      "notes": "This is the main structural gate before API/auth cleanup."
-    },
-    {
-      "name": "W04 Scoped API and Auth Alignment",
-      "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, keep public `reason` values separate from telemetry fields, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior.",
-      "depends_on": [
-        "W03 Legacy Model Decoupling"
-      ],
-      "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly track which routes still use `PlainTextErrorResponse`, only retire that contract where middleware and handler behavior have converged, and avoid turning every business rejection into a telemetry error."
-    }
-  ],
-  "risks": [
-    {
-      "severity": "high",
-      "statement": "A thin compatibility shim around `setup` or `util` could survive and become the new long-lived hidden boundary instead of a transition seam.",
-      "mitigation": "Make ownership explicit in W01/W02 and move touched consumers directly onto the new seams wherever practical."
-    },
-    {
-      "severity": "medium",
-      "statement": "Two backend logging packages create competing runtime vocabulary and can undermine operational diagnosis across replicas and deploy/restart events.",
-      "mitigation": "Complete package unification onto `backend/logger`, ban new `socialpredict/logging` imports, and treat `backend/logging` as deletion-only scope."
-    },
-    {
-      "severity": "high",
-      "statement": "If economics or other accounting-sensitive policy can vary across instances or be hot-reloaded live, replica drift can eliminate financial and accounting correctness.",
-      "mitigation": "Use startup-validated immutable snapshots, deployment-driven rollout, and durable persistence of accounting-relevant values where workflow correctness requires historical stability."
-    },
-    {
-      "severity": "high",
-      "statement": "Legacy-model decoupling can sprawl into a flag-day rewrite if boundary types are introduced without containment discipline.",
-      "mitigation": "Limit translation ownership to repositories and explicit adapters, and sequence the work through narrow domain slices."
-    },
-    {
-      "severity": "medium",
-      "statement": "W04 could become a superficial response-shape pass if handlers still own too much config loading, DB access, or policy behavior.",
-      "mitigation": "Treat W01-W03 as real prerequisites and stop contract cleanup from outrunning boundary cleanup."
-    },
-    {
-      "severity": "high",
-      "statement": "Relying on the standard library's implicit panic handling instead of application-owned recovery leaves SocialPredict with weak diagnostics, broken connection semantics, and no stable failure response shape under runtime faults.",
-      "mitigation": "Add request-correlation and panic-recovery middleware in W01, and log sanitized failure context through the owned runtime logger."
-    },
-    {
-      "severity": "medium",
-      "statement": "`configService.Current()` can preserve whole-tree coupling behind a cleaner facade if consumers continue to reach through the full configuration tree.",
-      "mitigation": "Treat narrow immutable policy slices and consumer-owned interfaces as explicit W02 exit criteria for handlers and domain services."
-    },
-    {
-      "severity": "medium",
-      "statement": "Ad hoc debug helpers or reflection-based dumps in runtime logging can violate redaction expectations and raise operational noise.",
-      "mitigation": "Keep one owned logging adapter, define redaction and message-vocabulary rules early, and do not preserve reflection-heavy production dump helpers."
-    },
-    {
-      "severity": "medium",
-      "statement": "If application code couples directly to OpenTelemetry SDK details or an implementation-specific stdout exporter format, SocialPredict can lock transient telemetry choices into long-lived business seams.",
-      "mitigation": "Keep `backend/logger` and runtime wiring as the stable application-facing boundary, treat OTLP/Collector as the export target rather than a code-level dependency, and avoid treating stdout exporter format as contract."
-    },
-    {
-      "severity": "medium",
-      "statement": "The current login/token model still has deeper security weaknesses that are only partially mitigated by must-change-password enforcement.",
-      "mitigation": "Document the limited-scope-token redesign as deferred and avoid implying that W04 fully resolves auth architecture."
-    },
-    {
-      "severity": "high",
-      "statement": "Generic retry or circuit-breaker middleware added in the name of graceful recovery could duplicate accounting-sensitive writes or create hard-to-reconcile financial side effects.",
-      "mitigation": "Ban generic write-path retries from the error-handling modernization scope and require a separate ADR for any idempotent retry case."
-    },
-    {
-      "severity": "medium",
-      "statement": "The mixed `ReasonResponse` versus `PlainTextErrorResponse` contract can continue to drift if middleware and handler migrations are not tracked together.",
-      "mitigation": "Maintain an explicit route-family migration matrix in docs and OpenAPI updates, and do not claim universal envelope coverage prematurely."
-    },
-    {
-      "severity": "medium",
-      "statement": "If expected business rejections are recorded as telemetry errors by default, traces and metrics will over-report faults and blur the distinction between policy outcomes and runtime failures.",
-      "mitigation": "Keep public `reason` values separate from telemetry fields, classify runtime errors contextually, and define one-time exception-recording rules at the failure boundary."
-    },
-    {
-      "severity": "medium",
-      "statement": "Historical backend/API documents are partially stale and can distort design decisions if treated as current truth.",
-      "mitigation": "Use current code plus active task scope as the main source of truth and treat older docs as contextual only."
-    }
-  ],
-  "open_questions": [
-    {
-      "question": "What is the narrowest owned home for the non-bootstrap helpers currently in `backend/util`, especially API key generation and model/user-specific checks?",
-      "why_it_matters": "W01 can remove one junk drawer only to create another if those helpers are not assigned to real owners.",
-      "blocking": true
-    },
-    {
-      "question": "Should the new configuration service expose one consolidated interface or separate economics/frontend interfaces to reduce accidental coupling?",
-      "why_it_matters": "That choice affects how much of the system takes a large shared dependency versus smaller focused seams.",
-      "blocking": false
-    },
-    {
-      "question": "Which economics values must be persisted into market, bet, or accounting state versus safely read from the injected runtime snapshot?",
-      "why_it_matters": "Financial and accounting correctness may require some policy values to remain historically stable for the workflow scope they governed.",
-      "blocking": true
-    },
-    {
-      "question": "What is the minimal stable runtime logger contract for `backend/logger`, especially around redaction, OpenTelemetry-aligned field vocabulary, and request/correlation context?",
-      "why_it_matters": "Logger unification only helps if the surviving package becomes a clear operational boundary rather than a renamed convenience wrapper or a thin pass-through to transient SDK details.",
-      "blocking": false
-    },
-    {
-      "question": "What, if anything, from `backend/logging/mocklogging.go` must survive the deletion of `backend/logging`, and where should that testing seam live without recreating package duplication?",
-      "why_it_matters": "The migration should not preserve duplicate package ownership just to keep one legacy mock alive.",
-      "blocking": false
-    },
-    {
-      "question": "How should `/health` evolve into explicit readiness/liveness semantics without conflating infrastructure health with application metrics routes like `/v0/system/metrics`?",
-      "why_it_matters": "High-availability rollout and orchestration depend on clear runtime signal boundaries.",
-      "blocking": false
-    },
-    {
-      "question": "Which internal packages genuinely need dedicated boundary types, and which can be decoupled with narrower repository-return types or adapters?",
-      "why_it_matters": "This determines whether W03 stays surgical or turns into type proliferation.",
-      "blocking": true
-    },
-    {
-      "question": "What stable `reason` vocabulary should W04 treat as public contract, especially for validation, authorization, and business-rule failures?",
-      "why_it_matters": "The envelope only helps if clients can depend on stable semantics rather than ad hoc strings.",
-      "blocking": false
-    },
-    {
-      "question": "Should all `/v0` application routes ultimately converge on `ReasonResponse`, or are there specific route families that should intentionally retain `PlainTextErrorResponse` after the active slice?",
-      "why_it_matters": "The answer determines whether plain-text failures are a temporary bridge or a durable contract branch that middleware and handlers must continue to support.",
-      "blocking": false
-    },
-    {
-      "question": "What request-correlation format and propagation rules should the server, logger, and failure writers use, given that the current backend has no request ID seam?",
-      "why_it_matters": "Panic recovery and HA-oriented diagnosis improve only if runtime fault logs can be tied back to the affected request path and later tracing can reuse the same OpenTelemetry-compatible correlation fields.",
-      "blocking": false
-    },
-    {
-      "question": "What is the minimum viable OpenTelemetry export posture for the active slice: correlation-ready stdout JSON only, direct OTLP, or Collector-first wiring?",
-      "why_it_matters": "The backend should leave a precise telemetry seam without prematurely coupling business code to an export topology it is not ready to own yet.",
-      "blocking": false
-    },
-    {
-      "question": "Should `internal/service/auth` migrate to typed auth outcomes, typed internal errors, or a small explicit failure enum before HTTP mapping occurs?",
-      "why_it_matters": "That choice determines whether auth becomes a cleaner domain/service seam or keeps leaking transport policy through a different wrapper type.",
-      "blocking": false
-    },
-    {
-      "question": "Which public `reason` values, if any, should also count as runtime telemetry errors, and which should remain expected business outcomes only?",
-      "why_it_matters": "The boundary stays clear only if SocialPredict explicitly decides how business rejections relate to spans, metrics, and logs instead of inferring it ad hoc per handler.",
-      "blocking": false
-    },
-    {
-      "question": "Which middleware-generated failures beyond 429 and 405 need stable public reasons in the active slice, such as 404/404-like not-found behavior or auth bootstrap failure?",
-      "why_it_matters": "The contract remains ambiguous if only handler-generated failures get stable semantics while middleware and router failures keep their own vocabulary.",
-      "blocking": false
-    },
-    {
-      "question": "Which currently authenticated endpoints must enforce `mustChangePassword` immediately once W04 starts, and are there any intentionally exempt flows besides login and change-password?",
-      "why_it_matters": "The auth cleanup is scoped, but server-side enforcement must still be unambiguous.",
-      "blocking": false
-    }
-  ],
-  "next_steps": [
-    "Use the software-planner pass to translate this design into smaller queue slices without changing the architectural decisions above.",
-    "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
-    "Migrate the remaining `socialpredict/logging` usage to `socialpredict/logger` and delete `backend/logging` once any minimal test support is ported or replaced.",
-    "Define the minimal stable `backend/logger` contract, including redaction expectations, OpenTelemetry-aligned correlation fields, and application-facing adapter rules, before adding richer observability surfaces.",
-    "Decide the first acceptable OpenTelemetry export posture for the active slice without binding business code directly to a stdout exporter or SDK-specific surface.",
-    "Add an ADR for server-owned failure handling covering request correlation, panic recovery, shared 405/429 behavior, and the relationship between middleware failures and `ReasonResponse`.",
-    "Add an ADR or equivalent design note covering how public `reason` values relate to OpenTelemetry telemetry fields such as `error.type`, span error status, and one-time exception recording.",
-    "Define the runtime/bootstrap versus application-policy configuration taxonomy explicitly in implementation guidance and ADRs.",
-    "Replace `internal/service/config` aliases with owned types and loader seams before migrating remaining setup consumers.",
-    "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
-    "Inventory the highest-value legacy-model dependencies in `internal/domain/markets`, `internal/domain/bets`, `internal/domain/math`, and analytics before W03 task breakdown.",
-    "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
-    "Inventory `/v0` routes and middleware paths that still emit raw `http.Error`, empty 405s, or plain-text 429s, then rank the highest-value route families for W04 convergence.",
-    "Draft the initial public `reason` vocabulary and route-family migration matrix for W04 so the API/auth cleanup does not improvise string contracts during implementation."
-  ]
 }

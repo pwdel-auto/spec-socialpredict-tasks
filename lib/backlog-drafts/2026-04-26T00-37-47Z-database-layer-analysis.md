@@ -175,6 +175,12 @@ The current direction is different:
 - repositories are adapters at the edge, not the top-level architecture
 - domain and use-case correctness matter more than inventing another generic DB layer
 
+The important clarification is that the new direction does not preserve a central DAL under a different name. The concerns the older DAL wanted to gather are being decomposed more cleanly:
+
+- runtime/bootstrap owns DB lifecycle and startup workflows
+- repositories own translation at the persistence edge
+- domain and application workflows own business behavior
+
 ### What does DAL stand for?
 
 `DAL` stands for `Data Access Layer`.
@@ -222,7 +228,7 @@ A `CRUD facade` is a generic wrapper that mostly offers:
 - update
 - delete
 
-The current direction wants edge translators, not CRUD facades, because SocialPredict is not a generic admin app. It has domain-specific workflows and correctness rules.
+CRUD is not the same thing as "just using a database." It is a software abstraction shaped around generic create, read, update, and delete operations. The current direction wants edge translators, not CRUD facades, because SocialPredict is not a generic admin app. It has domain-specific workflows and correctness rules.
 
 ### What is the startup-ownership risk?
 
@@ -272,6 +278,8 @@ They should be safe to start, stop, or replace at any time because durable state
 
 What breaks statelessness is when every replica also tries to own one-off startup writes such as migrations and seed operations.
 
+This is related to Kubernetes `Deployments` and `StatefulSets`, but it is not the same concept. Architectural statelessness is about durable ownership of truth, not only which Kubernetes controller is used.
+
 ### What is migration serialization?
 
 Migration serialization means schema-changing startup work is performed by at most one writer at a time.
@@ -293,6 +301,8 @@ Examples:
 - one process runs migrations
 - one process performs one-time seed writes
 - other replicas do not race to do the same shared writes
+
+This is broader than migration ordering. It is about having one writer for shared startup mutations.
 
 ### Warning-only migration failure: should it be fatal?
 
@@ -320,6 +330,8 @@ During DB impairment, a healthy architecture often reports:
 
 That lets the platform stop routing traffic to the instance without necessarily killing the process.
 
+This is a property of the application instance, not of the database by itself. The database can be impaired, and the application can still be live while not being ready.
+
 ### What is readiness behavior during DB impairment?
 
 It means the service should make a deliberate choice about what happens when the DB is unavailable or degraded.
@@ -343,6 +355,8 @@ Runtime DB ownership means one boundary owns:
 - startup-time DB workflows
 
 In this backend that ownership should live mainly under `internal/app/runtime` plus `main.go`, not in handlers and not in a generic helper layer.
+
+Migration invocation belongs in that runtime/bootstrap ownership story as well, even if the migration implementation remains in the `migration/` package.
 
 ### Why is residual global DB fallback via `SetDB` and `GetDB` a problem?
 
@@ -435,6 +449,8 @@ Typical approaches include:
 
 The right answer depends on the workflow, but the important part is to choose and document a policy.
 
+This is not primarily about one database copying to another database. The immediate problem is protecting overlapping writes against the same primary system of record.
+
 ### What does "transaction vs compensation policy" mean?
 
 It means deciding, use case by use case, whether a workflow must be:
@@ -446,6 +462,8 @@ or whether it is acceptable to:
 - perform separate steps and compensate later
 
 For accounting-sensitive workflows, the default should lean strongly toward atomic transactions unless there is a very strong reason otherwise.
+
+Metrics and observability do not replace this requirement. If an accounting-sensitive write path can leave the system economically inconsistent, the right design goal is to prevent partial commit where practical, not merely to detect it later.
 
 ### What does "DB seam needs hardening" mean?
 
@@ -486,6 +504,8 @@ It means the runtime/bootstrap layer should explicitly own:
 - eventual shutdown of the underlying `sql.DB`
 
 These should not be scattered through handlers or pushed into app-policy config.
+
+This does not require inventing a separate standalone "database service" inside the monolith. In the current backend, the right owner is the runtime/bootstrap layer.
 
 ### What are stronger readiness semantics?
 
