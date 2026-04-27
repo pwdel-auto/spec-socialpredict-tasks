@@ -1,0 +1,1617 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
+      "id": "WAVE01-CFG-001",
+      "title": "WAVE01 Config: Replace setup aliases with owned application-policy config types",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md` as the binding design context for WAVE01 configuration-management. Complete the first useful slice by making `backend/internal/service/config` own application-policy configuration types instead of aliasing `backend/setup` types. Preserve current runtime behavior while introducing an explicit loader seam and tests that prove the owned types can be exercised without `setup` globals, YAML parsing, or `init()` side effects. Keep this task focused on the config service boundary itself; do not yet migrate every downstream consumer.",
+      "acceptance_criteria": [
+        "`backend/internal/service/config` no longer depends on type aliases to `backend/setup` for its public owned types.",
+        "Configuration loading is expressed through an explicit loader seam that preserves current source-asset behavior while clarifying ownership.",
+        "Focused tests cover the owned config types and loader behavior without relying on `setup` globals or `init()`-driven access."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned config-type boundary",
+          "dependency direction away from setup aliases",
+          "tests that avoid legacy singleton behavior"
+        ]
+      },
+      "out_of_scope": [
+        "removing `backend/setup/setup.yaml` as the source asset",
+        "migrating all handlers and domain services in this task",
+        "hot-reload or external config-store design"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/app/runtime/config.go",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is WAVE01 only: configuration-management boundary completion.",
+        "Preserve `backend/setup/setup.yaml` as the migration-time source asset.",
+        "Do not introduce a new generic top-level `config/` subsystem."
+      ]
+    },
+    {
+      "uid": "57d5f112-1626-41cb-a301-fcef5f406136",
+      "id": "WAVE01-CFG-002",
+      "title": "WAVE01 Config: Reduce backend/setup to a source-asset and translation seam",
+      "status": "pending",
+      "prompt": "After the owned config types exist, reduce `backend/setup` toward the design-plan target role: source asset and translation seam only. Remove or isolate `init()`-driven loading, package-global convenience access, and other singleton behavior from the migrated runtime path while preserving current behavior for the backend entrypoint. The goal is to stop `setup` from acting as the long-term runtime boundary. Keep the migration reversible and avoid a flag-day rewrite.",
+      "acceptance_criteria": [
+        "The migrated runtime path no longer depends on `setup` package-global accessors or `init()`-driven loading.",
+        "`backend/setup` is narrowed toward source-asset and translation responsibilities for the touched path.",
+        "Focused tests demonstrate that runtime configuration initialization works through explicit seams rather than singleton state."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "setup seam reduction",
+          "removal of migrated global access paths",
+          "behavior-preserving runtime initialization"
+        ]
+      },
+      "out_of_scope": [
+        "changing the source asset format",
+        "broad refactors outside configuration-related seams",
+        "domain-consumer migration beyond touched runtime paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/setup",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0f7f5441-86ad-4d5a-9814-f13990fefbe3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `setup` as transitional, not final architecture.",
+        "Keep startup validation explicit and fail-fast."
+      ]
+    },
+    {
+      "uid": "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+      "id": "WAVE01-CFG-003",
+      "title": "WAVE01 Config: Migrate setup, stats, seed, and adjacent handlers off whole-tree config access",
+      "status": "pending",
+      "prompt": "Move the next vertical slice of consumers onto narrow immutable policy views. Focus on `handlers/setup`, `handlers/stats`, `seed`, and any adjacent touched paths that currently reach through `configService.Current()` or otherwise consume too much of the config tree. Preserve endpoint behavior while replacing whole-tree reads with narrower configuration slices or consumer-owned interfaces. Keep handlers thin and avoid pushing business policy into HTTP code.",
+      "acceptance_criteria": [
+        "Touched handler and seed paths no longer depend on broad whole-tree config access when a narrower policy view is sufficient.",
+        "Setup and stats behavior remain stable for the touched endpoints.",
+        "Focused tests cover the migrated narrow-view behavior and protect against regression."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "stable setup/stats behavior",
+          "narrow config-view usage",
+          "deterministic tests for migrated consumers"
+        ]
+      },
+      "out_of_scope": [
+        "auth and OpenAPI redesign",
+        "domain-service migration outside touched consumer paths",
+        "changing public route taxonomy"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/setup",
+        "../socialpredict/backend/handlers/stats",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `configService.Current()` whole-tree traversal as a smell to remove from touched paths.",
+        "Keep setup endpoints semantically stable while narrowing internal dependencies."
+      ]
+    },
+    {
+      "uid": "9d4ea064-e561-4e10-92f9-2320e116dc44",
+      "id": "WAVE01-CFG-004",
+      "title": "WAVE01 Config: Migrate bets, analytics, and markets config dependencies to narrow immutable slices",
+      "status": "pending",
+      "prompt": "Continue WAVE01 by removing raw `setup`-typed configuration and broad config dependencies from domain-facing consumers, especially bets, analytics, and any directly affected market flows. Replace `*setup.EconomicConfig`, `setup.EconConfigLoader`, and similar leaks with narrow immutable policy slices or consumer-owned interfaces that preserve dependency direction. Keep integer-first economics behavior unchanged and avoid persistence-model leakage.",
+      "acceptance_criteria": [
+        "Touched domain-facing services no longer depend directly on raw `setup` configuration types or loaders.",
+        "The migrated consumers use the smallest accounting-safe policy slice or interface they need.",
+        "Focused tests prove behavior stability for the touched betting, analytics, or market flows."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "dependency direction in domain-facing code",
+          "elimination of raw setup-type leakage",
+          "behavior-preserving economics usage"
+        ]
+      },
+      "out_of_scope": [
+        "economics redesign",
+        "OpenAPI sweeps",
+        "full repository/model decoupling beyond touched paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Use the smallest accounting-safe config slices possible.",
+        "Do not move business policy back into handlers or runtime bootstrap."
+      ]
+    },
+    {
+      "uid": "a0016891-6ddb-45f4-8c0a-c515bed7f4c8",
+      "id": "WAVE01-CFG-005",
+      "title": "WAVE01 Config: Lock economics snapshot semantics and protect accounting correctness",
+      "status": "pending",
+      "prompt": "Finish the configuration-management wave by making the accounting-sensitive semantics explicit in code and tests. Ensure the touched backend paths treat economics policy as startup-validated and immutable for the running process, reject live-mutation or hot-reload behavior for accounting-sensitive policy, and persist accounting-relevant economics into durable workflow or domain state where correctness requires historical stability. Keep this task tightly scoped to what the touched code can safely support now; if a full persistence decision cannot be completed, implement the highest-value protections and document the exact follow-up boundary.",
+      "acceptance_criteria": [
+        "The touched code and tests make startup-validated immutable economics snapshots explicit for the running process.",
+        "No touched path introduces or relies on hot reload for economics or other accounting-sensitive policy.",
+        "Accounting-sensitive workflow boundaries touched in this task either persist the required economics values durably or document a precise remaining gap with tests guarding the current behavior."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "financial and accounting correctness protections",
+          "immutable snapshot semantics",
+          "durability or explicit gap documentation for touched accounting-sensitive flows"
+        ]
+      },
+      "out_of_scope": [
+        "global background-job or observability work",
+        "production-note wave 02 and beyond",
+        "broad deployment-system redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/domain",
+        "../socialpredict/backend/internal/app",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+        "9d4ea064-e561-4e10-92f9-2320e116dc44"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE01 stop-and-review point before creating later production-note waves.",
+        "Financial and accounting correctness is binary; prefer explicit protection over speculative flexibility."
+      ]
+    },
+    {
+      "uid": "09cf942d-17bd-4e94-b6b7-eb70d497cf7d",
+      "id": "WAVE02-LOG-001",
+      "title": "WAVE02 Logging: Standardize on backend/logger and delete backend/logging",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md` as the binding design context for WAVE02 logging and observability. Complete the first useful slice by migrating the remaining touched backend code off `socialpredict/logging` and onto `socialpredict/logger`, porting or replacing any minimal test seam that truly needs to survive, and deleting `backend/logging`. Preserve current behavior for the touched flows, avoid leaving a compatibility shim behind, and do not replace the logger boundary with direct OpenTelemetry SDK-coupled application code.",
+      "acceptance_criteria": [
+        "No touched non-test backend code imports `socialpredict/logging`.",
+        "Any necessary test support is moved or replaced without preserving duplicate package ownership.",
+        "`backend/logging` is deleted and focused checks cover the migrated behavior for the touched paths.",
+        "No touched path replaces `backend/logger` with a direct application-level OpenTelemetry logging abstraction."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "package unification onto backend/logger",
+          "deletion of backend/logging without a compatibility shim",
+          "behavior-preserving migration for touched callers",
+          "preservation of backend/logger as the application-facing adapter"
+        ]
+      },
+      "out_of_scope": [
+        "request-correlation rollout",
+        "health and readiness redesign",
+        "metrics or tracing expansion"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/logging",
+        "../socialpredict/backend/handlers/markets"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "a0016891-6ddb-45f4-8c0a-c515bed7f4c8"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `backend/logging` as deletion-only scope.",
+        "Do not introduce a new wrapper package or long-lived compatibility layer.",
+        "Do not solve this task by wiring business code directly to an OpenTelemetry SDK."
+      ]
+    },
+    {
+      "uid": "8e76fa6e-2576-4021-965e-3c96fed3d4d1",
+      "id": "WAVE02-LOG-002",
+      "title": "WAVE02 Logging: Define the minimal stable backend/logger contract with redaction and OpenTelemetry-aligned guardrails",
+      "status": "pending",
+      "prompt": "After package unification, harden `backend/logger` as the sole backend runtime log-emission adapter. Make the surviving logger boundary explicit for startup, server, and middleware use; define the minimal stable helper surface, message or field vocabulary expectations, OpenTelemetry-aligned correlation expectations, and redaction or no-secret rules in code and tests; and remove ad hoc patterns that would preserve unsafe or reflection-heavy logging behavior. Keep the work small and runtime-focused; do not start a full structured-logging platform or couple callers directly to exporter-specific APIs.",
+      "acceptance_criteria": [
+        "`backend/logger` exposes a clearer minimal runtime boundary for the touched callers without introducing a second logging abstraction or direct SDK-coupled replacement.",
+        "The touched logger contract makes the initial OpenTelemetry-aligned correlation or field vocabulary explicit for the surviving callers.",
+        "Touched logging behavior has explicit tests guarding stable runtime usage and safe handling expectations for secrets or sensitive values.",
+        "Touched runtime call sites can use the surviving logger package without reintroducing per-package logging dialects."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "minimal stable logger contract",
+          "OpenTelemetry-aligned field and correlation vocabulary",
+          "redaction and no-secret guardrails",
+          "avoidance of a second logging abstraction"
+        ]
+      },
+      "out_of_scope": [
+        "a full structured-logging redesign",
+        "tracing framework rollout",
+        "application metrics changes outside touched callers"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/logger/README_SIMPLELOGGING.md",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "09cf942d-17bd-4e94-b6b7-eb70d497cf7d"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep logging at runtime and transport boundaries, not in core domain policy.",
+        "Never log secrets, passwords, tokens, or API keys.",
+        "If JSON logs are emitted outside OTLP, prefer top-level `trace_id`, `span_id`, and `trace_flags`."
+      ]
+    },
+    {
+      "uid": "bdf17c69-6dda-4fa5-8e81-6bb3a32d0272",
+      "id": "WAVE02-LOG-003",
+      "title": "WAVE02 Logging: Add lifecycle and request-boundary logging through server and middleware seams",
+      "status": "pending",
+      "prompt": "With one logger package and a stable contract, add runtime-boundary logging for startup, shutdown or fatal paths, and request lifecycle or correlation where it belongs: `main.go`, `server`, and middleware or security seams. Keep handlers and domain services thin, prefer one vocabulary, use OpenTelemetry-compatible correlation shape at the boundary, and avoid scattering logger construction through business code. Preserve existing endpoint behavior while making deploy, restart, and request diagnostics more deterministic.",
+      "acceptance_criteria": [
+        "Touched startup, server, and middleware paths emit runtime diagnostics through `backend/logger` rather than raw `log` calls or ad hoc local patterns.",
+        "Request or correlation context is added at the boundary layer instead of being pushed into domain logic or unrelated handlers.",
+        "Any touched serialized correlation fields are compatible with later OpenTelemetry trace-log correlation instead of inventing a second naming scheme.",
+        "Focused tests cover the new boundary logging behavior or helpers deterministically for the touched paths."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime-boundary placement of logging",
+          "request or correlation context handling compatible with later tracing",
+          "deterministic verification for touched logging helpers"
+        ]
+      },
+      "out_of_scope": [
+        "full tracing rollout",
+        "broad handler-by-handler logging sweeps",
+        "metrics redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/logger"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "8e76fa6e-2576-4021-965e-3c96fed3d4d1"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer middleware and runtime-boundary injection over handler-local logger construction.",
+        "Keep stdout or stderr-first emission suitable for process and container aggregation.",
+        "Do not start a full tracing rollout in this task."
+      ]
+    },
+    {
+      "uid": "d4e8fc6d-58bc-4217-8c51-c91fda76f304",
+      "id": "WAVE02-LOG-004",
+      "title": "WAVE02 Logging: Harden health and readiness semantics without conflating metrics",
+      "status": "pending",
+      "prompt": "After runtime logging boundaries are stable, harden the backend's operator-facing health signals. Clarify `/health` and any new readiness or liveness behavior so orchestration and deploy diagnostics can rely on explicit semantics, while keeping `/v0/system/metrics` separate as an application route. Reuse existing runtime and DB seams where practical, keep the implementation deterministic, and avoid inventing a broad observability subsystem or smuggling generic telemetry-backend status into health probes.",
+      "acceptance_criteria": [
+        "Touched server or runtime code exposes explicit, deterministic health or readiness semantics appropriate for orchestration.",
+        "Health and readiness handling remains separate from application metrics routes and does not repurpose `/v0/system/metrics` as an infrastructure probe.",
+        "Focused route and runtime tests cover the touched health or readiness behavior."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "clear runtime-boundary ownership for health and readiness",
+          "separation from application metrics routes",
+          "minimal and deterministic readiness semantics"
+        ]
+      },
+      "out_of_scope": [
+        "Prometheus or external metrics backend rollout",
+        "OpenTelemetry Collector rollout",
+        "distributed tracing rollout",
+        "public API taxonomy redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "bdf17c69-6dda-4fa5-8e81-6bb3a32d0272"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep `/health` simple and orchestration-friendly.",
+        "Do not collapse health and metrics into one generic observability abstraction.",
+        "Do not treat health endpoints as a proxy for telemetry pipeline status."
+      ]
+    },
+    {
+      "uid": "668dbea3-f70a-46c2-9683-877f2e45f480",
+      "id": "WAVE02-LOG-005",
+      "title": "WAVE02 Logging: Clarify metrics ownership and leave OpenTelemetry tracing or export as a precise follow-up seam",
+      "status": "pending",
+      "prompt": "Finish the logging and observability wave by tightening the boundary around existing metrics handling after logger unification and health or readiness hardening. Keep `/v0/system/metrics` and adjacent metrics code explicitly application-owned, avoid folding it into runtime probes, and add only the smallest implementation seam or documentation-in-code needed to keep future OpenTelemetry tracing or export work well-scoped. Do not introduce a top-level `observability/` tree, treat a stdout exporter format as a contract, or roll out a speculative tracing framework in this task.",
+      "acceptance_criteria": [
+        "Touched metrics routes or handlers have clearer ownership and do not blur runtime health or readiness with application metrics.",
+        "No touched path introduces a new top-level observability package family or a speculative tracing implementation.",
+        "The touched code and tests leave a precise, limited seam for later OpenTelemetry tracing or richer metrics work instead of preserving ad hoc coupling."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "metrics ownership clarity",
+          "absence of an observability mega-tree or speculative tracing rollout",
+          "precise OpenTelemetry-compatible follow-up seam for later work"
+        ]
+      },
+      "out_of_scope": [
+        "distributed tracing backend rollout",
+        "external log or metrics aggregation platform work",
+        "broad business-metrics redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/logger"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "d4e8fc6d-58bc-4217-8c51-c91fda76f304"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE02 stop-and-review point before any richer tracing rollout.",
+        "Treat tracing as later than package unification, logger hardening, and health or readiness clarification.",
+        "Do not treat an OpenTelemetry stdout exporter format as the production logging contract."
+      ]
+    },
+    {
+      "uid": "8bc7cbfd-0cfb-4029-9f3b-0073931389a3",
+      "id": "WAVE03-ERR-001",
+      "title": "WAVE03 Error Handling: Add request correlation and panic recovery at the server boundary",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md` as the binding design context for WAVE03 error handling. Complete the first useful slice by adding application-owned request correlation and panic-recovery behavior at the server boundary. Keep handlers and domain logic free of new error-policy growth, return sanitized client failures for unexpected request-path panics, and make the correlation path compatible with later OpenTelemetry-aligned runtime telemetry without introducing a new universal error hierarchy.",
+      "acceptance_criteria": [
+        "Touched request paths receive application-owned request correlation at the server boundary without pushing correlation plumbing into handlers or domain services.",
+        "Unexpected request-path panics are recovered at the boundary with sanitized client responses and correlated runtime diagnostics.",
+        "Focused tests verify panic recovery and correlation behavior deterministically for the touched boundary paths."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "deterministic panic-recovery behavior",
+          "boundary-owned request correlation",
+          "sanitized client failure handling"
+        ]
+      },
+      "out_of_scope": [
+        "shared 405 or 429 failure-writer rollout",
+        "auth outcome redesign",
+        "generic retry or circuit-breaker behavior"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/logger"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "668dbea3-f70a-46c2-9683-877f2e45f480"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start at the request boundary; do not create a new cross-cutting universal error package.",
+        "Keep panic responses sanitized and correlation-friendly."
+      ]
+    },
+    {
+      "uid": "1448e15d-34a0-49af-bf2d-504b9530f7f1",
+      "id": "WAVE03-ERR-002",
+      "title": "WAVE03 Error Handling: Converge runtime-owned 405, 429, and sanitized 500 failures on shared writers",
+      "status": "pending",
+      "prompt": "With boundary recovery in place, add shared failure writers for runtime-owned `405`, `429`, and sanitized `500` behavior in server and middleware paths. Make the minimal OpenTelemetry-aligned runtime failure telemetry rules explicit for request correlation, stable `error.type`, and one-time exception recording, while keeping public `reason` values separate from telemetry fields and avoiding any universal error hierarchy or speculative retry behavior.",
+      "acceptance_criteria": [
+        "Touched runtime-owned `405`, `429`, and unexpected `500` responses flow through shared boundary writers instead of scattered `http.Error` or ad hoc server strings.",
+        "The touched runtime failure path makes request correlation, stable `error.type`, and one-time exception recording explicit without coupling public `reason` values to telemetry fields.",
+        "No touched path introduces a universal error hierarchy or retry or circuit-breaker behavior for accounting-sensitive writes."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared boundary failure translation",
+          "separation of public reason from telemetry",
+          "absence of a universal error hierarchy or retry logic"
+        ]
+      },
+      "out_of_scope": [
+        "handler-by-handler response migration",
+        "business rejection taxonomy redesign",
+        "OpenAPI sweeps outside touched runtime-owned failures"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/errors"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "8bc7cbfd-0cfb-4029-9f3b-0073931389a3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `405`, `429`, and unexpected `500` responses as runtime-owned boundary behavior.",
+        "Keep public `reason` values separate from internal telemetry fields such as `error.type`.",
+        "Do not add generic retry or circuit-breaker behavior to accounting-sensitive writes."
+      ]
+    },
+    {
+      "uid": "a6bfad12-fc36-4480-b5ae-691919703684",
+      "id": "WAVE03-ERR-003",
+      "title": "WAVE03 Error Handling: Replace auth HTTP transport errors with typed internal outcomes",
+      "status": "pending",
+      "prompt": "Replace `internal/service/auth.HTTPError` with cleaner typed internal auth outcomes before HTTP mapping occurs. Update the touched auth middleware and handlers to translate those outcomes only at the boundary, tighten must-change-password behavior, and preserve current route-protection semantics elsewhere. Keep this slice focused on eliminating auth-local HTTP transport leakage rather than starting a broader route-family envelope sweep.",
+      "acceptance_criteria": [
+        "Touched auth flows no longer expose `internal/service/auth.HTTPError` and instead return typed internal outcomes that can be mapped at the HTTP boundary.",
+        "Touched boundary code translates auth outcomes into responses without reintroducing transport leakage into internal services.",
+        "Must-change-password behavior is tightened and covered by focused tests for the touched protected-route flow."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "removal of auth-local HTTP transport leakage",
+          "typed internal auth outcomes",
+          "must-change-password enforcement at the boundary"
+        ]
+      },
+      "out_of_scope": [
+        "credential or session model redesign",
+        "broad protected-route envelope migration outside touched auth paths",
+        "unrelated auth UX changes"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/handlers/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "1448e15d-34a0-49af-bf2d-504b9530f7f1"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "HTTP mapping belongs in handlers or middleware, not in `internal/service/auth`.",
+        "Preserve current auth protection semantics except for the intended must-change-password tightening."
+      ]
+    },
+    {
+      "uid": "f741f499-c696-40cb-abe4-56a2b2c65711",
+      "id": "WAVE03-ERR-004",
+      "title": "WAVE03 Error Handling: Migrate the first protected /v0 route family onto shared failure translation and accurate route docs",
+      "status": "pending",
+      "prompt": "Use the new boundary writers and auth outcomes to migrate the highest-value protected `/v0` route family off raw `http.Error`, status-only failures, or ad hoc strings. Adopt stable public `reason` values only where behavior has converged, keep any remaining plain-text exception explicit and temporary, and update `backend/docs/openapi.yaml` plus `README/PRODUCTION-NOTES/BACKEND/03-error-handling.md` route-by-route for the touched family without claiming universal envelope coverage.",
+      "acceptance_criteria": [
+        "One high-value protected `/v0` route family is migrated off raw `http.Error`, status-only failures, or ad hoc strings in touched paths and uses the shared failure translation from earlier tasks.",
+        "For the touched family, stable public `reason` values are used only where behavior has converged, and any retained plain-text exception is explicit and documented as temporary.",
+        "OpenAPI and production notes are updated route-by-route for the touched family and do not overclaim universal error-envelope coverage."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "accurate touched-route failure contracts",
+          "explicit migration-state documentation for any plain-text exception",
+          "route-family alignment between implementation and OpenAPI"
+        ]
+      },
+      "out_of_scope": [
+        "universal ReasonResponse rollout",
+        "full `backend/errors` retirement",
+        "telemetry exporter or tracing backend rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "a6bfad12-fc36-4480-b5ae-691919703684"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest protected `/v0` family that yields fast feedback and exposes the contract choice clearly.",
+        "Retain `PlainTextErrorResponse` only where behavior has not yet converged and mark it as temporary."
+      ]
+    },
+    {
+      "uid": "0647e6ec-c354-4232-a440-3c9d25f9ffa3",
+      "id": "WAVE03-ERR-005",
+      "title": "WAVE03 Error Handling: Stop and review remaining plain-text, raw HTTP, and backend/errors request paths",
+      "status": "pending",
+      "prompt": "Finish WAVE03 by reconciling the first migrated slice with the remaining migration surface. Remove `backend/errors` from any request boundary successfully migrated in this wave, make the still-live `PlainTextErrorResponse`, raw `http.Error`, status-only, and `backend/errors` request paths explicit where they remain, and leave the next wave as a precise route-family or exception-case seam instead of a vague backlog. This is the WAVE03 stop-and-review point before broader route-family convergence or full package retirement.",
+      "acceptance_criteria": [
+        "Remaining live request paths that still rely on `PlainTextErrorResponse`, raw `http.Error`, status-only failures, or `backend/errors` are made explicit after the first migration slice.",
+        "Any request boundary migrated in WAVE03 no longer depends on `backend/errors`; if other live boundaries still do, that dependency is left explicit rather than half-removed.",
+        "The wave ends with a precise next-wave seam for additional route-family migrations and eventual package retirement, with touched docs kept accurate."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "precise remaining migration inventory",
+          "no half-retired backend/errors usage on migrated boundaries",
+          "clear stop-and-review seam for the next wave"
+        ]
+      },
+      "out_of_scope": [
+        "broad follow-on route-family migrations",
+        "universal plain-text contract retirement",
+        "generic retries or circuit breakers"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/errors",
+        "../socialpredict/backend/handlers",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/03-error-handling.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "f741f499-c696-40cb-abe4-56a2b2c65711"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE03 stop-and-review point before broader route-family convergence.",
+        "Do not claim universal envelope coverage or package retirement ahead of the actual migrated boundaries."
+      ]
+    },
+    {
+      "uid": "700db0a4-da61-4d6f-883a-4bf6d1d5b468",
+      "id": "WAVE04-DB-001",
+      "title": "WAVE04 Database: Harden the runtime DB ownership seam and reduce process-global fallback",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md` as the binding design context for WAVE04 database runtime ownership. Complete the first useful slice by hardening `backend/internal/app/runtime/db.go` as the owned runtime DB seam: make the minimum production contract for pool sizing, connection lifetime, SSL/TLS posture, and shutdown or health hooks explicit, and reduce `SetDB`/`GetDB` so the production startup path no longer relies on process-global fallback state. Preserve current runtime behavior where safe, keep the change reversible, and do not start caching or Redis work.",
+      "acceptance_criteria": [
+        "The touched runtime DB path makes its minimum production ownership explicit for pool sizing, connection lifetime, SSL/TLS posture, and shutdown or health integration.",
+        "The production startup path no longer depends on `SetDB`/`GetDB` as a hidden runtime fallback; if compatibility remains, it is isolated to tests or a narrow migration bridge.",
+        "Focused tests cover the hardened runtime DB seam deterministically for the touched behavior."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime DB seam ownership",
+          "reduction of process-global DB fallback",
+          "explicit pool, SSL/TLS, and lifecycle contract for the touched path"
+        ]
+      },
+      "out_of_scope": [
+        "introducing a new `database/`, `repository/`, or `dal/` tree",
+        "every-replica startup-writer policy changes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/util/postgres.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0647e6ec-c354-4232-a440-3c9d25f9ffa3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep Postgres as the authoritative system of record.",
+        "Do not treat caching, Redis, or a generic database service as part of this slice."
+      ]
+    },
+    {
+      "uid": "63c28c0d-db5e-4036-a78d-8f2953ead2be",
+      "id": "WAVE04-DB-002",
+      "title": "WAVE04 Database: Tighten migration failure posture and introduce a single-writer startup seam",
+      "status": "pending",
+      "prompt": "After the runtime DB seam is explicit, tighten the startup mutation path. Replace warning-only or every-replica default behavior around migrations and any still-startup-owned seed writes with an explicit startup-writer seam that preserves the current repo shape. Choose the smallest reversible enforcement the backend can support now, but make it impossible for request-serving startup to treat shared schema or seed mutation as an implicit every-process responsibility. Fail closed or remain unready on unsafe schema state, and keep caching or Redis out of scope.",
+      "acceptance_criteria": [
+        "Touched startup code no longer treats migrations or any still-startup-owned seed writes as implicit every-replica work.",
+        "Migration or schema-incompatibility failure in the touched startup path no longer degrades to warning-only continuation; the process fails closed or remains unready.",
+        "Focused tests cover the chosen startup-writer gate and migration failure posture deterministically for the touched path."
+      ],
+      "verification": {
+        "owner": "software-action-db-migration-agent",
+        "sign_off": "required",
+        "focus": [
+          "migration runner failure posture",
+          "single-writer startup seam for migrations and startup-owned seeds",
+          "deterministic migration and startup safety checks"
+        ]
+      },
+      "out_of_scope": [
+        "final cluster-orchestration redesign",
+        "unrelated schema changes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/internal/app/runtime"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "700db0a4-da61-4d6f-883a-4bf6d1d5b468"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "The enforcement mechanism may be leader-only mode, a dedicated startup-writer mode, or a DB-backed serialization seam, but it must be explicit.",
+        "Do not leave warning-only migration failure or `AutoMigrate` fallback as the production end state."
+      ]
+    },
+    {
+      "uid": "ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d",
+      "id": "WAVE04-DB-003",
+      "title": "WAVE04 Database: Define DB-backed readiness and liveness for serving traffic",
+      "status": "pending",
+      "prompt": "With startup mutation policy tightened, make the serving contract reflect real database condition. Replace hard-coded health success with explicit DB-backed readiness and liveness behavior, or equivalent owned runtime signals, that distinguish process aliveness from safe request-serving readiness after startup. Reuse the runtime seam, keep `/v0/system/metrics` separate from health probes, and avoid a broad observability redesign.",
+      "acceptance_criteria": [
+        "Touched runtime or server code distinguishes process liveness from DB-backed readiness instead of reporting unconditional success.",
+        "The readiness decision for the touched path is tied to owned runtime DB condition rather than ad hoc handler behavior or application metrics routes.",
+        "Focused route and runtime tests cover the touched readiness and liveness behavior deterministically."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned readiness and liveness semantics",
+          "DB-backed serving contract",
+          "separation of health probes from application metrics"
+        ]
+      },
+      "out_of_scope": [
+        "tracing rollout",
+        "business-metrics redesign",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "63c28c0d-db5e-4036-a78d-8f2953ead2be"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep health and readiness operator-facing and separate from application metrics.",
+        "Do not reintroduce a hard-coded `ok` contract once DB condition is available."
+      ]
+    },
+    {
+      "uid": "7447e831-00b3-4bdc-8a25-a15db51f1c47",
+      "id": "WAVE04-DB-004",
+      "title": "WAVE04 Database: Remove the next raw request-boundary DB leaks behind owned seams",
+      "status": "pending",
+      "prompt": "After the runtime and readiness story is explicit, migrate the next raw request-boundary `*gorm.DB` call sites onto owned service or repository seams. Start with the concrete remaining leaks called out by the design context, especially stats, admin add-user, and any adjacent route wiring that still passes raw DB handles into handlers. Preserve endpoint behavior, keep handlers thin, and do not solve this by inventing a new central DAL or generic CRUD facade.",
+      "acceptance_criteria": [
+        "The touched request-boundary handlers no longer take raw `*gorm.DB` when an owned service or repository seam is sufficient.",
+        "Touched server or container wiring passes explicit owned dependencies instead of raw DB handles for the migrated paths.",
+        "Focused tests cover the migrated handler behavior or service seams deterministically for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "request-boundary DB leak removal",
+          "reuse of existing service and repository seams",
+          "avoidance of DAL or generic CRUD regression"
+        ]
+      },
+      "out_of_scope": [
+        "full handler migration sweep",
+        "legacy-model decoupling beyond the touched slice",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/stats",
+        "../socialpredict/backend/handlers/admin/adduser.go",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest vertical slice that removes a real raw DB leak.",
+        "Do not move persistence shaping back into handlers."
+      ]
+    },
+    {
+      "uid": "d439e58f-93be-42de-bd8c-1cb05cab0705",
+      "id": "WAVE04-DB-005",
+      "title": "WAVE04 Database: Make bet placement atomic and stop-and-review the remaining accounting surface",
+      "status": "pending",
+      "prompt": "Finish WAVE04 by turning one high-risk accounting-sensitive workflow into an explicit transaction-scoped unit of work, starting with bet placement unless the touched code reveals an even smaller live compensation path. Define which writes must commit together, where transaction scope begins and ends across repositories, and what primary-DB concurrency protection the touched workflow needs. Preserve integer-first accounting behavior, keep automatic retry or circuit-breaker behavior out of scope, and end the wave with a precise inventory of the remaining sell-position or market-resolution transaction surface while keeping caching or Redis explicitly deferred.",
+      "acceptance_criteria": [
+        "One high-risk accounting-sensitive workflow in the touched code is converted from compensation-style behavior to an explicit transaction-scoped unit of work with clear commit boundaries.",
+        "The touched workflow makes its primary-DB concurrency protection explicit and preserves existing accounting behavior without adding generic automatic retry or circuit-breaker behavior.",
+        "Focused tests prove atomicity-sensitive behavior for the migrated workflow, and the wave ends with an explicit remaining inventory for other accounting-sensitive flows while keeping caching or Redis deferred."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit atomic unit of work for the first accounting-sensitive workflow",
+          "deterministic evidence for touched transaction and concurrency behavior",
+          "precise remaining accounting-surface inventory with caching still deferred"
+        ]
+      },
+      "out_of_scope": [
+        "a generic transaction framework for every workflow",
+        "automatic retry or circuit-breaker rollout around money-moving writes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/handlers/bets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "7447e831-00b3-4bdc-8a25-a15db51f1c47"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start with the smallest high-risk workflow, expected to be bet placement.",
+        "Keep Redis and caching explicitly deferred until runtime ownership and accounting correctness are stronger."
+      ]
+    },
+    {
+      "uid": "97568861-fcab-4748-bd63-957981f94da3",
+      "id": "WAVE05-SEC-001",
+      "title": "WAVE05 Security: Make runtime/bootstrap own JWT, proxy-trust, CORS, and header posture",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` as the binding design context for WAVE05 security hardening. Complete the first useful slice by moving deployment-sensitive security posture behind an explicit runtime/bootstrap seam. Make JWT signing-key presence, trusted-proxy rules for forwarded headers, CORS defaults, and header or HSTS ownership assumptions explicit in runtime code and operator-facing docs; remove ad hoc env reads from auth or server code where the touched path can now depend on injected runtime settings. Preserve current login and serving behavior where safe, fail closed on missing JWT signing material for the touched auth-serving path, and do not create a new `security/*` platform tree.",
+      "acceptance_criteria": [
+        "The touched runtime/bootstrap path owns JWT signing-key presence, trusted-proxy rules, CORS defaults, and header or HSTS posture explicitly instead of leaving them split across ad hoc helpers.",
+        "Touched auth or server code no longer reads deployment-sensitive security settings ad hoc when an injected runtime seam is available.",
+        "Focused tests and operator-facing note updates cover the chosen runtime security posture and missing-key failure behavior for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime ownership of deployment-sensitive security posture",
+          "removal of ad hoc env reads from touched auth and server paths",
+          "explicit fail-closed JWT key behavior for the touched slice"
+        ]
+      },
+      "out_of_scope": [
+        "token or session redesign",
+        "MFA, RBAC, or request-signing rollout",
+        "distributed rate limiting or compliance-program work"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "d439e58f-93be-42de-bd8c-1cb05cab0705"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep deployment-sensitive security posture separate from application-policy configuration.",
+        "Do not hide runtime security ownership back inside `setup`, auth helpers, or a new middleware platform tree."
+      ]
+    },
+    {
+      "uid": "33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf",
+      "id": "WAVE05-SEC-002",
+      "title": "WAVE05 Security: Harden client-IP extraction and keep the in-process limiter honest",
+      "status": "pending",
+      "prompt": "After the runtime-owned proxy rules exist, harden `backend/security` rate limiting around an explicit client-identity extractor that respects the new proxy-trust contract instead of blindly trusting `X-Forwarded-For` or `X-Real-IP`. Keep the current in-process limiter as the active-slice baseline, reuse the boundary failure path for `429` behavior rather than reintroducing transport-rough strings, and make the limitation to per-process enforcement explicit in code, tests, and the active security note without pulling in Redis or shared rate limiting.",
+      "acceptance_criteria": [
+        "The touched rate-limiting path no longer blindly trusts forwarded headers and instead uses an explicit proxy-trust or client-identity contract.",
+        "Touched `429` behavior stays on the shared boundary-failure path rather than raw transport strings.",
+        "Focused tests and note updates make the in-process limiter baseline and its replica-level limitations explicit for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "deterministic proxy-trust and client-identity behavior",
+          "stable shared `429` behavior for touched middleware paths",
+          "explicit in-process limiter baseline without distributed-scope drift"
+        ]
+      },
+      "out_of_scope": [
+        "Redis or distributed rate limiting",
+        "IP reputation or abuse-platform work",
+        "public route taxonomy changes"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "97568861-fcab-4748-bd63-957981f94da3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep the active-slice limiter local and honest about its limits.",
+        "Do not reintroduce plain-text `429` behavior while tightening proxy trust."
+      ]
+    },
+    {
+      "uid": "9df6daaf-aab4-4893-b816-f5f70244ae2e",
+      "id": "WAVE05-SEC-003",
+      "title": "WAVE05 Security: Inject shared validation and sanitization into the first auth and write-path slices",
+      "status": "pending",
+      "prompt": "Keep `backend/security` as shared request-boundary support instead of a hidden constructor call in every handler. Migrate the first high-value touched slices that still instantiate `security.NewSecurityService()` ad hoc, starting with login plus one write-heavy boundary path such as admin add-user or create-market, onto injected or otherwise owned reusable validation and sanitization dependencies through the existing server or container seams. Preserve current validation and sanitization behavior, keep handlers thin, and do not invent a new validation platform or move boundary checks into domain policy.",
+      "acceptance_criteria": [
+        "The touched auth and write-path slices no longer create fresh security services ad hoc when a shared boundary seam is sufficient.",
+        "Reusable validation and sanitization ownership is explicit in the touched server, container, or handler wiring without leaking transport checks into domain policy.",
+        "Focused tests preserve current validation and sanitization behavior for the migrated slices."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned validation and sanitization seam reuse",
+          "removal of ad hoc `security.NewSecurityService()` creation from touched paths",
+          "preservation of boundary-only validation responsibilities"
+        ]
+      },
+      "out_of_scope": [
+        "schema-wide validation redesign",
+        "domain-policy validation rewrites",
+        "new top-level security or validation subsystems"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/security"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest reusable seam that removes a real ad hoc security-service construction.",
+        "Do not turn `backend/security` into domain policy or a second platform architecture."
+      ]
+    },
+    {
+      "uid": "991c8ea5-19c8-4a16-885e-7d03c7e489e3",
+      "id": "WAVE05-SEC-004",
+      "title": "WAVE05 Security: Make must-change-password enforcement explicit across the next protected route family",
+      "status": "pending",
+      "prompt": "With reusable auth and boundary helpers in place, make the `mustChangePassword` rule explicit across the next protected route family rather than relying on whichever handlers already happen to call the auth helper correctly. Preserve the intentional exceptions for login and `/v0/changepassword`, block the chosen authenticated slice consistently with the shared failure reason, and update route tests plus OpenAPI or production-note text for the touched endpoints without claiming universal route-family completion.",
+      "acceptance_criteria": [
+        "The chosen protected route family enforces `mustChangePassword` consistently at the boundary with the shared failure reason instead of mixed ad hoc behavior.",
+        "Login and `/v0/changepassword` remain intentionally usable when `mustChangePassword` is set.",
+        "Focused route tests and touched API documentation reflect the migrated enforcement behavior without overstating wider coverage."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit `mustChangePassword` boundary behavior for the touched route family",
+          "preserved login and change-password exceptions",
+          "accurate contract documentation for the migrated slice"
+        ]
+      },
+      "out_of_scope": [
+        "broader token redesign",
+        "full authenticated-route sweep in one task",
+        "authorization framework redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/bets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "9df6daaf-aab4-4893-b816-f5f70244ae2e"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Preserve the current login and change-password exception behavior intentionally.",
+        "Prefer one coherent protected route family over a broad unaudited auth sweep."
+      ]
+    },
+    {
+      "uid": "0ba7f17a-9086-4ebc-8a2b-75da87826d2b",
+      "id": "WAVE05-SEC-005",
+      "title": "WAVE05 Security: Stop and review remaining boundary-security gaps and deferred platform topics",
+      "status": "pending",
+      "prompt": "Finish WAVE05 with a security-specific stop-and-review point. Remove or document any touched leftover plain-text security failures that still bypass the shared boundary contract, inventory the remaining spoofable-header, raw auth, or ad hoc validation hotspots after this wave, and refresh the active security note so the next queue slice is a precise auth or boundary-hardening seam instead of a vague platform backlog. Keep `FUTURE/01-long-term-security-hardening.md` explicitly deferred and do not pull MFA, RBAC, distributed rate limiting, request signing, session redesign, or compliance work into the active queue.",
+      "acceptance_criteria": [
+        "The touched remaining boundary-security exceptions are either removed or made explicit with a precise next migration seam.",
+        "The active security note reflects what this wave actually hardened, what remains, and which long-term topics stay deferred.",
+        "The wave ends with a concrete follow-on security or auth seam rather than a broad speculative platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining boundary-security inventory",
+          "active-note accuracy versus touched code",
+          "continued deferral of long-term security-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating FUTURE security-platform topics",
+        "distributed rate limiting, MFA, RBAC, or request signing implementation",
+        "broad compliance-program planning"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "991c8ea5-19c8-4a16-885e-7d03c7e489e3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE05 stop-and-review point before broader auth or API convergence work.",
+        "Keep security hardening threaded through existing seams instead of reopening a separate platform buildout."
+      ]
+    },
+    {
+      "uid": "4e2d1e16-7b98-4a04-990e-70af6fdaa60a",
+      "id": "WAVE06-API-001",
+      "title": "WAVE06 API: Publish the route-family migration matrix and touched public reason vocabulary",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md`, and `../socialpredict/backend/docs/API-ISSUES.md` as the binding design context for WAVE06 API alignment. Start the wave by making the mixed contract explicit instead of improvising it during code cleanup. Add an initial route-family migration matrix for the touched `/v0` families plus infra docs routes, classify which paths are envelope-based, mixed raw-success plus `ReasonResponse`, or legacy plain-text, capture the touched public `reason` vocabulary, and make every touched `PlainTextErrorResponse` usage explicit migration state. Keep `backend/server/server.go` as the source of truth and align `backend/docs/openapi.yaml`, route/spec checks, and API follow-up notes to that matrix without introducing a universal wrapper, `/v1`, header-based versioning, or generated-client workflow.",
+      "acceptance_criteria": [
+        "The touched docs and OpenAPI contract include a route-family migration matrix that matches live route behavior for the chosen families and infra docs routes.",
+        "Touched public `reason` values are explicit and kept separate from runtime or telemetry vocabulary, and touched `PlainTextErrorResponse` usage is documented as migration state rather than target contract.",
+        "Focused contract validation keeps the matrix slice aligned with `server.go`, touched handlers or DTOs, and `openapi.yaml`."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "route-family migration matrix accuracy",
+          "OpenAPI parity for the touched families and infra docs routes",
+          "explicit `PlainTextErrorResponse` migration-state documentation"
+        ]
+      },
+      "out_of_scope": [
+        "HATEOAS or broader hypermedia rollout",
+        "XML or broader content negotiation",
+        "universal `APIResponse` wrappers, `/v1`, or header-based versioning"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/openapi_test.go",
+        "../socialpredict/backend/server/server_contract_test.go",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0ba7f17a-9086-4ebc-8a2b-75da87826d2b"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Track middleware and handler response families together in the matrix.",
+        "Keep the source-of-truth order explicit: `server.go` -> touched handlers or DTOs -> `openapi.yaml` -> `API-ISSUES.md`."
+      ]
+    },
+    {
+      "uid": "a8738d53-e5b3-494c-8ca1-6a9c30126f2f",
+      "id": "WAVE06-API-002",
+      "title": "WAVE06 API: Introduce boundary-safe auth outcomes for the first protected route family",
+      "status": "pending",
+      "prompt": "With the migration matrix in place, start retiring auth transport leakage in code rather than just documenting it. Replace `internal/service/auth.HTTPError` usage on one coherent protected route family, such as the current-user/profile, admin, or create-market slice, with typed internal outcomes or an equivalent boundary-safe translation seam that keeps HTTP mapping at the handler or boundary helper. Preserve the existing `POST /v0/login` token response and the intentional `/v0/changepassword` exception when `mustChangePassword` is set, keep public `reason` values separate from telemetry classification, and update OpenAPI or notes only for the touched routes instead of claiming wave-wide completion.",
+      "acceptance_criteria": [
+        "The chosen auth path no longer requires `internal/service/auth.HTTPError` as the internal contract for the touched protected route family, and HTTP mapping stays at the boundary.",
+        "The touched protected routes preserve the existing login token contract plus the intentional login and change-password `mustChangePassword` exception behavior.",
+        "Focused route tests and OpenAPI or note updates cover the migrated auth failure reasons without leaking raw transport strings or overstating broader retirement."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "boundary-safe auth outcomes for the chosen route family",
+          "removal of `HTTPError` transport leakage from the touched auth path",
+          "preserved login and change-password `mustChangePassword` exceptions"
+        ]
+      },
+      "out_of_scope": [
+        "token redesign, MFA, RBAC, or session-platform work",
+        "full authenticated-route sweep in one task",
+        "turning public `reason` values into telemetry fields"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/docs/API-ISSUES.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "4e2d1e16-7b98-4a04-990e-70af6fdaa60a"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose one coherent protected family instead of scattering single-callsite changes across the tree.",
+        "Preserve the existing login and change-password exception behavior intentionally while retiring transport leakage in the touched slice."
+      ]
+    },
+    {
+      "uid": "78131017-967a-43e2-9fd0-fc523891b1ce",
+      "id": "WAVE06-API-003",
+      "title": "WAVE06 API: Converge the first client-visible legacy route family on shared failure writers",
+      "status": "pending",
+      "prompt": "After the first auth-translation seam lands, migrate one client-visible legacy route family that still returns raw JSON success with plain-text or ad hoc `http.Error` failures, such as search markets or a public-user reporting slice, onto the shared failure-writer direction. Keep success payloads truthful to the current family unless the route already advertises an envelope, update the route-family migration matrix and OpenAPI route-by-route, and only retire `PlainTextErrorResponse` for the paths whose handler and middleware behavior have actually converged. Do not attempt a flag-day public route redesign or a universal response wrapper.",
+      "acceptance_criteria": [
+        "The chosen legacy route family no longer emits touched ad hoc plain-text failures where the shared boundary-failure path now applies.",
+        "Success payloads for the chosen family remain stable and truthful to the current route contract instead of being force-wrapped.",
+        "Focused tests, the migration matrix, and OpenAPI updates reflect the migrated family and make remaining `PlainTextErrorResponse` families explicit elsewhere."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared failure-writer behavior for the migrated family",
+          "stable success-shape preservation without wrapper drift",
+          "accurate remaining `PlainTextErrorResponse` inventory"
+        ]
+      },
+      "out_of_scope": [
+        "broad public route taxonomy rewrite",
+        "universal success-wrapper middleware",
+        "repo-wide parameter normalization"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "a8738d53-e5b3-494c-8ca1-6a9c30126f2f"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer a route family with existing contract tests or clear client visibility.",
+        "Migrate middleware and handler behavior together for the chosen family."
+      ]
+    },
+    {
+      "uid": "da866ab1-b53d-48f6-82d6-eb0d58d2a723",
+      "id": "WAVE06-API-004",
+      "title": "WAVE06 API: Make Swagger and OpenAPI publishing explicit across proxy environments",
+      "status": "pending",
+      "prompt": "Once the active contract inventory is explicit, make backend-served docs an owned publishing contract across local, staging, and production. Preserve `/swagger/` and `/openapi.yaml` as the canonical backend endpoints, update the repo's proxy or deployment templates and operator-facing notes so those paths are published deliberately instead of being hidden behind `/api/` prefix routing, and keep the backend as the single Swagger or OpenAPI source of truth. Do not solve this by cloning Swagger into the frontend, inventing a new docs platform, or starting generated-client rollout.",
+      "acceptance_criteria": [
+        "The chosen staging or production publishing path for `/swagger/` and `/openapi.yaml` is explicit in the touched proxy or deployment config and operator docs rather than implicit prefix routing.",
+        "Backend tests and touched docs agree on the canonical backend docs endpoints and their intended external publishing behavior.",
+        "The task keeps backend-served docs as the single contract surface and does not introduce a frontend-owned Swagger copy or new platform layer."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit proxy publishing for `/swagger/` and `/openapi.yaml`",
+          "agreement between backend tests and operator-facing docs",
+          "continued backend ownership of the docs surface"
+        ]
+      },
+      "out_of_scope": [
+        "generated clients or generator-first contract ownership",
+        "frontend-owned Swagger duplication",
+        "`/v1` or broader version-platform rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server/server_contract_test.go",
+        "../socialpredict/backend/docs/README.md",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
+        "../socialpredict/data/nginx/vhosts/dev/default.conf.template",
+        "../socialpredict/data/nginx/vhosts/prod/default.conf.template",
+        "../socialpredict/data/traefik/config/traefik.template"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "78131017-967a-43e2-9fd0-fc523891b1ce"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose one explicit external docs path or hostname and document any access-restriction decision.",
+        "Do not let `/api/` proxy rules accidentally own the docs contract."
+      ]
+    },
+    {
+      "uid": "f8cf6368-bd2e-4dbc-9548-6431f21e7b25",
+      "id": "WAVE06-API-005",
+      "title": "WAVE06 API: Stop and review remaining auth leakage, PlainTextErrorResponse families, and deferred platform ideas",
+      "status": "pending",
+      "prompt": "Finish WAVE06 with an API-specific stop-and-review point. Remove or document any touched remaining auth transport leakage or plain-text boundary failures that still bypass the current shared contract, refresh the route-family migration matrix with what this wave actually changed, and leave a precise next seam for the remaining `PlainTextErrorResponse` families or auth call sites. Keep `FUTURE/02-long-term-api-design.md` explicitly deferred, and do not pull HATEOAS, XML content negotiation, universal `APIResponse` wrappers, header-based versioning, `/v1`, generated-client-first workflow, or an API service or platform layer back into the active queue.",
+      "acceptance_criteria": [
+        "The remaining touched auth transport leaks and remaining `PlainTextErrorResponse` route families are either removed or explicitly inventoried with a precise next migration seam.",
+        "`API-ISSUES.md` and the active API notes accurately distinguish WAVE06 outcomes, remaining migration state, and the chosen docs-publishing contract.",
+        "The wave ends with a concrete next API or auth slice rather than a revived platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining auth and `PlainTextErrorResponse` inventory",
+          "active-note accuracy versus touched code and proxy config",
+          "continued deferral of long-term API-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating FUTURE API-platform topics",
+        "greenfield route redesign or universal wrapper rollout",
+        "generated-client, content-negotiation, or versioning buildout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "da866ab1-b53d-48f6-82d6-eb0d58d2a723"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE06 stop-and-review point before any broader API platform or versioning discussion.",
+        "Keep the next slice framed as a concrete route family or auth seam."
+      ]
+    },
+    {
+      "uid": "661835f8-0764-4ce6-bb3e-6a4ec53925eb",
+      "id": "WAVE07-TEST-001",
+      "title": "WAVE07 Testing: Clarify convenience versus source-of-truth verification at the owning packages",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md` as the binding context for WAVE07 verification hardening. Start by tightening the existing package-local runtime, migration, and accounting-sensitive test files so they explicitly distinguish SQLite convenience coverage from behaviors that still require real-Postgres proof. Keep the changes close to the owning packages, refresh the active testing note only as needed to reflect the concrete source-of-truth targets chosen for this wave, and do not create a new shared test framework, top-level `testing/` tree, or CI program.",
+      "acceptance_criteria": [
+        "The touched runtime, migration, or accounting-sensitive test files make it clear which checks are convenience-only and which behaviors are still awaiting real-Postgres verification.",
+        "The first real-Postgres targets for this wave are narrowed to concrete W04 and W06 risks rather than a broad integration backlog.",
+        "Any touched testing note changes stay consistent with package-local test ownership and keep long-term infrastructure ideas explicitly deferred."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "package-local verification ownership",
+          "explicit SQLite-versus-Postgres truth boundary",
+          "continued deferral of new testing-platform structure"
+        ]
+      },
+      "out_of_scope": [
+        "introducing a top-level `testing/` subsystem or shared `TestSuite` base",
+        "broad CI orchestration or coverage-gating redesign",
+        "testcontainers-first rollout or generalized integration harness work"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "f8cf6368-bd2e-4dbc-9548-6431f21e7b25"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer comments, naming, and helper extraction inside the owning packages over a central test taxonomy.",
+        "Use the smallest documentation edit that makes the chosen truth boundary explicit."
+      ]
+    },
+    {
+      "uid": "bc2d6801-7904-406d-b2f4-b23ccd6998bb",
+      "id": "WAVE07-TEST-002",
+      "title": "WAVE07 Testing: Add Postgres-truthful runtime and migration verification for readiness and startup-writer behavior",
+      "status": "pending",
+      "prompt": "With the target seams narrowed, add the first real-Postgres verification where SQLite is not credible: runtime DB readiness after startup, migration failure posture, and the chosen startup-writer or migration-serialization behavior from W04. Keep the tests beside `internal/app/runtime` and `migration` or in the smallest justified backend-root contract location, reuse existing helpers where practical, and avoid broad container-orchestration or CI redesign. If minimal production seams must change to make the behavior testable, keep them owned by runtime or migration code rather than inventing a new test platform.",
+      "acceptance_criteria": [
+        "Real-Postgres-backed checks exist for the touched readiness, startup-writer, or migration behaviors whose correctness depends on Postgres semantics.",
+        "The new DB-truthful checks live with the owning runtime or migration code, or in a narrowly justified backend-root contract test, without introducing a central test subsystem.",
+        "The touched verification makes failure posture explicit for DB loss, schema incompatibility, or startup-writer discipline without widening into general deployment orchestration."
+      ],
+      "verification": {
+        "owner": "software-action-db-migration-agent",
+        "sign_off": "required",
+        "focus": [
+          "real-Postgres verification for readiness and startup mutation behavior",
+          "migration failure posture under the owned startup seam",
+          "package-local or narrowly justified contract-test placement"
+        ]
+      },
+      "out_of_scope": [
+        "generalized multi-node orchestration harnesses",
+        "backend-wide CI redesign",
+        "caching, Redis, or unrelated database architecture changes"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "661835f8-0764-4ce6-bb3e-6a4ec53925eb"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest real-Postgres cases that prove the runtime contract; do not duplicate every SQLite case against Postgres.",
+        "If startup-writer behavior cannot be proven entirely package-local, use backend-root or `server` only for the narrow cross-boundary seam."
+      ]
+    },
+    {
+      "uid": "5547ad2a-a236-4e90-b9ab-cd3d133295b3",
+      "id": "WAVE07-TEST-003",
+      "title": "WAVE07 Testing: Add Postgres-truthful verification for the first atomic accounting workflow",
+      "status": "pending",
+      "prompt": "Add the next small real-Postgres verification slice to the first accounting-sensitive workflow that W04 made atomic, expected to be bet placement unless the completed W04 slice leaves a smaller live unit of work. Prove transaction boundaries, rollback behavior, and the chosen primary-DB concurrency protection under overlapping requests or equivalent direct repository or service calls. Keep the tests in the owning domain or repository packages, preserve integer-first accounting assumptions, and do not grow a generalized transaction-test framework.",
+      "acceptance_criteria": [
+        "The first migrated atomic workflow has real-Postgres verification for transaction success, rollback, and the touched concurrency-control behavior.",
+        "The verification stays in the owning domain or repository packages and does not depend on a new shared transaction-test platform.",
+        "The tests preserve accounting semantics and avoid speculative coverage of workflows that the active queue has not yet migrated."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "transaction and rollback truth under Postgres",
+          "concurrency protection for the first atomic workflow",
+          "preservation of integer-first accounting behavior"
+        ]
+      },
+      "out_of_scope": [
+        "sell-position or market-resolution sweeps beyond the first migrated workflow",
+        "automatic retry or circuit-breaker experimentation",
+        "load, stress, or benchmark infrastructure"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/internal/repository/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "bc2d6801-7904-406d-b2f4-b23ccd6998bb"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start with the workflow W04 actually migrated instead of inventing a new accounting surface.",
+        "Add only the smallest concurrency cases needed to prove the chosen locking or update semantics."
+      ]
+    },
+    {
+      "uid": "b309821d-deb6-4a6b-a78b-ef1637cc765f",
+      "id": "WAVE07-TEST-004",
+      "title": "WAVE07 Testing: Harden boundary contract tests for auth, rate limiting, and shared failure vocabulary",
+      "status": "pending",
+      "prompt": "Strengthen the request-boundary verification that earlier waves introduced by extending existing auth, security, server, and OpenAPI contract tests around must-change-password exceptions, shared `405`, `429`, or sanitized `500` behavior, proxy-sensitive client-IP assumptions, and any touched public `reason` vocabulary. Keep the tests package-local or backend-root where they already live, and update `openapi.yaml` only if the hardened contract checks expose real drift. Do not reopen route redesign, distributed rate limiting, or generated-client work.",
+      "acceptance_criteria": [
+        "Existing auth, security, server, or OpenAPI contract tests cover the touched shared-failure behaviors and documented auth exceptions more explicitly than before.",
+        "Any touched public `reason` vocabulary or route-spec expectations stay aligned between implementation and `openapi.yaml`.",
+        "The verification remains attached to the owning packages and backend-root contract tests rather than moving into a new shared test layer."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared failure vocabulary and auth-exception contract coverage",
+          "proxy-sensitive rate-limit and boundary-failure behavior",
+          "route-spec parity for any touched public failure shapes"
+        ]
+      },
+      "out_of_scope": [
+        "distributed rate-limiting rollout",
+        "broader API versioning or generated-client changes",
+        "reopening unrelated handler migrations just to chase test coverage"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/openapi_test.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "5547ad2a-a236-4e90-b9ab-cd3d133295b3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer extending existing contract tests over adding duplicate suites.",
+        "Keep proxy-trust and shared-failure expectations explicit in test names and fixtures."
+      ]
+    },
+    {
+      "uid": "dcf47cd2-ea9e-42dc-b8d9-5bc4f765b669",
+      "id": "WAVE07-TEST-005",
+      "title": "WAVE07 Testing: Stop and review remaining DB-truth gaps and deferred test-platform ideas",
+      "status": "pending",
+      "prompt": "Finish WAVE07 with a verification-specific stop-and-review point. Reconcile what this wave actually proved against the remaining SQLite-only convenience coverage, make the next real-Postgres candidate explicit if one still remains, and keep `FUTURE/03-long-term-test-infrastructure.md` clearly deferred. Do not pull `testcontainers-go`, a top-level `testing/` tree, shared `TestSuite` architecture, broad fast/slow taxonomy work, performance suites, or CI-platform redesign into the active queue unless the touched evidence now reveals a specific uncovered behavior that cannot be handled with the current package-local posture.",
+      "acceptance_criteria": [
+        "The remaining DB or runtime behaviors that still lack source-of-truth Postgres verification are explicitly inventoried after the wave's concrete test additions.",
+        "The active and future testing notes accurately distinguish completed hardening from still-deferred infrastructure ideas.",
+        "The wave ends with a precise next verification seam rather than a revived platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining DB-truth verification inventory",
+          "accuracy of active versus deferred testing notes",
+          "continued rejection of speculative testing-platform expansion"
+        ]
+      },
+      "out_of_scope": [
+        "testcontainers adoption or container-orchestration rollout",
+        "broad CI or workflow taxonomy redesign",
+        "centralized shared test framework or helper-repo extraction"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/server",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "b309821d-deb6-4a6b-a78b-ef1637cc765f"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE07 stop-and-review point before any heavier verification or CI discussion.",
+        "Keep the next slice framed as one concrete uncovered behavior, not a testing-platform program."
+      ]
+    }
+  ]
+}

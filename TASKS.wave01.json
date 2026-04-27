@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
+      "id": "WAVE01-CFG-001",
+      "title": "WAVE01 Config: Replace setup aliases with owned application-policy config types",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md` as the binding design context for WAVE01 configuration-management. Complete the first useful slice by making `backend/internal/service/config` own application-policy configuration types instead of aliasing `backend/setup` types. Preserve current runtime behavior while introducing an explicit loader seam and tests that prove the owned types can be exercised without `setup` globals, YAML parsing, or `init()` side effects. Keep this task focused on the config service boundary itself; do not yet migrate every downstream consumer.",
+      "acceptance_criteria": [
+        "`backend/internal/service/config` no longer depends on type aliases to `backend/setup` for its public owned types.",
+        "Configuration loading is expressed through an explicit loader seam that preserves current source-asset behavior while clarifying ownership.",
+        "Focused tests cover the owned config types and loader behavior without relying on `setup` globals or `init()`-driven access."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned config-type boundary",
+          "dependency direction away from setup aliases",
+          "tests that avoid legacy singleton behavior"
+        ]
+      },
+      "out_of_scope": [
+        "removing `backend/setup/setup.yaml` as the source asset",
+        "migrating all handlers and domain services in this task",
+        "hot-reload or external config-store design"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/app/runtime/config.go",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is WAVE01 only: configuration-management boundary completion.",
+        "Preserve `backend/setup/setup.yaml` as the migration-time source asset.",
+        "Do not introduce a new generic top-level `config/` subsystem."
+      ]
+    },
+    {
+      "uid": "57d5f112-1626-41cb-a301-fcef5f406136",
+      "id": "WAVE01-CFG-002",
+      "title": "WAVE01 Config: Reduce backend/setup to a source-asset and translation seam",
+      "status": "pending",
+      "prompt": "After the owned config types exist, reduce `backend/setup` toward the design-plan target role: source asset and translation seam only. Remove or isolate `init()`-driven loading, package-global convenience access, and other singleton behavior from the migrated runtime path while preserving current behavior for the backend entrypoint. The goal is to stop `setup` from acting as the long-term runtime boundary. Keep the migration reversible and avoid a flag-day rewrite.",
+      "acceptance_criteria": [
+        "The migrated runtime path no longer depends on `setup` package-global accessors or `init()`-driven loading.",
+        "`backend/setup` is narrowed toward source-asset and translation responsibilities for the touched path.",
+        "Focused tests demonstrate that runtime configuration initialization works through explicit seams rather than singleton state."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "setup seam reduction",
+          "removal of migrated global access paths",
+          "behavior-preserving runtime initialization"
+        ]
+      },
+      "out_of_scope": [
+        "changing the source asset format",
+        "broad refactors outside configuration-related seams",
+        "domain-consumer migration beyond touched runtime paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/setup",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0f7f5441-86ad-4d5a-9814-f13990fefbe3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `setup` as transitional, not final architecture.",
+        "Keep startup validation explicit and fail-fast."
+      ]
+    },
+    {
+      "uid": "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+      "id": "WAVE01-CFG-003",
+      "title": "WAVE01 Config: Migrate setup, stats, seed, and adjacent handlers off whole-tree config access",
+      "status": "pending",
+      "prompt": "Move the next vertical slice of consumers onto narrow immutable policy views. Focus on `handlers/setup`, `handlers/stats`, `seed`, and any adjacent touched paths that currently reach through `configService.Current()` or otherwise consume too much of the config tree. Preserve endpoint behavior while replacing whole-tree reads with narrower configuration slices or consumer-owned interfaces. Keep handlers thin and avoid pushing business policy into HTTP code.",
+      "acceptance_criteria": [
+        "Touched handler and seed paths no longer depend on broad whole-tree config access when a narrower policy view is sufficient.",
+        "Setup and stats behavior remain stable for the touched endpoints.",
+        "Focused tests cover the migrated narrow-view behavior and protect against regression."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "stable setup/stats behavior",
+          "narrow config-view usage",
+          "deterministic tests for migrated consumers"
+        ]
+      },
+      "out_of_scope": [
+        "auth and OpenAPI redesign",
+        "domain-service migration outside touched consumer paths",
+        "changing public route taxonomy"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/setup",
+        "../socialpredict/backend/handlers/stats",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `configService.Current()` whole-tree traversal as a smell to remove from touched paths.",
+        "Keep setup endpoints semantically stable while narrowing internal dependencies."
+      ]
+    },
+    {
+      "uid": "9d4ea064-e561-4e10-92f9-2320e116dc44",
+      "id": "WAVE01-CFG-004",
+      "title": "WAVE01 Config: Migrate bets, analytics, and markets config dependencies to narrow immutable slices",
+      "status": "pending",
+      "prompt": "Continue WAVE01 by removing raw `setup`-typed configuration and broad config dependencies from domain-facing consumers, especially bets, analytics, and any directly affected market flows. Replace `*setup.EconomicConfig`, `setup.EconConfigLoader`, and similar leaks with narrow immutable policy slices or consumer-owned interfaces that preserve dependency direction. Keep integer-first economics behavior unchanged and avoid persistence-model leakage.",
+      "acceptance_criteria": [
+        "Touched domain-facing services no longer depend directly on raw `setup` configuration types or loaders.",
+        "The migrated consumers use the smallest accounting-safe policy slice or interface they need.",
+        "Focused tests prove behavior stability for the touched betting, analytics, or market flows."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "dependency direction in domain-facing code",
+          "elimination of raw setup-type leakage",
+          "behavior-preserving economics usage"
+        ]
+      },
+      "out_of_scope": [
+        "economics redesign",
+        "OpenAPI sweeps",
+        "full repository/model decoupling beyond touched paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Use the smallest accounting-safe config slices possible.",
+        "Do not move business policy back into handlers or runtime bootstrap."
+      ]
+    },
+    {
+      "uid": "a0016891-6ddb-45f4-8c0a-c515bed7f4c8",
+      "id": "WAVE01-CFG-005",
+      "title": "WAVE01 Config: Lock economics snapshot semantics and protect accounting correctness",
+      "status": "pending",
+      "prompt": "Finish the configuration-management wave by making the accounting-sensitive semantics explicit in code and tests. Ensure the touched backend paths treat economics policy as startup-validated and immutable for the running process, reject live-mutation or hot-reload behavior for accounting-sensitive policy, and persist accounting-relevant economics into durable workflow or domain state where correctness requires historical stability. Keep this task tightly scoped to what the touched code can safely support now; if a full persistence decision cannot be completed, implement the highest-value protections and document the exact follow-up boundary.",
+      "acceptance_criteria": [
+        "The touched code and tests make startup-validated immutable economics snapshots explicit for the running process.",
+        "No touched path introduces or relies on hot reload for economics or other accounting-sensitive policy.",
+        "Accounting-sensitive workflow boundaries touched in this task either persist the required economics values durably or document a precise remaining gap with tests guarding the current behavior."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "financial and accounting correctness protections",
+          "immutable snapshot semantics",
+          "durability or explicit gap documentation for touched accounting-sensitive flows"
+        ]
+      },
+      "out_of_scope": [
+        "global background-job or observability work",
+        "production-note wave 02 and beyond",
+        "broad deployment-system redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/domain",
+        "../socialpredict/backend/internal/app",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+        "9d4ea064-e561-4e10-92f9-2320e116dc44"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE01 stop-and-review point before creating later production-note waves.",
+        "Financial and accounting correctness is binary; prefer explicit protection over speculative flexibility."
+      ]
+    }
+  ]
+}
