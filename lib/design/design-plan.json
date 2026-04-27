@@ -75,7 +75,7 @@
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md",
-            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-database-caching.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md",
             "../socialpredict/.github/workflows/backend.yml",
             "../socialpredict/backend/logger/simplelogging.go",
             "../socialpredict/backend/logging/loggingutils.go",

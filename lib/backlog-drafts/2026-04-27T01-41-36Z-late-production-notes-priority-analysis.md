@@ -6,12 +6,12 @@ Purpose: capture a current-state-first re-ranking of the remaining backend produ
 
 ## Inputs Reviewed
 
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-performance-optimization.md`
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/09-deployment-infrastructure.md`
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/10-monitoring-alerting.md`
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-data-validation.md`
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-background-jobs.md`
-- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-database-caching.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/09-monitoring-alerting.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/10-data-validation.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md`
+- `../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md`
 - `../socialpredict/README/PRODUCTION-NOTES/BACKEND/plan.md`
 - `lib/design/design-plan.json`
 - representative live backend/runtime files:
@@ -49,10 +49,10 @@ They split into two broad categories:
 
 The strongest consensus across the three design agents was:
 
-1. `09-deployment-infrastructure.md` should come earlier, but only after being heavily re-scoped to runtime/bootstrap reality.
-2. `10-monitoring-alerting.md` should also come earlier, but only for minimal app-owned observability, not for a full Prometheus/Grafana/Alertmanager platform.
-3. `11-data-validation.md` should stay active and likely comes before performance work, but only as consolidation of the existing `backend/security` validation and sanitization seam.
-4. `08-performance-optimization.md`, `12-background-jobs.md`, and most of `13-database-caching.md` are later optimization or future platform work.
+1. `08-deployment-infrastructure.md` should come earlier, but only after being heavily re-scoped to runtime/bootstrap reality.
+2. `09-monitoring-alerting.md` should also come earlier, but only for minimal app-owned observability, not for a full Prometheus/Grafana/Alertmanager platform.
+3. `10-data-validation.md` should stay active and likely comes before performance work, but only as consolidation of the existing `backend/security` validation and sanitization seam.
+4. `11-runtime-performance-tuning.md`, `13-background-jobs.md`, and most of `12-database-caching.md` are later optimization or future platform work.
 
 ## Why The Old Ordering Is Wrong
 
@@ -69,7 +69,7 @@ That means deployment/runtime discipline, minimal observability, and request-bou
 
 ## Re-Ranked Order
 
-### 1. `09-deployment-infrastructure.md`
+### 1. `08-deployment-infrastructure.md`
 
 Priority: earlier, but only after rewrite and re-scope
 
@@ -96,7 +96,7 @@ Why earlier:
 - HA rollout is unsafe while `/health` is fake and startup still mutates shared state per process
 - deployment notes currently assume routes and probes that do not exist
 
-### 2. `10-monitoring-alerting.md`
+### 2. `09-monitoring-alerting.md`
 
 Priority: earlier, but only as minimal runtime observability
 
@@ -121,7 +121,7 @@ Why earlier:
 - observability is prerequisite runtime safety, not just later ops polish
 - but the current note is too platform-heavy for the backend’s present state
 
-### 3. `11-data-validation.md`
+### 3. `10-data-validation.md`
 
 Priority: earlier than performance/caching/jobs
 
@@ -145,7 +145,7 @@ Why earlier:
 - validation and sanitization already exist in the live backend
 - the real need is consistency and owned boundary use, not another platform
 
-### 4. `08-performance-optimization.md`
+### 4. `11-runtime-performance-tuning.md`
 
 Priority: later optimization
 
@@ -166,7 +166,7 @@ Why later:
 - correctness, startup safety, observability, and boundary ownership still come first
 - much of `08` overlaps with caching and even background-jobs ideas
 
-### 5. `13-database-caching.md`
+### 5. `12-database-caching.md`
 
 Priority: deferred, correctly so already
 
@@ -181,7 +181,7 @@ Recommendation:
 - keep it deferred
 - optionally move it under `FUTURE` later if you want all optimization/platform topics grouped there
 
-### 6. `12-background-jobs.md`
+### 6. `13-background-jobs.md`
 
 Priority: fully later / `FUTURE`
 
@@ -240,7 +240,7 @@ The right move is to extend and harden those seams, not build parallel platform 
 
 Yes: your instinct is right.
 
-`11-data-validation.md` should come before performance/caching/background jobs, but only after it is rewritten as:
+`10-data-validation.md` should come before performance/caching/background jobs, but only after it is rewritten as:
 
 - boundary hardening of the existing `backend/security` seam
 - not a new validation framework
@@ -251,9 +251,9 @@ Yes: your instinct is right.
 
 The cleanest next editing sequence would be:
 
-1. rewrite `09-deployment-infrastructure.md` into a current-state-first runtime/deployment note
-2. rewrite `10-monitoring-alerting.md` into a minimal observability/runtime note and push the broader stack into `FUTURE`
-3. rewrite `11-data-validation.md` into a current-state-first boundary-hardening note and defer the framework-heavy parts
+1. rewrite `08-deployment-infrastructure.md` into a current-state-first runtime/deployment note
+2. rewrite `09-monitoring-alerting.md` into a minimal observability/runtime note and push the broader stack into `FUTURE`
+3. rewrite `10-data-validation.md` into a current-state-first boundary-hardening note and defer the framework-heavy parts
 4. leave `13` deferred
 5. move `12` to `FUTURE`
 6. rewrite `08` much later, after there is real performance evidence
