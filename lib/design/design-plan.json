@@ -4,7 +4,7 @@
     "title": "Active Backend Modernization Slice: Configuration Ownership, Runtime Observability, Failure Recovery, Request-Boundary Security Hardening, Database Runtime Hardening, Legacy Model Decoupling, and API Contract Alignment",
     "status": "draft",
     "created_at": "2026-04-17T11:56:27Z",
-    "updated_at": "2026-04-26T16:54:12Z",
+    "updated_at": "2026-04-27T00:27:17Z",
     "source_context": {
         "task_repo": ".",
         "target_repo": "../socialpredict",
@@ -71,17 +71,25 @@
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md",
+            "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md",
             "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-database-caching.md",
+            "../socialpredict/.github/workflows/backend.yml",
             "../socialpredict/backend/logger/simplelogging.go",
             "../socialpredict/backend/logging/loggingutils.go",
             "../socialpredict/backend/security/headers.go",
             "../socialpredict/backend/security/ratelimit.go",
+            "../socialpredict/backend/security/ratelimit_test.go",
             "../socialpredict/backend/security/sanitizer.go",
             "../socialpredict/backend/security/security.go",
             "../socialpredict/backend/security/validator.go",
             "../socialpredict/backend/docs/openapi.yaml",
+            "../socialpredict/backend/openapi_test.go",
+            "../socialpredict/backend/internal/app/runtime/db_test.go",
+            "../socialpredict/backend/migration/migrate_test.go",
+            "../socialpredict/backend/models/modelstesting/modelstesting.go",
             "../socialpredict/backend/server/server_contract_test.go",
             "../socialpredict/backend/handlers/markets/resolvemarket.go",
             "https://opentelemetry.io/docs/specs/status/",
@@ -123,11 +131,11 @@
         {
             "agent": "codex",
             "design_posture": "fowler",
-            "notes": "Grounded the plan against the live backend's mixed error-handling paths, boundary security posture, OpenTelemetry-aligned observability posture, and the database runtime/startup ownership direction captured in the rewritten production notes."
+            "notes": "Grounded the plan against the live backend's mixed error-handling paths, boundary security posture, OpenTelemetry-aligned observability posture, database runtime/startup ownership direction, and the rewritten testing-strategy note's package-local verification posture."
         }
     ],
     "summary": {
-        "one_sentence": "Modernize the active SocialPredict backend slice by establishing explicit configuration, runtime observability, failure-recovery, request-boundary security, and database-runtime ownership seams; tightening accounting-sensitive transaction direction; decoupling domain logic from legacy persistence models; and only then aligning auth/API behavior with a cleaner contract.",
+        "one_sentence": "Modernize the active SocialPredict backend slice by establishing explicit configuration, runtime observability, failure-recovery, request-boundary security, and database-runtime ownership seams; tightening accounting-sensitive transaction direction; keeping verification boundary-aware and package-local by default; decoupling domain logic from legacy persistence models; and only then aligning auth/API behavior with a cleaner contract.",
         "business_outcomes": [
             "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
             "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
@@ -135,13 +143,14 @@
             "Preserve 100% financial and accounting correctness by treating economics policy as an immutable, accounting-sensitive input rather than a live mutable control surface.",
             "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership, OpenTelemetry-aligned correlation, and health/readiness boundaries.",
             "Make multi-replica startup safer by clarifying migration and seed ownership, readiness semantics, and database-runtime lifecycle responsibilities before adding caching or other optimization layers.",
-            "Make request-boundary security behavior more explicit across environments by clarifying rate limiting, auth failure ownership, JWT runtime expectations, and CORS or proxy assumptions."
+            "Make request-boundary security behavior more explicit across environments by clarifying rate limiting, auth failure ownership, JWT runtime expectations, and CORS or proxy assumptions.",
+            "Preserve fast boundary-local verification in the live backend and add source-of-truth DB/runtime checks only where SQLite cannot credibly model behavior."
         ],
-        "proposed_direction": "Treat the current work as a prerequisite-architecture program in six waves: configuration ownership, runtime observability ownership, failure recovery and translation, database runtime hardening plus accounting-sensitive transaction direction, legacy-model decoupling, and finally scoped API/auth/OpenAPI contract alignment, with request-boundary security hardening threaded through the runtime, failure, and auth-facing waves rather than split into a separate platform track."
+        "proposed_direction": "Treat the current work as a prerequisite-architecture program in six waves: configuration ownership, runtime observability ownership, failure recovery and translation, database runtime hardening plus accounting-sensitive transaction direction, legacy-model decoupling, and finally scoped API/auth/OpenAPI contract alignment, with request-boundary security hardening and verification threaded through the runtime, failure, database, and auth-facing waves rather than split into separate platform tracks."
     },
     "problem": {
-        "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the modernization story is still transitional across five connected areas. Configuration ownership is incomplete because `setup` still behaves as a package-global seam and `internal/service/config` still aliases `setup` types. Runtime observability is under-specified because `backend/logger` remains mostly string-oriented, request correlation is not standardized, and the backend still carries duplicated logging conventions. Error handling is mixed because newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary while legacy handlers, middleware, and auth flows still leak raw `http.Error` strings or transport-shaped internal types. Request-boundary security hardening is also only partly owned: the `security` package already exists, but rate limiting still emits plain-text `429`, auth still exposes transport-shaped `HTTPError`, JWT key handling is still ad hoc, and runtime assumptions around CORS, trusted proxy headers, and header posture are not yet explicit. Database runtime ownership is now the next major gap: startup DB reachability, migration invocation, and seed bootstrapping are still broad per-process startup responsibilities, `internal/app/runtime/db.go` still exposes `SetDB` and `GetDB`, `/health` does not reflect real DB readiness after startup, some handlers still take raw `*gorm.DB`, and accounting-sensitive write flows still need clearer atomic transaction and concurrency direction. Those seams make the system harder to reason about, harder to operate safely under replicas, and more likely to resist later high-availability extraction or service isolation.",
-        "why_now": "The active queue already assumes these prerequisites, and the rewritten production notes now align on configuration, logging/observability, error handling, database architecture, and security hardening as evolutionary migrations grounded in the live backend. If runtime security posture, database runtime ownership, startup-writer semantics, and accounting-sensitive transaction direction stay vague while later API/auth and optimization work continues, SocialPredict will freeze unsafe request-boundary assumptions, partial-write risk, and auth transport leakage into long-lived seams and create avoidable rework.",
+        "statement": "The backend has already moved toward layered internal services, explicit runtime helpers, and a service-backed configuration seam, but the modernization story is still transitional across runtime, security, database, contract, and verification concerns. Configuration ownership is incomplete because `setup` still behaves as a package-global seam and `internal/service/config` still aliases `setup` types. Runtime observability is under-specified because `backend/logger` remains mostly string-oriented, request correlation is not standardized, and the backend still carries duplicated logging conventions. Error handling is mixed because newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary while legacy handlers, middleware, and auth flows still leak raw `http.Error` strings or transport-shaped internal types. Request-boundary security hardening is also only partly owned: the `security` package already exists, but rate limiting still emits plain-text `429`, auth still exposes transport-shaped `HTTPError`, JWT key handling is still ad hoc, and runtime assumptions around CORS, trusted proxy headers, and header posture are not yet explicit. Database runtime ownership is now the next major gap: startup DB reachability, migration invocation, and seed bootstrapping are still broad per-process startup responsibilities, `internal/app/runtime/db.go` still exposes `SetDB` and `GetDB`, `/health` does not reflect real DB readiness after startup, some handlers still take raw `*gorm.DB`, and accounting-sensitive write flows still need clearer atomic transaction and concurrency direction. The live backend already has a broad package-local test suite, but the plan still under-describes verification posture and does not distinguish convenience SQLite coverage from source-of-truth verification for Postgres-sensitive locking, readiness, migration coordination, and atomic money-moving flows. Those seams make the system harder to reason about, harder to operate safely under replicas, and more likely to resist later high-availability extraction or service isolation.",
+        "why_now": "The active queue already assumes these prerequisites, and the rewritten production notes now align on configuration, logging/observability, error handling, database architecture, security hardening, and testing strategy as evolutionary migrations grounded in the live backend. If runtime security posture, database runtime ownership, startup-writer semantics, accounting-sensitive transaction direction, and verification truthfulness stay vague while later API/auth and optimization work continues, SocialPredict will freeze unsafe request-boundary assumptions, partial-write risk, auth transport leakage, and SQLite-only false confidence into long-lived seams and create avoidable rework.",
         "out_of_scope": [
             "Full microservice decomposition or container rollout in this pass.",
             "Broad frontend or infrastructure redesign.",
@@ -149,7 +158,8 @@
             "Limited-scope login token redesign beyond current enforcement and response-shape cleanup.",
             "Bets-to-Trades rename.",
             "Caching or Redis rollout as part of the active database-layer slice.",
-            "Long-term security-platform work such as MFA, RBAC, distributed rate limiting, request signing, or compliance-program implementation."
+            "Long-term security-platform work such as MFA, RBAC, distributed rate limiting, request signing, or compliance-program implementation.",
+            "A centralized `testing/` subsystem, shared `TestSuite` base architecture, or testcontainers-first rollout in the active slice."
         ]
     },
     "design_drivers": {
@@ -197,7 +207,7 @@
         ]
     },
     "current_state": {
-        "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, repositories already exist under `internal/repository`, and setup handlers already consume a service seam, but several ownership stories are still transitional. Configuration still leans on `setup` and aliased `setup` types. Error handling is split between envelope routes, legacy raw responses, auth-local transport errors, and middleware-generated plain-text failures. The backend also already has a concrete shared security surface in `backend/security`, but its ownership is mixed across server wiring, auth helpers, and middleware defaults. Runtime observability is still string-oriented and only partly standardized around `backend/logger`. Database runtime ownership is also incomplete: startup DB checks, migration invocation, and seed bootstrapping are still broad per-process startup behaviors; `/health` is not true DB readiness after startup; `SetDB`/`GetDB` still preserve process-global fallback state; and accounting-sensitive flows still need clearer atomic transaction and concurrency boundaries.",
+        "shape": "The backend is a monolith with a partially modernized internal architecture: startup already uses explicit runtime helpers, the application container and server already pass `configService` explicitly, repositories already exist under `internal/repository`, and setup handlers already consume a service seam, but several ownership stories are still transitional. Configuration still leans on `setup` and aliased `setup` types. Error handling is split between envelope routes, legacy raw responses, auth-local transport errors, and middleware-generated plain-text failures. The backend also already has a concrete shared security surface in `backend/security`, but its ownership is mixed across server wiring, auth helpers, and middleware defaults. Runtime observability is still string-oriented and only partly standardized around `backend/logger`. Database runtime ownership is also incomplete: startup DB checks, migration invocation, and seed bootstrapping are still broad per-process startup behaviors; `/health` is not true DB readiness after startup; `SetDB`/`GetDB` still preserve process-global fallback state; and accounting-sensitive flows still need clearer atomic transaction and concurrency boundaries. Verification is already substantial but mostly package-local: the live backend has 94 `*_test.go` files, 343 `Test*` functions, OpenAPI/route parity tests, server contract tests, auth/security/runtime tests, and CI smoke plus `go test ./...`, but the current plan does not yet describe that posture clearly or separate convenience SQLite coverage from source-of-truth DB/runtime checks.",
         "pain_points": [
             "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
             "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
@@ -225,7 +235,12 @@
             "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
             "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
             "The current nginx/Traefik deployment topology proxies backend application traffic under `/api/`, while the backend serves Swagger at `/swagger/` and the embedded UI fetches `/openapi.yaml` by absolute root path, so API docs publishing is not yet an explicit owned contract across local versus proxied environments.",
-            "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction."
+            "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction.",
+            "Most DB-heavy tests still use `modelstesting.NewFakeDB` and in-memory SQLite, so there is no source-of-truth Postgres-backed verification for locking, transaction isolation, migration serialization, startup-writer coordination, or DB-ready runtime behavior.",
+            "`internal/app/runtime/db_test.go` covers DSN, env, and shared-handle behavior, but not real DB readiness, pool, or connection-lifecycle semantics.",
+            "`migration/migrate_test.go` proves ordering and idempotency but not multi-process startup discipline or single-writer migration behavior.",
+            "Some tests still encode transitional seams such as `SetDB` and `GetDB` or `internal/service/auth.HTTPError`, which can slow removal of globals and transport-shaped internal errors.",
+            "The current backend CI path is intentionally simple but shallow: the smoke job only builds, starts, sleeps, and kills `./main`, and the `go test ./...` path is branch-prefix gated rather than a universal architecture guard."
         ],
         "constraints": [
             "The existing container and internal service pattern is real and should be extended rather than replaced.",
@@ -233,11 +248,12 @@
             "The current backend still uses Gorilla Mux, GORM, and embedded assets; this slice should isolate those details better but not replace them.",
             "Historical docs under `backend/README/BACKEND/API` are informative but not fully current.",
             "Long-term security-platform ideas are intentionally deferred until the runtime, failure, and auth boundary seams are clearer.",
-            "Caching and Redis-related work are intentionally lower priority than runtime DB ownership and accounting-sensitive correctness."
+            "Caching and Redis-related work are intentionally lower priority than runtime DB ownership and accounting-sensitive correctness.",
+            "The active slice should not introduce a centralized `testing/` subsystem, shared `TestSuite` base architecture, or testcontainers-first rollout."
         ]
     },
     "target_state": {
-        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, health/readiness wiring, and deployment-sensitive security settings such as JWT key presence, CORS posture, trusted-proxy assumptions, and header/HSTS ownership; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; a shared request-boundary security adapter owns validation, sanitization, rate limiting, and reusable security middleware support without becoming a second security platform; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable, with backend-served docs and OpenAPI exposure paths made explicit across local and proxied environments.",
+        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, health/readiness wiring, and deployment-sensitive security settings such as JWT key presence, CORS posture, trusted-proxy assumptions, and header/HSTS ownership; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; a shared request-boundary security adapter owns validation, sanitization, rate limiting, and reusable security middleware support without becoming a second security platform; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable, with backend-served docs and OpenAPI exposure paths made explicit across local and proxied environments. Verification remains a supporting capability rather than a new bounded context: tests stay beside the code they verify, backend-root contract tests guard OpenAPI/docs/failure vocabulary seams, SQLite remains a fast convenience path, and only a small amount of targeted Postgres-backed verification is added where DB/runtime behavior depends on real Postgres semantics.",
         "boundaries": [
             {
                 "name": "Runtime Bootstrap and Infrastructure",
@@ -500,6 +516,16 @@
                 ],
                 "contract": "Backend-served docs endpoints such as `/swagger/` and `/openapi.yaml` remain the canonical API docs surface, while ingress or proxy layers publish them at explicit external paths instead of accidentally hiding them behind `/api/` prefix routing or duplicating them in the frontend.",
                 "notes": "Local backend-root paths can stay simple, but staging and production should choose an explicit external docs route or host and, if needed, an explicit access restriction policy. The frontend should link or proxy, not own a separate Swagger copy."
+            },
+            {
+                "name": "Verification Source-of-Truth Seam",
+                "participants": [
+                    "Runtime Bootstrap and Infrastructure",
+                    "Repository and Legacy Model Adapter Boundary",
+                    "API and Auth Contract Boundary"
+                ],
+                "contract": "Package-local tests remain the default verification posture, backend-root contract tests protect server/docs/OpenAPI/public-failure seams, and DB-specific startup, locking, transaction, migration, and readiness behavior is verified against Postgres only where SQLite cannot credibly model the behavior.",
+                "notes": "This seam keeps verification attached to the owning architecture instead of creating a centralized testing platform, while still making room for a small amount of source-of-truth DB verification in HA-sensitive areas."
             },
             {
                 "name": "Request Validation and Sanitization Seam",
@@ -1184,6 +1210,39 @@
                 "The active slice remains focused on boundary cleanup and deterministic request handling instead of speculative security-platform expansion.",
                 "Long-term security work has an explicit deferred home without becoming accidental current-wave scope."
             ]
+        },
+        {
+            "id": "DP-024",
+            "title": "Keep testing as boundary-owned evidence rather than a separate platform program",
+            "status": "accepted",
+            "context": "The rewritten testing-strategy note and live backend test tree show broad package-local coverage, while the older note proposed a centralized `testing/` tree and shared `TestSuite` architecture.",
+            "decision": "Keep tests near the code they verify in idiomatic Go `*_test.go` files, preserve backend-root contract tests for server/OpenAPI/public-failure seams, and allow broader cross-boundary tests only when package ownership is genuinely unclear.",
+            "consequences": [
+                "Verification strengthens the existing architecture instead of creating a second testing architecture beside it.",
+                "Owning packages remain responsible for proving their behavior, while a small number of edge contract tests guard public seams."
+            ]
+        },
+        {
+            "id": "DP-025",
+            "title": "Treat SQLite-backed helpers as convenience coverage, not DB truth",
+            "status": "accepted",
+            "context": "The live suite relies heavily on `modelstesting.NewFakeDB`, which is fast and useful but cannot credibly prove Postgres-specific locking, isolation, startup coordination, or readiness semantics.",
+            "decision": "Continue using SQLite-backed helpers for broad fast coverage, but require targeted real-Postgres verification for behaviors whose correctness depends on Postgres semantics such as locking, transaction isolation, migration serialization, startup coordination, readiness, and accounting-sensitive write behavior.",
+            "consequences": [
+                "The backend keeps fast local feedback without mistaking convenience DB coverage for authoritative HA/runtime proof.",
+                "The first heavier DB verification can stay small and focused on the highest-risk runtime and accounting seams."
+            ]
+        },
+        {
+            "id": "DP-026",
+            "title": "Keep heavier test infrastructure explicitly deferred until a concrete gap justifies it",
+            "status": "accepted",
+            "context": "The new future test-infrastructure note is a holding area for testcontainers, centralized cross-boundary integration suites, broader CI orchestration, and other heavier testing-platform ideas.",
+            "decision": "Do not commit the active modernization plan to a top-level `testing/` subsystem, shared `TestSuite`, testcontainers-by-default rollout, or broader performance/load testing infrastructure until a concrete verification gap justifies the cost and operational complexity.",
+            "consequences": [
+                "The active slice stays focused on runtime, DB, security, and contract risks instead of speculative test-platform expansion.",
+                "Future infrastructure ideas remain visible without distorting current workstream priorities."
+            ]
         }
     ],
     "workstreams": [
@@ -1195,27 +1254,27 @@
         },
         {
             "name": "W02 Runtime Observability Ownership",
-            "objective": "Standardize runtime logging on `backend/logger`, clarify OpenTelemetry-aligned correlation posture, and tighten the health/readiness ownership story at the runtime boundary.",
+            "objective": "Standardize runtime logging on `backend/logger`, clarify OpenTelemetry-aligned correlation posture, tighten the health/readiness ownership story at the runtime boundary, and keep runtime-owned observability and readiness checks under explicit package-local verification.",
             "depends_on": [
                 "W01 Configuration Ownership"
             ],
-            "notes": "This wave is about owned runtime observability behavior, not a greenfield observability platform."
+            "notes": "This wave is about owned runtime observability behavior, not a greenfield observability platform. If CI or tests are touched here, the goal is stronger readiness and health verification, not a new testing framework."
         },
         {
             "name": "W03 Failure Recovery and Translation Ownership",
-            "objective": "Own request correlation, panic recovery, middleware-generated failures, and public failure-translation boundaries before broader API/auth cleanup, including security-adjacent `429`, `405`, and auth-bootstrap failures.",
+            "objective": "Own request correlation, panic recovery, middleware-generated failures, and public failure-translation boundaries before broader API/auth cleanup, including security-adjacent `429`, `405`, and auth-bootstrap failures, with explicit contract tests for migrated middleware and handler failure paths.",
             "depends_on": [
                 "W02 Runtime Observability Ownership"
             ],
-            "notes": "This corresponds to the active error-handling wave, keeps public `reason` values separate from telemetry fields, and absorbs the current middleware-level security failure cleanup rather than creating a separate security platform wave."
+            "notes": "This corresponds to the active error-handling wave, keeps public `reason` values separate from telemetry fields, and absorbs the current middleware-level security failure cleanup rather than creating a separate security platform wave. Verification here should focus on panic-recovery, 405/429/auth-bootstrap behavior, and public-failure vocabulary convergence."
         },
         {
             "name": "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction",
-            "objective": "Clarify runtime DB ownership, startup-writer semantics, readiness behavior, remaining request-boundary DB leaks, and explicit atomic transaction direction for accounting-sensitive workflows while keeping caching deferred.",
+            "objective": "Clarify runtime DB ownership, startup-writer semantics, readiness behavior, remaining request-boundary DB leaks, and explicit atomic transaction direction for accounting-sensitive workflows while keeping caching deferred, then add only the smallest real-Postgres verification needed for DB-truthful readiness, migration, and concurrency behavior.",
             "depends_on": [
                 "W03 Failure Recovery and Translation Ownership"
             ],
-            "notes": "This wave should not create a new `database/` or `dal/` architecture; it should extend `internal/app/runtime`, the composition root, and existing repositories."
+            "notes": "This wave should not create a new `database/` or `dal/` architecture; it should extend `internal/app/runtime`, the composition root, and existing repositories. It is also the first justified point for a small source-of-truth Postgres-backed verification slice covering readiness, startup-writer discipline, and accounting-sensitive transaction behavior."
         },
         {
             "name": "W05 Legacy Model Decoupling",
@@ -1227,11 +1286,11 @@
         },
         {
             "name": "W06 Scoped API and Auth Alignment",
-            "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, keep public `reason` values separate from telemetry fields, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior.",
+            "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, keep public `reason` values separate from telemetry fields, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior while extending route/spec and shared-failure contract tests.",
             "depends_on": [
                 "W05 Legacy Model Decoupling"
             ],
-            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly retire `internal/service/auth.HTTPError`, preserve the login/change-password `mustChangePassword` exceptions intentionally, track which routes still use `PlainTextErrorResponse`, and avoid turning every business rejection into a telemetry error."
+            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly retire `internal/service/auth.HTTPError`, preserve the login/change-password `mustChangePassword` exceptions intentionally, track which routes still use `PlainTextErrorResponse`, avoid turning every business rejection into a telemetry error, and keep OpenAPI/route parity plus shared `reason` vocabulary checks as first-class exit criteria."
         }
     ],
     "risks": [
@@ -1339,6 +1398,21 @@
             "severity": "medium",
             "statement": "Introducing caching or Redis before runtime DB ownership and correctness are explicit can hide weak boundaries and optimize the wrong surfaces.",
             "mitigation": "Keep caching deferred until startup ownership, readiness behavior, and accounting-sensitive correctness are clearer."
+        },
+        {
+            "severity": "medium",
+            "statement": "SQLite-heavy confidence can hide W04 defects in locking, isolation, migration coordination, startup discipline, and readiness semantics if those behaviors are never verified against Postgres.",
+            "mitigation": "Keep SQLite-backed tests as convenience coverage only and add a small targeted real-Postgres verification slice for DB-truthful behavior once W04 identifies the first concrete invariants."
+        },
+        {
+            "severity": "medium",
+            "statement": "The current backend CI path can miss meaningful regressions because the smoke job does not prove readiness or DB behavior and the `go test ./...` path is branch-prefix gated rather than always-on.",
+            "mitigation": "Treat current CI gating as transitional delivery debt and normalize architecture-protecting test execution before depending on it as a durable guardrail."
+        },
+        {
+            "severity": "medium",
+            "statement": "Building a centralized testing platform or testcontainers-first rollout too early can add flake, cost, and architectural noise before the active modernization slice has identified a concrete verification gap.",
+            "mitigation": "Keep testing threaded through existing waves, defer heavier infrastructure to the future testing note, and require a specific uncovered behavior before adding new testing-platform machinery."
         }
     ],
     "open_questions": [
@@ -1471,6 +1545,26 @@
             "question": "At what scale or abuse profile would distributed rate limiting become justified enough to leave deferred scope?",
             "why_it_matters": "The architecture should not pay the operational cost of shared rate limiting until there is a concrete reason to do so.",
             "blocking": false
+        },
+        {
+            "question": "Which exact W04 behaviors require the first real-Postgres verification: readiness under DB loss, migration serialization, single-writer startup enforcement, place-bet concurrency, sell-position concurrency, or resolve-market atomicity?",
+            "why_it_matters": "The testing strategy now distinguishes convenience coverage from DB truth, so the first heavier verification slice should target the narrowest high-risk behaviors first.",
+            "blocking": true
+        },
+        {
+            "question": "Should the first Postgres-backed checks run inside the default backend test path or in a second slower CI job?",
+            "why_it_matters": "The answer affects cost, determinism, and how much of the architecture-protecting suite can remain fast by default.",
+            "blocking": false
+        },
+        {
+            "question": "If a test is truly cross-boundary and does not fit one owning package, where should it live: backend root, `server`, or a runtime-owned location?",
+            "why_it_matters": "The plan now rejects a centralized testing subsystem, so the small number of broader tests still needs a clear placement rule.",
+            "blocking": false
+        },
+        {
+            "question": "Is the branch-prefix gating in `.github/workflows/backend.yml` an intentional long-term governance choice or simply CI debt to remove?",
+            "why_it_matters": "The current workflow cannot become a durable architecture guard if backend unit and contract checks remain conditional on branch naming.",
+            "blocking": false
         }
     ],
     "next_steps": [
@@ -1496,6 +1590,10 @@
         "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
         "Inventory `/v0` routes and middleware paths that still emit raw `http.Error`, empty 405s, or plain-text 429s, then rank the highest-value route families for W06 convergence.",
         "Draft the initial public `reason` vocabulary and route-family migration matrix for W06 so the API/auth cleanup does not improvise string contracts during implementation.",
-        "Keep `README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` explicitly out of the active wave queue unless a later design decision reactivates part of it."
+        "Keep `README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` explicitly out of the active wave queue unless a later design decision reactivates part of it.",
+        "Add the rewritten testing notes, `backend.yml`, and the key runtime/OpenAPI/security test files to the design-plan source context so verification posture stays reviewable.",
+        "Define explicit verification exit criteria for W03, W04, and W06 before breaking those waves into delivery tasks.",
+        "Inventory SQLite-backed tests that appear to cover DB semantics and mark which ones need a later Postgres-truth replacement or companion check.",
+        "Decide whether backend CI should gain one narrow Postgres-backed job after W04 clarifies the first DB-specific invariants."
     ]
 }
