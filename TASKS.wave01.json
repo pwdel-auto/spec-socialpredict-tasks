@@ -10,7 +10,7 @@
       "uid": "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
       "id": "WAVE01-CFG-001",
       "title": "WAVE01 Config: Replace setup aliases with owned application-policy config types",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md` as the binding design context for WAVE01 configuration-management. Complete the first useful slice by making `backend/internal/service/config` own application-policy configuration types instead of aliasing `backend/setup` types. Preserve current runtime behavior while introducing an explicit loader seam and tests that prove the owned types can be exercised without `setup` globals, YAML parsing, or `init()` side effects. Keep this task focused on the config service boundary itself; do not yet migrate every downstream consumer.",
       "acceptance_criteria": [
         "`backend/internal/service/config` no longer depends on type aliases to `backend/setup` for its public owned types.",
@@ -38,7 +38,7 @@
       ],
       "working_dir": "../socialpredict/backend",
       "depends_on": [],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -47,13 +47,28 @@
         "This is WAVE01 only: configuration-management boundary completion.",
         "Preserve `backend/setup/setup.yaml` as the migration-time source asset.",
         "Do not introduce a new generic top-level `config/` subsystem."
-      ]
+      ],
+      "started_at": "2026-04-27T03:18:22.526235+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260427T031822Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260427T031822Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260427T031822Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260427T031822Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260427T031822Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dccf1-f7e2-75b3-9684-72138753ad85"
+      },
+      "finished_at": "2026-04-27T04:02:54.194031+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `0f7f5441-86ad-4d5a-9814-f13990fefbe3`  \ntask_id: `WAVE01-CFG-001`  \nstatus: `completed`\n\n`backend/internal/service/config` now owns the application-policy types and loader boundary. I kept `backend/setup/setup.yaml` as the source asset, added a source-bytes seam via `setup.SourceBytes()`, routed runtime loading through `config.NewYAMLLoader(...)`, and limited legacy `setup` translation to unmigrated container wiring with `FromSetup` / `ToSetup()` rather than forcing a wider refactor in this slice. Focused tests now exercise the owned types and injected loader seam without depending on `setup` globals, YAML parsing, or `init()` side effects.\n\nAssumption: I treated the active untracked files `backend/internal/service/config/types.go`, `backend/internal/service/config/loader.go`, and `backend/internal/service/config/loader_test.go` as part of this task\u2019s implementation surface, because the package now depends on them and the scoped tests validate them. Required architecture sign-off was approved, and the verifier marked the diff ready to land.\n\nfiles_changed:\n- `backend/internal/service/config/service.go`\n- `backend/internal/service/config/service_test.go`\n- `backend/internal/service/config/types.go`\n- `backend/internal/service/config/loader.go`\n- `backend/internal/service/config/loader_test.go`\n- `backend/internal/app/runtime/config.go`\n- `backend/internal/app/runtime/config_test.go`\n- `backend/internal/app/container.go`\n- `backend/setup/setup.go`\n- `backend/server/server_test.go`\n\nchecks_run:\n- `go test -count=1 ./internal/service/config ./internal/app/runtime`\n- `go test -count=1 ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n- `go test -count=1 ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n- `go vet ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n- `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `go test ./... -run TestOpenAPISpecValidates -count=1`\n\nfollow_ups:\n- Make the transitional `any`-based compatibility shims fail fast after the remaining `setup` consumers are migrated.\n- Optionally add an end-to-end assertion for `LoadConfigService()` against the real embedded `setup.yaml` asset in a later slice."
     },
     {
       "uid": "57d5f112-1626-41cb-a301-fcef5f406136",
       "id": "WAVE01-CFG-002",
       "title": "WAVE01 Config: Reduce backend/setup to a source-asset and translation seam",
-      "status": "pending",
+      "status": "done",
       "prompt": "After the owned config types exist, reduce `backend/setup` toward the design-plan target role: source asset and translation seam only. Remove or isolate `init()`-driven loading, package-global convenience access, and other singleton behavior from the migrated runtime path while preserving current behavior for the backend entrypoint. The goal is to stop `setup` from acting as the long-term runtime boundary. Keep the migration reversible and avoid a flag-day rewrite.",
       "acceptance_criteria": [
         "The migrated runtime path no longer depends on `setup` package-global accessors or `init()`-driven loading.",
@@ -84,7 +99,7 @@
       "depends_on": [
         "0f7f5441-86ad-4d5a-9814-f13990fefbe3"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -92,13 +107,28 @@
       "notes": [
         "Treat `setup` as transitional, not final architecture.",
         "Keep startup validation explicit and fail-fast."
-      ]
+      ],
+      "started_at": "2026-04-27T04:02:54.280353+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/57d5f112-1626-41cb-a301-fcef5f406136_20260427T040254Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/57d5f112-1626-41cb-a301-fcef5f406136_20260427T040254Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/57d5f112-1626-41cb-a301-fcef5f406136_20260427T040254Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/57d5f112-1626-41cb-a301-fcef5f406136_20260427T040254Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/57d5f112-1626-41cb-a301-fcef5f406136_20260427T040254Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dcd1a-bc4a-7b80-9802-61251e972e00"
+      },
+      "finished_at": "2026-04-27T04:30:32.135847+00:00",
+      "last_exit_code": 0,
+      "last_summary": "Runtime config now loads through an explicit source seam instead of relying on `setup` package initialization. `main` injects `setup.EmbeddedSource{}`, `setup` keeps the embedded asset plus legacy translation/access paths, and the touched tests now cover both explicit embedded-source loading and the legacy singleton compatibility path. The report was updated at [summary.json](/workspace/socialpredict/.codex-reports/tasks/57d5f112-1626-41cb-a301-fcef5f406136/summary.json).\n\n- `task_uid`: `57d5f112-1626-41cb-a301-fcef5f406136`\n- `task_id`: `WAVE01-CFG-002`\n- `status`: `in_review`\n- `files_changed`: [backend/internal/app/runtime/config.go](/workspace/socialpredict/backend/internal/app/runtime/config.go), [backend/internal/app/runtime/config_test.go](/workspace/socialpredict/backend/internal/app/runtime/config_test.go), [backend/main.go](/workspace/socialpredict/backend/main.go), [backend/setup/setup.go](/workspace/socialpredict/backend/setup/setup.go), [backend/setup/setup_test.go](/workspace/socialpredict/backend/setup/setup_test.go)\n- `checks_run`: `run_boundary_checks.sh /workspace/socialpredict`; `gofmt -l` on touched backend Go files; `go test ./internal/app/runtime ./internal/service/config ./setup -count=1` twice; `go test ./... -run TestOpenAPISpecValidates -count=1`; `go vet ./...`\n- `follow_ups`: explicit `software-action-architecture-agent` sign-off was not captured before the dispatcher concluded, so the task was left in `in_review`\n\nAssumption: the pre-existing dirty-tree config-service changes from the prerequisite wave were treated as baseline and preserved."
     },
     {
       "uid": "72a14560-e1b5-4c08-8fde-e00b9c08881c",
       "id": "WAVE01-CFG-003",
       "title": "WAVE01 Config: Migrate setup, stats, seed, and adjacent handlers off whole-tree config access",
-      "status": "pending",
+      "status": "done",
       "prompt": "Move the next vertical slice of consumers onto narrow immutable policy views. Focus on `handlers/setup`, `handlers/stats`, `seed`, and any adjacent touched paths that currently reach through `configService.Current()` or otherwise consume too much of the config tree. Preserve endpoint behavior while replacing whole-tree reads with narrower configuration slices or consumer-owned interfaces. Keep handlers thin and avoid pushing business policy into HTTP code.",
       "acceptance_criteria": [
         "Touched handler and seed paths no longer depend on broad whole-tree config access when a narrower policy view is sufficient.",
@@ -130,7 +160,7 @@
       "depends_on": [
         "57d5f112-1626-41cb-a301-fcef5f406136"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -138,13 +168,28 @@
       "notes": [
         "Treat `configService.Current()` whole-tree traversal as a smell to remove from touched paths.",
         "Keep setup endpoints semantically stable while narrowing internal dependencies."
-      ]
+      ],
+      "started_at": "2026-04-27T04:30:32.218133+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260427T043032Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260427T043032Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260427T043032Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260427T043032Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260427T043032Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dcd34-0840-73e0-b6aa-b389e59a31cf"
+      },
+      "finished_at": "2026-04-27T04:42:13.185415+00:00",
+      "last_exit_code": 0,
+      "last_summary": "`software-action-test-reliability-agent` is now shut down. No change to the completed task result."
     },
     {
       "uid": "9d4ea064-e561-4e10-92f9-2320e116dc44",
       "id": "WAVE01-CFG-004",
       "title": "WAVE01 Config: Migrate bets, analytics, and markets config dependencies to narrow immutable slices",
-      "status": "pending",
+      "status": "done",
       "prompt": "Continue WAVE01 by removing raw `setup`-typed configuration and broad config dependencies from domain-facing consumers, especially bets, analytics, and any directly affected market flows. Replace `*setup.EconomicConfig`, `setup.EconConfigLoader`, and similar leaks with narrow immutable policy slices or consumer-owned interfaces that preserve dependency direction. Keep integer-first economics behavior unchanged and avoid persistence-model leakage.",
       "acceptance_criteria": [
         "Touched domain-facing services no longer depend directly on raw `setup` configuration types or loaders.",
@@ -176,7 +221,7 @@
       "depends_on": [
         "57d5f112-1626-41cb-a301-fcef5f406136"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -184,13 +229,28 @@
       "notes": [
         "Use the smallest accounting-safe config slices possible.",
         "Do not move business policy back into handlers or runtime bootstrap."
-      ]
+      ],
+      "started_at": "2026-04-27T04:42:13.264568+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/9d4ea064-e561-4e10-92f9-2320e116dc44_20260427T044213Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/9d4ea064-e561-4e10-92f9-2320e116dc44_20260427T044213Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/9d4ea064-e561-4e10-92f9-2320e116dc44_20260427T044213Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/9d4ea064-e561-4e10-92f9-2320e116dc44_20260427T044213Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/9d4ea064-e561-4e10-92f9-2320e116dc44_20260427T044213Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dcd3e-bab2-7641-81a2-6d9506900cf3"
+      },
+      "finished_at": "2026-04-27T05:23:03.242722+00:00",
+      "last_exit_code": 0,
+      "last_summary": "Completed `WAVE01-CFG-004` by replacing raw `setup` config usage in bets and analytics with narrow domain-owned immutable config structs, and projecting those slices from [`backend/internal/app/container.go`](/workspace/socialpredict/backend/internal/app/container.go). The canonical task report summary was updated at [`summary.json`](/workspace/socialpredict/.codex-reports/tasks/9d4ea064-e561-4e10-92f9-2320e116dc44/summary.json). Architecture sign-off was recorded as `approved-with-followups`.\n\n- `task_uid`: `9d4ea064-e561-4e10-92f9-2320e116dc44`\n- `task_id`: `WAVE01-CFG-004`\n- `status`: `completed`\n- `files_changed`: `backend/internal/domain/bets/service.go`, `backend/internal/domain/bets/bet_support.go`, `backend/internal/domain/bets/service_helpers_test.go`, `backend/internal/domain/bets/service_test.go`, `backend/internal/domain/analytics/service.go`, `backend/internal/domain/analytics/financials.go`, `backend/internal/domain/analytics/financialsnapshot_test.go`, `backend/internal/domain/analytics/system_metrics.go`, `backend/internal/domain/analytics/systemmetrics_integration_test.go`, `backend/internal/app/container.go`, `backend/handlers/metrics/getsystemmetrics_test.go`, `backend/handlers/metrics/getgloballeaderboard_test.go`\n- `checks_run`: `gofmt -l` on touched files, boundary checks script, `go test ./internal/domain/bets ./internal/domain/analytics ./internal/app ./handlers/metrics -count=1` twice, `go test ./... -run TestOpenAPISpecValidates -count=1`, `go vet ./...`\n- `follow_ups`: keep future config migrations container-owned and domain-local per architecture sign-off; the dispatcher\u2019s separate verifier-agent artifact was interrupted, so equivalent verification was completed directly in the main workspace\n\nAssumption: the repo already had in-progress config-service refactor changes in the dirty worktree, and this task extended them without touching unrelated files."
     },
     {
       "uid": "a0016891-6ddb-45f4-8c0a-c515bed7f4c8",
       "id": "WAVE01-CFG-005",
       "title": "WAVE01 Config: Lock economics snapshot semantics and protect accounting correctness",
-      "status": "pending",
+      "status": "done",
       "prompt": "Finish the configuration-management wave by making the accounting-sensitive semantics explicit in code and tests. Ensure the touched backend paths treat economics policy as startup-validated and immutable for the running process, reject live-mutation or hot-reload behavior for accounting-sensitive policy, and persist accounting-relevant economics into durable workflow or domain state where correctness requires historical stability. Keep this task tightly scoped to what the touched code can safely support now; if a full persistence decision cannot be completed, implement the highest-value protections and document the exact follow-up boundary.",
       "acceptance_criteria": [
         "The touched code and tests make startup-validated immutable economics snapshots explicit for the running process.",
@@ -223,7 +283,7 @@
         "72a14560-e1b5-4c08-8fde-e00b9c08881c",
         "9d4ea064-e561-4e10-92f9-2320e116dc44"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -231,7 +291,22 @@
       "notes": [
         "This is the WAVE01 stop-and-review point before creating later production-note waves.",
         "Financial and accounting correctness is binary; prefer explicit protection over speculative flexibility."
-      ]
+      ],
+      "started_at": "2026-04-27T05:23:03.322511+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260427T052303Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260427T052303Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260427T052303Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260427T052303Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260427T052303Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dcd64-1d14-7d53-8d3d-7eeee8e8f830"
+      },
+      "finished_at": "2026-04-27T05:35:46.148696+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `a0016891-6ddb-45f4-8c0a-c515bed7f4c8`  \ntask_id: `WAVE01-CFG-005`  \nstatus: `completed`\n\nThe task is complete and the curated report is finalized at [summary.json](/workspace/socialpredict/.codex-reports/tasks/a0016891-6ddb-45f4-8c0a-c515bed7f4c8/summary.json). The resulting backend state makes startup-loaded economics explicit and immutable for the running process: config/setup now defensively copy startup snapshots, accounting-sensitive services consume fixed config slices, and regression tests cover both source-mutation and caller-mutation paths.\n\nfiles_changed:\n- `backend/internal/service/config/{loader.go,loader_test.go,service.go,service_test.go,types.go}`\n- `backend/internal/app/{container.go,runtime/config.go,runtime/config_test.go}`\n- `backend/setup/{setup.go,setup_test.go}`\n- `backend/internal/domain/analytics/{financials.go,financialsnapshot_test.go,service.go,system_metrics.go,systemmetrics_integration_test.go,systemmetrics_test.go}`\n- `backend/internal/domain/bets/{bet_support.go,service.go,service_helpers_test.go,service_test.go}`\n- `backend/seed/{seed.go,seed_test.go,seed_users_test.go}`\n- `backend/handlers/{metrics/getgloballeaderboard_test.go,metrics/getsystemmetrics_test.go,setup/setuphandler_test.go,stats/statshandler.go,stats/statshandler_test.go}`\n- `backend/{main.go,server/server_test.go}`\n\nchecks_run:\n- `gofmt -l backend/internal/service/config/service.go backend/internal/service/config/service_test.go backend/internal/service/config/types.go`\n- `go test ./internal/service/config ./internal/app/runtime ./setup ./seed ./internal/domain/bets ./internal/domain/analytics ./handlers/setup ./handlers/stats ./handlers/metrics ./server -count=1` run twice\n- `go test ./... -run TestOpenAPISpecValidates -count=1`\n- `go vet ./...`\n\nfollow_ups:\n- `System metrics still recompute historical fee/cost totals from the injected process snapshot. If economics values ever change across deployments, exact historical reporting will require durable per-market or per-bet fee/cost persistence instead of recomputation from the current process snapshot.`\n\nAssumption: process-lifetime immutability is the intended protection for this wave; no broader persistence redesign was introduced beyond the explicit follow-up boundary above."
     }
   ]
 }
