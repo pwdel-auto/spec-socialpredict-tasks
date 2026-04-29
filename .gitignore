@@ -8,3 +8,4 @@ __pycache__/
 .gomodcache/
 .codex-runs/
 .codex-agent-runs
+.codex-scratch/
