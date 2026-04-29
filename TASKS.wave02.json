@@ -1,0 +1,620 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
+      "id": "WAVE01-CFG-001",
+      "title": "WAVE01 Config: Replace setup aliases with owned application-policy config types",
+      "status": "done",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/01-configuration-management.md` as the binding design context for WAVE01 configuration-management. Complete the first useful slice by making `backend/internal/service/config` own application-policy configuration types instead of aliasing `backend/setup` types. Preserve current runtime behavior while introducing an explicit loader seam and tests that prove the owned types can be exercised without `setup` globals, YAML parsing, or `init()` side effects. Keep this task focused on the config service boundary itself; do not yet migrate every downstream consumer.",
+      "acceptance_criteria": [
+        "`backend/internal/service/config` no longer depends on type aliases to `backend/setup` for its public owned types.",
+        "Configuration loading is expressed through an explicit loader seam that preserves current source-asset behavior while clarifying ownership.",
+        "Focused tests cover the owned config types and loader behavior without relying on `setup` globals or `init()`-driven access."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned config-type boundary",
+          "dependency direction away from setup aliases",
+          "tests that avoid legacy singleton behavior"
+        ]
+      },
+      "out_of_scope": [
+        "removing `backend/setup/setup.yaml` as the source asset",
+        "migrating all handlers and domain services in this task",
+        "hot-reload or external config-store design"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/app/runtime/config.go",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is WAVE01 only: configuration-management boundary completion.",
+        "Preserve `backend/setup/setup.yaml` as the migration-time source asset.",
+        "Do not introduce a new generic top-level `config/` subsystem."
+      ],
+      "started_at": "2026-04-28T11:53:11.444585+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260428T115311Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260428T115311Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260428T115311Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260428T115311Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/0f7f5441-86ad-4d5a-9814-f13990fefbe3_20260428T115311Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd3ef-a71d-7322-bdb7-45bc56754cbd"
+      },
+      "finished_at": "2026-04-28T11:59:00.613300+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `0f7f5441-86ad-4d5a-9814-f13990fefbe3`  \ntask_id: `WAVE01-CFG-001`  \nstatus: `completed`\n\nI explicitly spawned `software-action-dispatcher-agent` as requested. Assumption: the clean target repo already contained the intended WAVE01 implementation, so this run converged by re-verifying that slice and refreshing the canonical report rather than making new code edits. The dispatcher updated [summary.json](/workspace/socialpredict/.codex-reports/tasks/0f7f5441-86ad-4d5a-9814-f13990fefbe3/summary.json), appended a verification event, and the target worktree is clean.\n\nfiles_changed:\n- `backend/internal/service/config/service.go`\n- `backend/internal/service/config/service_test.go`\n- `backend/internal/service/config/types.go`\n- `backend/internal/service/config/loader.go`\n- `backend/internal/service/config/loader_test.go`\n- `backend/internal/app/runtime/config.go`\n- `backend/internal/app/runtime/config_test.go`\n- `backend/internal/app/container.go`\n- `backend/setup/setup.go`\n- `backend/server/server_test.go`\n\nchecks_run:\n- `gofmt -l backend/internal/service/config/*.go backend/internal/app/runtime/config.go backend/internal/app/runtime/config_test.go backend/internal/app/container.go backend/setup/setup.go backend/server/server_test.go`\n- `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `env GOTMPDIR=/workspace/.tmp/go-build GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod GOPATH=/workspace/.cache/go-path go test -count=1 ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n- `env GOTMPDIR=/workspace/.tmp/go-build GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod GOPATH=/workspace/.cache/go-path go test -count=1 ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n- `env GOTMPDIR=/workspace/.tmp/go-build GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod GOPATH=/workspace/.cache/go-path go test ./... -run TestOpenAPISpecValidates -count=1`\n- `env GOTMPDIR=/workspace/.tmp/go-build GOCACHE=/workspace/.cache/go-build GOMODCACHE=/workspace/.cache/go-mod GOPATH=/workspace/.cache/go-path go vet ./internal/service/config ./internal/app/runtime ./internal/app ./server`\n\nfollow_ups:\n- Make transitional `any`-based compatibility shims fail fast after the remaining `setup` consumers are migrated.\n- Optionally add an end-to-end assertion for `LoadConfigService()` against the real embedded `setup.yaml` asset in a later slice."
+    },
+    {
+      "uid": "57d5f112-1626-41cb-a301-fcef5f406136",
+      "id": "WAVE01-CFG-002",
+      "title": "WAVE01 Config: Reduce backend/setup to a source-asset and translation seam",
+      "status": "done",
+      "prompt": "After the owned config types exist, reduce `backend/setup` toward the design-plan target role: source asset and translation seam only. Remove or isolate `init()`-driven loading, package-global convenience access, and other singleton behavior from the migrated runtime path while preserving current behavior for the backend entrypoint. The goal is to stop `setup` from acting as the long-term runtime boundary. Keep the migration reversible and avoid a flag-day rewrite.",
+      "acceptance_criteria": [
+        "The migrated runtime path no longer depends on `setup` package-global accessors or `init()`-driven loading.",
+        "`backend/setup` is narrowed toward source-asset and translation responsibilities for the touched path.",
+        "Focused tests demonstrate that runtime configuration initialization works through explicit seams rather than singleton state."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "setup seam reduction",
+          "removal of migrated global access paths",
+          "behavior-preserving runtime initialization"
+        ]
+      },
+      "out_of_scope": [
+        "changing the source asset format",
+        "broad refactors outside configuration-related seams",
+        "domain-consumer migration beyond touched runtime paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/setup",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "0f7f5441-86ad-4d5a-9814-f13990fefbe3"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `setup` as transitional, not final architecture.",
+        "Keep startup validation explicit and fail-fast."
+      ],
+      "started_at": "2026-04-28T11:59:00.709860+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/57d5f112-1626-41cb-a301-fcef5f406136_20260428T115900Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/57d5f112-1626-41cb-a301-fcef5f406136_20260428T115900Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/57d5f112-1626-41cb-a301-fcef5f406136_20260428T115900Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/57d5f112-1626-41cb-a301-fcef5f406136_20260428T115900Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/57d5f112-1626-41cb-a301-fcef5f406136_20260428T115900Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd3f4-fbc0-74e1-bfa9-dc79fc4651df"
+      },
+      "finished_at": "2026-04-28T12:20:02.942091+00:00",
+      "last_exit_code": 0,
+      "last_summary": "Recorded the missing `software-action-architecture-agent` approval and updated [summary.json](/workspace/socialpredict/.codex-reports/tasks/57d5f112-1626-41cb-a301-fcef5f406136/summary.json) to `completed`. No backend code edits were needed in this turn; the existing runtime/config seam change already satisfied the task and the remaining work was sign-off plus report closure.\n\n- `task_uid`: `57d5f112-1626-41cb-a301-fcef5f406136`\n- `task_id`: `WAVE01-CFG-002`\n- `status`: `completed`\n- `files_changed`: `backend/main.go`, `backend/internal/app/runtime/config.go`, `backend/internal/app/runtime/config_test.go`, `backend/setup/setup.go`, `backend/setup/setup_test.go`\n- `checks_run`: `./.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`; `gofmt -l backend/main.go backend/internal/app/runtime/config.go backend/internal/app/runtime/config_test.go backend/setup/setup.go backend/setup/setup_test.go`; `GOPATH=/workspace/.cache/socialpredict-gopath GOMODCACHE=/workspace/.cache/socialpredict-gomodcache GOCACHE=/workspace/.cache/socialpredict-gocache GOTMPDIR=/workspace/.cache/go-build RUNS=2 ENABLE_RACE=0 /home/agent/.codex/skills/socialpredict-go-testing-reliability/scripts/run_reliability_suite.sh /workspace/socialpredict ./internal/app/runtime`; same command for `./internal/service/config`; same command for `./setup`\n- `follow_ups`: `backend/setup` still contains transitional legacy compatibility helpers for unmigrated consumers; this is non-blocking follow-on debt, not a blocker for this task\n\nAssumption: the previously landed backend changes were the intended implementation for this wave, and this run\u2019s job was to verify them, capture the required architecture sign-off, and close the report cleanly."
+    },
+    {
+      "uid": "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+      "id": "WAVE01-CFG-003",
+      "title": "WAVE01 Config: Migrate setup, stats, seed, and adjacent handlers off whole-tree config access",
+      "status": "done",
+      "prompt": "Move the next vertical slice of consumers onto narrow immutable policy views. Focus on `handlers/setup`, `handlers/stats`, `seed`, and any adjacent touched paths that currently reach through `configService.Current()` or otherwise consume too much of the config tree. Preserve endpoint behavior while replacing whole-tree reads with narrower configuration slices or consumer-owned interfaces. Keep handlers thin and avoid pushing business policy into HTTP code.",
+      "acceptance_criteria": [
+        "Touched handler and seed paths no longer depend on broad whole-tree config access when a narrower policy view is sufficient.",
+        "Setup and stats behavior remain stable for the touched endpoints.",
+        "Focused tests cover the migrated narrow-view behavior and protect against regression."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "stable setup/stats behavior",
+          "narrow config-view usage",
+          "deterministic tests for migrated consumers"
+        ]
+      },
+      "out_of_scope": [
+        "auth and OpenAPI redesign",
+        "domain-service migration outside touched consumer paths",
+        "changing public route taxonomy"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/setup",
+        "../socialpredict/backend/handlers/stats",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `configService.Current()` whole-tree traversal as a smell to remove from touched paths.",
+        "Keep setup endpoints semantically stable while narrowing internal dependencies."
+      ],
+      "started_at": "2026-04-28T12:20:03.025478+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260428T122003Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260428T122003Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260428T122003Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260428T122003Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/72a14560-e1b5-4c08-8fde-e00b9c08881c_20260428T122003Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd408-3ebd-73e1-bfbc-f6267b9c3022"
+      },
+      "finished_at": "2026-04-28T12:47:40.778923+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `72a14560-e1b5-4c08-8fde-e00b9c08881c`  \ntask_id: `WAVE01-CFG-003`  \nstatus: `completed`\n\nThe target repo already had the setup/stats/seed consumer migration in place, so this run narrowed the remaining adjacent whole-tree access in [service.go](/workspace/socialpredict/backend/internal/service/config/service.go:1) and added regression coverage in [service_test.go](/workspace/socialpredict/backend/internal/service/config/service_test.go:1). `RuntimeService.Economics()` and `Frontend()` now return direct frozen value slices instead of routing through `Current()` and cloning the whole `AppConfig` first. The dispatcher also refreshed the curated report summary at [summary.json](/workspace/socialpredict/.codex-reports/tasks/72a14560-e1b5-4c08-8fde-e00b9c08881c/summary.json:1).\n\nfiles_changed:\n- [service.go](/workspace/socialpredict/backend/internal/service/config/service.go:1)\n- [service_test.go](/workspace/socialpredict/backend/internal/service/config/service_test.go:1)\n\nchecks_run:\n- `gofmt -l` on touched files\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `rg -n \"configService\\.Current\\(|\\.Current\\(\" handlers/setup handlers/stats seed`\n- `rg -n \"return s\\.Current\\(\\)\\.(Economics|Frontend)\" internal/service/config/service.go`\n- `go test ./internal/service/config ./handlers/setup ./handlers/stats ./seed -count=1` twice\n- `go test ./... -run TestOpenAPISpecValidates -count=1`\n- `go vet ./internal/service/config ./handlers/setup ./handlers/stats ./seed`\n\nfollow_ups:\n- none\n\nAssumption: the already-landed setup/stats/seed narrowing in the target repo was the intended baseline for this queued run, so only the residual config-service accessor smell needed a live code change."
+    },
+    {
+      "uid": "9d4ea064-e561-4e10-92f9-2320e116dc44",
+      "id": "WAVE01-CFG-004",
+      "title": "WAVE01 Config: Migrate bets, analytics, and markets config dependencies to narrow immutable slices",
+      "status": "done",
+      "prompt": "Continue WAVE01 by removing raw `setup`-typed configuration and broad config dependencies from domain-facing consumers, especially bets, analytics, and any directly affected market flows. Replace `*setup.EconomicConfig`, `setup.EconConfigLoader`, and similar leaks with narrow immutable policy slices or consumer-owned interfaces that preserve dependency direction. Keep integer-first economics behavior unchanged and avoid persistence-model leakage.",
+      "acceptance_criteria": [
+        "Touched domain-facing services no longer depend directly on raw `setup` configuration types or loaders.",
+        "The migrated consumers use the smallest accounting-safe policy slice or interface they need.",
+        "Focused tests prove behavior stability for the touched betting, analytics, or market flows."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "dependency direction in domain-facing code",
+          "elimination of raw setup-type leakage",
+          "behavior-preserving economics usage"
+        ]
+      },
+      "out_of_scope": [
+        "economics redesign",
+        "OpenAPI sweeps",
+        "full repository/model decoupling beyond touched paths"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/internal/service/config"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "57d5f112-1626-41cb-a301-fcef5f406136"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Use the smallest accounting-safe config slices possible.",
+        "Do not move business policy back into handlers or runtime bootstrap."
+      ],
+      "started_at": "2026-04-28T12:47:40.869912+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/9d4ea064-e561-4e10-92f9-2320e116dc44_20260428T124740Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/9d4ea064-e561-4e10-92f9-2320e116dc44_20260428T124740Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/9d4ea064-e561-4e10-92f9-2320e116dc44_20260428T124740Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/9d4ea064-e561-4e10-92f9-2320e116dc44_20260428T124740Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/9d4ea064-e561-4e10-92f9-2320e116dc44_20260428T124740Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd421-8a75-7663-83f6-90f2f7185f7f"
+      },
+      "finished_at": "2026-04-28T12:57:42.336412+00:00",
+      "last_exit_code": 0,
+      "last_summary": "`WAVE01-CFG-004` is complete. I spawned the required dispatcher, revalidated the current branch, and updated the canonical report at [summary.json](/workspace/socialpredict/.codex-reports/tasks/9d4ea064-e561-4e10-92f9-2320e116dc44/summary.json), [conversation.ndjson](/workspace/socialpredict/.codex-reports/tasks/9d4ea064-e561-4e10-92f9-2320e116dc44/conversation.ndjson), and [decisions.ndjson](/workspace/socialpredict/.codex-reports/tasks/9d4ea064-e561-4e10-92f9-2320e116dc44/decisions.ndjson). `HEAD` on `run-20260428-wave02` matches `main`, so the bets/analytics/markets config-slice migration is already present on `HEAD`; no backend source files were edited in this closing pass.\n\n- `task_uid`: `9d4ea064-e561-4e10-92f9-2320e116dc44`\n- `task_id`: `WAVE01-CFG-004`\n- `status`: `completed`\n- `files_changed`: `backend/internal/domain/bets/service.go`, `backend/internal/domain/bets/bet_support.go`, `backend/internal/domain/bets/service_helpers_test.go`, `backend/internal/domain/bets/service_test.go`, `backend/internal/domain/analytics/service.go`, `backend/internal/domain/analytics/financials.go`, `backend/internal/domain/analytics/financialsnapshot_test.go`, `backend/internal/domain/analytics/system_metrics.go`, `backend/internal/domain/analytics/systemmetrics_integration_test.go`, `backend/internal/app/container.go`, `backend/handlers/metrics/getsystemmetrics_test.go`, `backend/handlers/metrics/getgloballeaderboard_test.go`\n- `checks_run`: `gofmt -l backend/internal/service/config/service.go backend/internal/service/config/service_test.go`; `run_boundary_checks.sh /workspace/socialpredict`; `run_quality_guardrails.sh /workspace/socialpredict main (includes go vet ./...)`; `go test ./internal/domain/bets ./internal/domain/analytics ./internal/domain/markets ./internal/app ./internal/service/config ./handlers/metrics -count=1` twice; `go test ./... -run TestOpenAPISpecValidates -count=1`\n- `follow_ups`: keep future config migrations container-owned and domain-local; assumption recorded that the dirty `backend/internal/service/config/service.go` and `backend/internal/service/config/service_test.go` changes were pre-existing shared-worktree state and were validated but not attributed to this task\u2019s historical `files_changed` set"
+    },
+    {
+      "uid": "a0016891-6ddb-45f4-8c0a-c515bed7f4c8",
+      "id": "WAVE01-CFG-005",
+      "title": "WAVE01 Config: Lock economics snapshot semantics and protect accounting correctness",
+      "status": "done",
+      "prompt": "Finish the configuration-management wave by making the accounting-sensitive semantics explicit in code and tests. Ensure the touched backend paths treat economics policy as startup-validated and immutable for the running process, reject live-mutation or hot-reload behavior for accounting-sensitive policy, and persist accounting-relevant economics into durable workflow or domain state where correctness requires historical stability. Keep this task tightly scoped to what the touched code can safely support now; if a full persistence decision cannot be completed, implement the highest-value protections and document the exact follow-up boundary.",
+      "acceptance_criteria": [
+        "The touched code and tests make startup-validated immutable economics snapshots explicit for the running process.",
+        "No touched path introduces or relies on hot reload for economics or other accounting-sensitive policy.",
+        "Accounting-sensitive workflow boundaries touched in this task either persist the required economics values durably or document a precise remaining gap with tests guarding the current behavior."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "financial and accounting correctness protections",
+          "immutable snapshot semantics",
+          "durability or explicit gap documentation for touched accounting-sensitive flows"
+        ]
+      },
+      "out_of_scope": [
+        "global background-job or observability work",
+        "production-note wave 02 and beyond",
+        "broad deployment-system redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/config",
+        "../socialpredict/backend/internal/domain",
+        "../socialpredict/backend/internal/app",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/setup"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "72a14560-e1b5-4c08-8fde-e00b9c08881c",
+        "9d4ea064-e561-4e10-92f9-2320e116dc44"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE01 stop-and-review point before creating later production-note waves.",
+        "Financial and accounting correctness is binary; prefer explicit protection over speculative flexibility."
+      ],
+      "started_at": "2026-04-28T12:57:42.418083+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260428T125742Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260428T125742Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260428T125742Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260428T125742Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/a0016891-6ddb-45f4-8c0a-c515bed7f4c8_20260428T125742Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd42a-b890-76a1-8791-be7ee2d794b9"
+      },
+      "finished_at": "2026-04-28T13:05:10.325488+00:00",
+      "last_exit_code": 0,
+      "last_summary": "`task_uid`: `a0016891-6ddb-45f4-8c0a-c515bed7f4c8`  \n`task_id`: `WAVE01-CFG-005`  \n`status`: `completed`\n\nThe required dispatcher flow was used via `software-action-dispatcher-agent`. It concluded the current repo state already satisfies this wave, so no additional code changes were needed beyond the existing config-service diff. The canonical report was refreshed at [summary.json](/workspace/socialpredict/.codex-reports/tasks/a0016891-6ddb-45f4-8c0a-c515bed7f4c8/summary.json).\n\n`files_changed`:\n- Active worktree diff is limited to [service.go](/workspace/socialpredict/backend/internal/service/config/service.go) and [service_test.go](/workspace/socialpredict/backend/internal/service/config/service_test.go).\n- The canonical task-level changed file set remains the backend paths recorded in [summary.json](/workspace/socialpredict/.codex-reports/tasks/a0016891-6ddb-45f4-8c0a-c515bed7f4c8/summary.json).\n\n`checks_run`:\n- `gofmt -l backend/internal/service/config/service.go backend/internal/service/config/service_test.go` passed\n- `run_boundary_checks.sh /workspace/socialpredict` passed\n- `go test ./internal/service/config ./internal/app/runtime ./setup ./seed ./internal/domain/bets ./internal/domain/analytics ./handlers/setup ./handlers/stats ./handlers/metrics ./server -count=1` passed twice\n- `go test ./... -run TestOpenAPISpecValidates -count=1` passed\n- `go vet ./...` passed\n\n`follow_ups`:\n- Historically exact system-metrics accounting across future economics rollouts still needs durable per-market or per-bet fee/cost persistence instead of recomputing from the current process snapshot.\n\nAssumption: this wave\u2019s intended boundary is process-lifetime immutability of startup-validated economics, not a broader persistence redesign."
+    },
+    {
+      "uid": "09cf942d-17bd-4e94-b6b7-eb70d497cf7d",
+      "id": "WAVE02-LOG-001",
+      "title": "WAVE02 Logging: Standardize on backend/logger and delete backend/logging",
+      "status": "done",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/02-logging-observability.md` as the binding design context for WAVE02 logging and observability. Complete the first useful slice by migrating the remaining touched backend code off `socialpredict/logging` and onto `socialpredict/logger`, porting or replacing any minimal test seam that truly needs to survive, and deleting `backend/logging`. Preserve current behavior for the touched flows, avoid leaving a compatibility shim behind, and do not replace the logger boundary with direct OpenTelemetry SDK-coupled application code.",
+      "acceptance_criteria": [
+        "No touched non-test backend code imports `socialpredict/logging`.",
+        "Any necessary test support is moved or replaced without preserving duplicate package ownership.",
+        "`backend/logging` is deleted and focused checks cover the migrated behavior for the touched paths.",
+        "No touched path replaces `backend/logger` with a direct application-level OpenTelemetry logging abstraction."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "package unification onto backend/logger",
+          "deletion of backend/logging without a compatibility shim",
+          "behavior-preserving migration for touched callers",
+          "preservation of backend/logger as the application-facing adapter"
+        ]
+      },
+      "out_of_scope": [
+        "request-correlation rollout",
+        "health and readiness redesign",
+        "metrics or tracing expansion"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/logging",
+        "../socialpredict/backend/handlers/markets"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "a0016891-6ddb-45f4-8c0a-c515bed7f4c8"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Treat `backend/logging` as deletion-only scope.",
+        "Do not introduce a new wrapper package or long-lived compatibility layer.",
+        "Do not solve this task by wiring business code directly to an OpenTelemetry SDK."
+      ],
+      "started_at": "2026-04-28T13:05:10.419681+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/09cf942d-17bd-4e94-b6b7-eb70d497cf7d_20260428T130510Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/09cf942d-17bd-4e94-b6b7-eb70d497cf7d_20260428T130510Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/09cf942d-17bd-4e94-b6b7-eb70d497cf7d_20260428T130510Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/09cf942d-17bd-4e94-b6b7-eb70d497cf7d_20260428T130510Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/09cf942d-17bd-4e94-b6b7-eb70d497cf7d_20260428T130510Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd431-8e54-7181-954d-d8ff03af30cf"
+      },
+      "finished_at": "2026-04-28T13:17:03.511694+00:00",
+      "last_exit_code": 0,
+      "last_summary": "Explicitly spawned `software-action-dispatcher-agent` first. It coordinated `software-action-logging-agent`, `software-action-test-reliability-agent`, and `software-action-verifier-agent`; verifier sign-off is satisfied. [resolvemarket.go](/workspace/socialpredict/backend/handlers/markets/resolvemarket.go:1) now uses `socialpredict/logger`, the legacy `backend/logging` package files were deleted, and the canonical report under [/workspace/socialpredict/.codex-reports/tasks/09cf942d-17bd-4e94-b6b7-eb70d497cf7d](/workspace/socialpredict/.codex-reports/tasks/09cf942d-17bd-4e94-b6b7-eb70d497cf7d) was updated.\n\ntask_uid: `09cf942d-17bd-4e94-b6b7-eb70d497cf7d`  \ntask_id: `WAVE02-LOG-001`  \nstatus: `completed`\n\nfiles_changed:\n- `backend/handlers/markets/resolvemarket.go`\n- `backend/logging/loggingutils.go`\n- `backend/logging/mocklogging.go`\n\nchecks_run:\n- `bash /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `gofmt -w ../socialpredict/backend/handlers/markets/resolvemarket.go`\n- `gofmt -l ../socialpredict/backend/handlers/markets/resolvemarket.go`\n- `go test ./handlers/markets -count=1` twice\n- `go test ./logger -count=1` twice\n- `go test . -run TestOpenAPISpecValidates -vet=off -count=1`\n- `go vet -p=1 ./...`\n- `bash /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-code-quality-guardrails/scripts/run_quality_guardrails.sh /workspace/socialpredict main`\n\nassumptions:\n- Used the existing shared Go cache at `/workspace/.tmp-go` for validation because the default `/home/agent/go` path was not writable and `/tmp`/ad hoc workspace caches hit space limits.\n\nfollow_ups:\n- none"
+    },
+    {
+      "uid": "8e76fa6e-2576-4021-965e-3c96fed3d4d1",
+      "id": "WAVE02-LOG-002",
+      "title": "WAVE02 Logging: Define the minimal stable backend/logger contract with redaction and OpenTelemetry-aligned guardrails",
+      "status": "done",
+      "prompt": "After package unification, harden `backend/logger` as the sole backend runtime log-emission adapter. Make the surviving logger boundary explicit for startup, server, and middleware use; define the minimal stable helper surface, message or field vocabulary expectations, OpenTelemetry-aligned correlation expectations, and redaction or no-secret rules in code and tests; and remove ad hoc patterns that would preserve unsafe or reflection-heavy logging behavior. Keep the work small and runtime-focused; do not start a full structured-logging platform or couple callers directly to exporter-specific APIs.",
+      "acceptance_criteria": [
+        "`backend/logger` exposes a clearer minimal runtime boundary for the touched callers without introducing a second logging abstraction or direct SDK-coupled replacement.",
+        "The touched logger contract makes the initial OpenTelemetry-aligned correlation or field vocabulary explicit for the surviving callers.",
+        "Touched logging behavior has explicit tests guarding stable runtime usage and safe handling expectations for secrets or sensitive values.",
+        "Touched runtime call sites can use the surviving logger package without reintroducing per-package logging dialects."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "minimal stable logger contract",
+          "OpenTelemetry-aligned field and correlation vocabulary",
+          "redaction and no-secret guardrails",
+          "avoidance of a second logging abstraction"
+        ]
+      },
+      "out_of_scope": [
+        "a full structured-logging redesign",
+        "tracing framework rollout",
+        "application metrics changes outside touched callers"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/logger/README_SIMPLELOGGING.md",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "09cf942d-17bd-4e94-b6b7-eb70d497cf7d"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep logging at runtime and transport boundaries, not in core domain policy.",
+        "Never log secrets, passwords, tokens, or API keys.",
+        "If JSON logs are emitted outside OTLP, prefer top-level `trace_id`, `span_id`, and `trace_flags`."
+      ],
+      "started_at": "2026-04-28T13:17:03.597064+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/8e76fa6e-2576-4021-965e-3c96fed3d4d1_20260428T131703Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/8e76fa6e-2576-4021-965e-3c96fed3d4d1_20260428T131703Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/8e76fa6e-2576-4021-965e-3c96fed3d4d1_20260428T131703Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/8e76fa6e-2576-4021-965e-3c96fed3d4d1_20260428T131703Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/8e76fa6e-2576-4021-965e-3c96fed3d4d1_20260428T131703Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd43c-700b-7732-a2ca-d9cc636c23ed"
+      },
+      "finished_at": "2026-04-28T13:33:21.543370+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `8e76fa6e-2576-4021-965e-3c96fed3d4d1`  \ntask_id: `WAVE02-LOG-002`  \nstatus: `completed`\n\nI explicitly spawned `software-action-dispatcher-agent` first. It classified the work as runtime logging scope, planned logging/verifier delegation, and then closed coordination once the completed main-line implementation and focused validation made separate specialist passes unnecessary.\n\nThe change set makes `backend/logger` the concrete runtime emission boundary for the touched callers. It now exposes stable `Info`/`Warn`/`Error`/`Fatal` helpers plus field helpers, emits explicit `component`, `operation`, `trace_id`, `span_id`, `trace_flags`, `address`, `error`, and `source` fields, keeps compatibility shims for older callers, redacts obvious secret-bearing keys/text, and moves `backend/main.go` plus `backend/server/server.go` onto that contract. The logger README and tests were updated to document and lock that behavior.\n\nfiles_changed:\n- `backend/logger/simplelogging.go`\n- `backend/logger/simplelogging_test.go`\n- `backend/logger/README_SIMPLELOGGING.md`\n- `backend/main.go`\n- `backend/server/server.go`\n\nchecks_run:\n- `gofmt -w backend/logger/simplelogging.go backend/logger/simplelogging_test.go backend/main.go backend/server/server.go`\n- `env GOPATH=/workspace/.gopath GOMODCACHE=/workspace/.gomodcache GOCACHE=/workspace/.gocache go test ./logger ./server`\n- `/workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-architecture-governance/scripts/run_boundary_checks.sh /workspace/socialpredict`\n- `env GOPATH=/workspace/.gopath GOMODCACHE=/workspace/.gomodcache GOCACHE=/workspace/.gocache /workspace/spec-socialpredict-tasks/.codex/skills/socialpredict-go-code-quality-guardrails/scripts/run_quality_guardrails.sh /workspace/socialpredict`\n- `env GOPATH=/workspace/.gopath GOMODCACHE=/workspace/.gomodcache GOCACHE=/workspace/.gocache go test ./...`  \n  Result: fails outside this scope in `socialpredict/handlers/users`\n\nfollow_ups:\n- `go test ./...` still has unrelated repo failures in `socialpredict/handlers/users` (`TestEmojiValidation` and a missing bets-table path); I treated those as pre-existing repo debt, not a blocker for `WAVE02-LOG-002`.\n- Assumption: those broader failures are unrelated to this task because the touched logger/server packages, boundary checks, and `go vet` path all passed."
+    },
+    {
+      "uid": "bdf17c69-6dda-4fa5-8e81-6bb3a32d0272",
+      "id": "WAVE02-LOG-003",
+      "title": "WAVE02 Logging: Add lifecycle and request-boundary logging through server and middleware seams",
+      "status": "done",
+      "prompt": "With one logger package and a stable contract, add runtime-boundary logging for startup, shutdown or fatal paths, and request lifecycle or correlation where it belongs: `main.go`, `server`, and middleware or security seams. Keep handlers and domain services thin, prefer one vocabulary, use OpenTelemetry-compatible correlation shape at the boundary, and avoid scattering logger construction through business code. Preserve existing endpoint behavior while making deploy, restart, and request diagnostics more deterministic.",
+      "acceptance_criteria": [
+        "Touched startup, server, and middleware paths emit runtime diagnostics through `backend/logger` rather than raw `log` calls or ad hoc local patterns.",
+        "Request or correlation context is added at the boundary layer instead of being pushed into domain logic or unrelated handlers.",
+        "Any touched serialized correlation fields are compatible with later OpenTelemetry trace-log correlation instead of inventing a second naming scheme.",
+        "Focused tests cover the new boundary logging behavior or helpers deterministically for the touched paths."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime-boundary placement of logging",
+          "request or correlation context handling compatible with later tracing",
+          "deterministic verification for touched logging helpers"
+        ]
+      },
+      "out_of_scope": [
+        "full tracing rollout",
+        "broad handler-by-handler logging sweeps",
+        "metrics redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/logger"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "8e76fa6e-2576-4021-965e-3c96fed3d4d1"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer middleware and runtime-boundary injection over handler-local logger construction.",
+        "Keep stdout or stderr-first emission suitable for process and container aggregation.",
+        "Do not start a full tracing rollout in this task."
+      ],
+      "started_at": "2026-04-28T13:33:21.624751+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272_20260428T133321Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272_20260428T133321Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272_20260428T133321Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272_20260428T133321Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272_20260428T133321Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd44b-5cd5-7571-b58c-e616ca666107"
+      },
+      "finished_at": "2026-04-28T13:48:20.089893+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `bdf17c69-6dda-4fa5-8e81-6bb3a32d0272`  \ntask_id: `WAVE02-LOG-003`  \nstatus: `completed`\n\nConverged the runtime-boundary logging work in the dirty tree without reverting existing edits. Startup and fatal paths stay on `backend/logger` in [main.go](/workspace/socialpredict/backend/main.go:1), request correlation/logging now sits at the outer HTTP boundary in [requestboundary.go](/workspace/socialpredict/backend/security/requestboundary.go:1) and [server.go](/workspace/socialpredict/backend/server/server.go:1), and `server.Start` now owns graceful shutdown logging through an `http.Server` with signal-aware shutdown. The middleware propagates or generates `X-Request-Id`, extracts `traceparent`, and emits OTel-aligned `trace_id` / `span_id` / `trace_flags` fields. Focused deterministic coverage was added in [requestboundary_test.go](/workspace/socialpredict/backend/security/requestboundary_test.go:1) and [server_test.go](/workspace/socialpredict/backend/server/server_test.go:1). The curated report was updated at [summary.json](/workspace/socialpredict/.codex-reports/tasks/bdf17c69-6dda-4fa5-8e81-6bb3a32d0272/summary.json:1).\n\nfiles_changed: `[\"backend/main.go\",\"backend/server/server.go\",\"backend/server/server_test.go\",\"backend/security/requestboundary.go\",\"backend/security/requestboundary_test.go\",\"backend/logger/simplelogging.go\",\"backend/logger/simplelogging_test.go\"]`\n\nchecks_run: `[\"gofmt -w touched Go files\",\"go test ./logger -count=1 (repo-local caches) x2\",\"go test ./security -run TestRequestBoundaryMiddlewareAddsContextHeaderAndStructuredLog|TestSecurityMiddleware|TestLoginSecurityMiddleware -count=1 (repo-local caches) x2\",\"go test ./server -run TestBuildHandlerPropagatesRequestIDToPublicRoutes|TestServerRegistersAndServesCoreRoutes -count=1 (repo-local caches) x4\",\"run_boundary_checks.sh /workspace/socialpredict\",\"gofmt -l touched Go files\",\"go vet ./... (repo-local caches)\"]`\n\nfollow_ups: `[\"Monitor workspace disk pressure before broader Go rebuilds or full reliability-suite reruns.\",\"Keep panic recovery and shared 405/429 failure translation in the W03 wave unless a later task explicitly pulls them forward.\"]`"
+    },
+    {
+      "uid": "d4e8fc6d-58bc-4217-8c51-c91fda76f304",
+      "id": "WAVE02-LOG-004",
+      "title": "WAVE02 Logging: Harden health and readiness semantics without conflating metrics",
+      "status": "done",
+      "prompt": "After runtime logging boundaries are stable, harden the backend's operator-facing health signals. Clarify `/health` and any new readiness or liveness behavior so orchestration and deploy diagnostics can rely on explicit semantics, while keeping `/v0/system/metrics` separate as an application route. Reuse existing runtime and DB seams where practical, keep the implementation deterministic, and avoid inventing a broad observability subsystem or smuggling generic telemetry-backend status into health probes.",
+      "acceptance_criteria": [
+        "Touched server or runtime code exposes explicit, deterministic health or readiness semantics appropriate for orchestration.",
+        "Health and readiness handling remains separate from application metrics routes and does not repurpose `/v0/system/metrics` as an infrastructure probe.",
+        "Focused route and runtime tests cover the touched health or readiness behavior."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "clear runtime-boundary ownership for health and readiness",
+          "separation from application metrics routes",
+          "minimal and deterministic readiness semantics"
+        ]
+      },
+      "out_of_scope": [
+        "Prometheus or external metrics backend rollout",
+        "OpenTelemetry Collector rollout",
+        "distributed tracing rollout",
+        "public API taxonomy redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "bdf17c69-6dda-4fa5-8e81-6bb3a32d0272"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep `/health` simple and orchestration-friendly.",
+        "Do not collapse health and metrics into one generic observability abstraction.",
+        "Do not treat health endpoints as a proxy for telemetry pipeline status."
+      ],
+      "started_at": "2026-04-28T13:48:20.188522+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/d4e8fc6d-58bc-4217-8c51-c91fda76f304_20260428T134820Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/d4e8fc6d-58bc-4217-8c51-c91fda76f304_20260428T134820Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/d4e8fc6d-58bc-4217-8c51-c91fda76f304_20260428T134820Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/d4e8fc6d-58bc-4217-8c51-c91fda76f304_20260428T134820Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/d4e8fc6d-58bc-4217-8c51-c91fda76f304_20260428T134820Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd459-12d2-73c2-95d4-e6a207d4e6bd"
+      },
+      "finished_at": "2026-04-28T14:03:43.063785+00:00",
+      "last_exit_code": 0,
+      "last_summary": "Implemented separate liveness and readiness semantics in the backend: `/health` stays a simple process probe, `/readyz` is now a distinct readiness probe that requires both the runtime readiness gate and live DB reachability, and `/v0/system/metrics` remains untouched as an application route. Focused route/runtime tests and OpenAPI parity were updated accordingly.\n\nAssumptions: I integrated with the pre-existing in-flight readiness wiring already present in `backend/main.go` and `backend/internal/app/runtime/readiness.go` instead of replacing it. Validation used repo-local Go cache/tmp env overrides because the runner\u2019s default Go cache paths were unwritable.\n\ntask_uid: `d4e8fc6d-58bc-4217-8c51-c91fda76f304`  \ntask_id: `WAVE02-LOG-004`  \nstatus: `completed`  \nfiles_changed: `[\"backend/server/server.go\",\"backend/server/server_test.go\",\"backend/internal/app/runtime/db.go\",\"backend/internal/app/runtime/db_test.go\",\"backend/docs/openapi.yaml\"]`  \nchecks_run: `[\"gofmt -l backend/internal/app/runtime/db.go backend/internal/app/runtime/db_test.go backend/server/server.go backend/server/server_test.go\",\"go test ./internal/app/runtime ./server -count=1\",\"go test . -run 'TestOpenAPISpecValidates|TestEmbeddedOpenAPISpecMatchesDocument|TestOpenAPIOperationsMatchServerRoutes' -count=1\",\"run_boundary_checks.sh /workspace/socialpredict\",\"run_reliability_suite.sh /workspace/socialpredict ./server (RUNS=2)\",\"run_reliability_suite.sh /workspace/socialpredict ./internal/app/runtime (RUNS=2)\",\"check_api_contract_sync.sh /workspace/socialpredict HEAD\",\"run_quality_guardrails.sh /workspace/socialpredict HEAD\"]`  \nfollow_ups: `[]`"
+    },
+    {
+      "uid": "668dbea3-f70a-46c2-9683-877f2e45f480",
+      "id": "WAVE02-LOG-005",
+      "title": "WAVE02 Logging: Clarify metrics ownership and leave OpenTelemetry tracing or export as a precise follow-up seam",
+      "status": "done",
+      "prompt": "Finish the logging and observability wave by tightening the boundary around existing metrics handling after logger unification and health or readiness hardening. Keep `/v0/system/metrics` and adjacent metrics code explicitly application-owned, avoid folding it into runtime probes, and add only the smallest implementation seam or documentation-in-code needed to keep future OpenTelemetry tracing or export work well-scoped. Do not introduce a top-level `observability/` tree, treat a stdout exporter format as a contract, or roll out a speculative tracing framework in this task.",
+      "acceptance_criteria": [
+        "Touched metrics routes or handlers have clearer ownership and do not blur runtime health or readiness with application metrics.",
+        "No touched path introduces a new top-level observability package family or a speculative tracing implementation.",
+        "The touched code and tests leave a precise, limited seam for later OpenTelemetry tracing or richer metrics work instead of preserving ad hoc coupling."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "metrics ownership clarity",
+          "absence of an observability mega-tree or speculative tracing rollout",
+          "precise OpenTelemetry-compatible follow-up seam for later work"
+        ]
+      },
+      "out_of_scope": [
+        "distributed tracing backend rollout",
+        "external log or metrics aggregation platform work",
+        "broad business-metrics redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/logger"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "d4e8fc6d-58bc-4217-8c51-c91fda76f304"
+      ],
+      "attempts": 2,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE02 stop-and-review point before any richer tracing rollout.",
+        "Treat tracing as later than package unification, logger hardening, and health or readiness clarification.",
+        "Do not treat an OpenTelemetry stdout exporter format as the production logging contract."
+      ],
+      "started_at": "2026-04-28T14:03:43.146253+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/668dbea3-f70a-46c2-9683-877f2e45f480_20260428T140343Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/668dbea3-f70a-46c2-9683-877f2e45f480_20260428T140343Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/668dbea3-f70a-46c2-9683-877f2e45f480_20260428T140343Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/668dbea3-f70a-46c2-9683-877f2e45f480_20260428T140343Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/668dbea3-f70a-46c2-9683-877f2e45f480_20260428T140343Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dd467-279a-76d1-a6c0-e77ef0999a74"
+      },
+      "finished_at": "2026-04-28T14:19:29.311680+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `668dbea3-f70a-46c2-9683-877f2e45f480`  \ntask_id: `WAVE02-LOG-005`  \nstatus: `completed`\n\nChanged the metrics/reporting seam so `/v0/system/metrics` stays application-owned and distinct from `/health` and `/readyz`. The final workspace adds narrow handler interfaces in `handlers/metrics`, groups application reporting routes explicitly in `server.go`, clarifies logger trace helpers as correlation-only rather than exporter contracts, and adds a contract test proving probe vs. application-route behavior stays separate. The canonical report at `/workspace/socialpredict/.codex-reports/tasks/668dbea3-f70a-46c2-9683-877f2e45f480` is finalized with dispatcher and verifier entries.\n\nAssumptions:\n- Verification used repo-local Go cache/temp directories because the default Go cache and temp paths were unavailable in this environment.\n- No OpenAPI behavior change was intended beyond preserving the existing route contract and validating it.\n\nfiles_changed:\n- `backend/handlers/metrics/service.go`\n- `backend/handlers/metrics/getsystemmetrics.go`\n- `backend/handlers/metrics/getgloballeaderboard.go`\n- `backend/server/server.go`\n- `backend/server/server_contract_test.go`\n- `backend/logger/simplelogging.go`\n- `backend/logger/README_SIMPLELOGGING.md`\n\nchecks_run:\n- `gofmt` on converged touched files\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `go test ./handlers/metrics ./server -count=1` twice with repo-local caches and `GOFLAGS=-p=1`\n- `go test ./... -run TestOpenAPISpecValidates -count=1`\n- `run_quality_guardrails.sh /workspace/socialpredict HEAD`\n- `check_api_contract_sync.sh /workspace/socialpredict HEAD`\n- `software-action-verifier-agent` bounded sign-off: `PASS`\n\nfollow_ups:\n- `none`"
+    }
+  ]
+}
