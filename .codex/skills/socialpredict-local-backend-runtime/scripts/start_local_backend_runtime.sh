@@ -103,8 +103,8 @@ has_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
-health_ok() {
-  has_command curl && curl --fail --silent --show-error --max-time 3 "$BASE_URL/health" >/dev/null 2>&1
+readiness_ok() {
+  has_command curl && curl --fail --silent --show-error --max-time 3 "$BASE_URL/readyz" >/dev/null 2>&1
 }
 
 postgres_ok() {
@@ -238,13 +238,13 @@ start_postgres_if_needed() {
 }
 
 start_backend_if_needed() {
-  if health_ok; then
-    echo "Backend is already healthy at $BASE_URL."
+  if readiness_ok; then
+    echo "Backend is already ready at $BASE_URL."
     return 0
   fi
 
   if pid_running "$BACKEND_PID_FILE"; then
-    echo "Backend PID is recorded but health check failed. See $LOG_DIR/backend.log" >&2
+    echo "Backend PID is recorded but readiness check failed. See $LOG_DIR/backend.log" >&2
     return 1
   fi
 
@@ -292,14 +292,14 @@ start_backend_if_needed() {
   )
 
   for _ in $(seq 1 60); do
-    if health_ok; then
+    if readiness_ok; then
       echo "Started backend at $BASE_URL."
       return 0
     fi
     sleep 1
   done
 
-  echo "Backend did not become healthy. See $LOG_DIR/backend.log" >&2
+  echo "Backend did not become ready. See $LOG_DIR/backend.log" >&2
   return 1
 }
 
@@ -333,10 +333,10 @@ stop_pid() {
 case "$COMMAND" in
   check)
     print_config
-    if health_ok; then
-      echo "Backend health: PASS"
+    if readiness_ok; then
+      echo "Backend readiness: PASS"
     else
-      echo "Backend health: not running"
+      echo "Backend readiness: not ready"
     fi
     if postgres_ok; then
       echo "Postgres readiness: PASS"
@@ -368,10 +368,10 @@ case "$COMMAND" in
     else
       echo "Recorded backend PID: none"
     fi
-    if health_ok; then
-      echo "Backend health: PASS"
+    if readiness_ok; then
+      echo "Backend readiness: PASS"
     else
-      echo "Backend health: not healthy"
+      echo "Backend readiness: not ready"
     fi
     if postgres_ok; then
       echo "Postgres readiness: PASS"

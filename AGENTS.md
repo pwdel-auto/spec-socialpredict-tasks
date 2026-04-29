@@ -22,9 +22,9 @@ used in this workspace.
   `../socialpredict`
 - Current target focus
   `./backend/` with the current task wave centered on platform prerequisites
-  first (`setup`/configuration service extraction and remaining domain-model
-  decoupling), followed by API/auth/docs alignment sourced from
-  `./backend/docs/API-ISSUES.md`
+  after the landed WAVE01/WAVE02 baseline: failure recovery and translation,
+  database runtime hardening, remaining domain-model decoupling, and then
+  API/auth/docs alignment sourced from `./backend/docs/API-ISSUES.md`
 - Path convention below
   TARGET paths are written relative to the TARGET repo root, so `./backend/...`
   means `../socialpredict/backend/...`.
@@ -155,16 +155,12 @@ used in this workspace.
   Simple logging package plus local notes and tests.
 - `./backend/logger/README_SIMPLELOGGING.md`
   Notes for the simple logging package.
+- `./backend/logger/middleware.go`
+  Runtime request-logging middleware at the HTTP boundary.
 - `./backend/logger/simplelogging.go`
   Concrete simple logging implementation.
 - `./backend/logger/simplelogging_test.go`
   Tests for the simple logging package.
-- `./backend/logging/`
-  Shared logging helpers and mocks.
-- `./backend/logging/loggingutils.go`
-  Logging helper utilities.
-- `./backend/logging/mocklogging.go`
-  Mock logging helpers for tests and isolated package use.
 - `./backend/server/`
   HTTP server package.
 - `./backend/server/server.go`
