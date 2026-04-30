@@ -19,6 +19,14 @@ REPO_DIR="$(resolve_target_repo_dir "${1:-}")"
 BASE_URL="${2:-${SCHEMATHESIS_BASE_URL:-}}"
 BACKEND_DIR="$(require_backend_dir "$REPO_DIR")"
 SPEC_PATH="$BACKEND_DIR/docs/openapi.yaml"
+SCHEMATHESIS_WORKERS="${SCHEMATHESIS_WORKERS:-1}"
+SCHEMATHESIS_RATE_LIMIT="${SCHEMATHESIS_RATE_LIMIT:-30/m}"
+SCHEMATHESIS_MAX_EXAMPLES="${SCHEMATHESIS_MAX_EXAMPLES:-10}"
+SCHEMATHESIS_REQUEST_TIMEOUT="${SCHEMATHESIS_REQUEST_TIMEOUT:-10}"
+SCHEMATHESIS_GENERATION_DATABASE="${SCHEMATHESIS_GENERATION_DATABASE:-none}"
+SCHEMATHESIS_INCLUDE_PATH="${SCHEMATHESIS_INCLUDE_PATH:-}"
+SCHEMATHESIS_INCLUDE_PATH_REGEX="${SCHEMATHESIS_INCLUDE_PATH_REGEX:-}"
+SCHEMATHESIS_HEADER="${SCHEMATHESIS_HEADER:-}"
 
 if [ -z "$BASE_URL" ]; then
   usage >&2
@@ -47,7 +55,26 @@ fi
 
 echo "[2/2] Run Schemathesis against backend/docs/openapi.yaml"
 if schemathesis --help 2>/dev/null | grep -Eq '(^|[[:space:]])run([[:space:]]|$)'; then
-  schemathesis run --base-url "$BASE_URL" "$SPEC_PATH"
+  run_args=(
+    run
+    --url "$BASE_URL"
+    --workers "$SCHEMATHESIS_WORKERS"
+    --rate-limit "$SCHEMATHESIS_RATE_LIMIT"
+    --max-examples "$SCHEMATHESIS_MAX_EXAMPLES"
+    --generation-database "$SCHEMATHESIS_GENERATION_DATABASE"
+    --request-timeout "$SCHEMATHESIS_REQUEST_TIMEOUT"
+  )
+  if [ -n "$SCHEMATHESIS_INCLUDE_PATH" ]; then
+    run_args+=(--include-path "$SCHEMATHESIS_INCLUDE_PATH")
+  fi
+  if [ -n "$SCHEMATHESIS_INCLUDE_PATH_REGEX" ]; then
+    run_args+=(--include-path-regex "$SCHEMATHESIS_INCLUDE_PATH_REGEX")
+  fi
+  if [ -n "$SCHEMATHESIS_HEADER" ]; then
+    run_args+=(-H "$SCHEMATHESIS_HEADER")
+  fi
+  run_args+=("$SPEC_PATH")
+  schemathesis "${run_args[@]}"
 else
   echo "Installed schemathesis CLI does not expose the expected 'run' command." >&2
   echo "Run 'schemathesis --help' and adapt the command for this installed version." >&2

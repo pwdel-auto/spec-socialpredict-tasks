@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "700db0a4-da61-4d6f-883a-4bf6d1d5b468",
+      "id": "WAVE04-DB-001",
+      "title": "WAVE04 Database: Harden the runtime DB ownership seam and reduce process-global fallback",
+      "status": "done",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md` as the binding design context for WAVE04 database runtime ownership. Complete the first useful slice by hardening `backend/internal/app/runtime/db.go` as the owned runtime DB seam: make the minimum production contract for pool sizing, connection lifetime, SSL/TLS posture, and shutdown or health hooks explicit, and reduce `SetDB`/`GetDB` so the production startup path no longer relies on process-global fallback state. Preserve current runtime behavior where safe, keep the change reversible, and do not start caching or Redis work.",
+      "acceptance_criteria": [
+        "The touched runtime DB path makes its minimum production ownership explicit for pool sizing, connection lifetime, SSL/TLS posture, and shutdown or health integration.",
+        "The production startup path no longer depends on `SetDB`/`GetDB` as a hidden runtime fallback; if compatibility remains, it is isolated to tests or a narrow migration bridge.",
+        "Focused tests cover the hardened runtime DB seam deterministically for the touched behavior."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime DB seam ownership",
+          "reduction of process-global DB fallback",
+          "explicit pool, SSL/TLS, and lifecycle contract for the touched path"
+        ]
+      },
+      "out_of_scope": [
+        "introducing a new `database/`, `repository/`, or `dal/` tree",
+        "every-replica startup-writer policy changes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/util/postgres.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep Postgres as the authoritative system of record.",
+        "Do not treat caching, Redis, or a generic database service as part of this slice."
+      ],
+      "started_at": "2026-04-29T21:20:57.498062+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/700db0a4-da61-4d6f-883a-4bf6d1d5b468_20260429T212057Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/700db0a4-da61-4d6f-883a-4bf6d1d5b468_20260429T212057Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/700db0a4-da61-4d6f-883a-4bf6d1d5b468_20260429T212057Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/700db0a4-da61-4d6f-883a-4bf6d1d5b468_20260429T212057Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/700db0a4-da61-4d6f-883a-4bf6d1d5b468_20260429T212057Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb1d-d185-7290-bc6e-2e821d2f492b"
+      },
+      "finished_at": "2026-04-29T21:28:36.479207+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `700db0a4-da61-4d6f-883a-4bf6d1d5b468`  \ntask_id: `WAVE04-DB-001`  \nstatus: `complete`\n\nChanged `internal/app/runtime/db.go`, `internal/app/runtime/db_test.go`, and `main.go`.\n\nRuntime DB ownership is now explicit for pool sizing, connection lifetime, SSL/TLS posture, readiness pinging, and shutdown. `InitDB` now returns/configures the explicit handle without mutating `SetDB`/`GetDB`; those globals remain documented as legacy/test bridge only. `main.go` now closes the DB pool after server shutdown.\n\nAssumption: production runtime should fail closed on TLS posture when `APP_ENV=production` unless SSL mode is set to `require`, `verify-ca`, or `verify-full`, or TLS requirement is explicitly disabled.\n\nChecks run:\n- `go test ./internal/app/runtime -count=1`\n- runtime reliability suite, including two deterministic runtime test runs\n- `go vet ./...`\n- architecture boundary checks\n- quality guardrails\n- `gofmt`\n- `git diff --check`\n\nfollow_ups: none."
+    },
+    {
+      "uid": "63c28c0d-db5e-4036-a78d-8f2953ead2be",
+      "id": "WAVE04-DB-002",
+      "title": "WAVE04 Database: Tighten migration failure posture and introduce a single-writer startup seam",
+      "status": "done",
+      "prompt": "After the runtime DB seam is explicit, tighten the startup mutation path. Replace warning-only or every-replica default behavior around migrations and any still-startup-owned seed writes with an explicit startup-writer seam that preserves the current repo shape. Choose the smallest reversible enforcement the backend can support now, but make it impossible for request-serving startup to treat shared schema or seed mutation as an implicit every-process responsibility. Fail closed or remain unready on unsafe schema state, and keep caching or Redis out of scope.",
+      "acceptance_criteria": [
+        "Touched startup code no longer treats migrations or any still-startup-owned seed writes as implicit every-replica work.",
+        "Migration or schema-incompatibility failure in the touched startup path no longer degrades to warning-only continuation; the process fails closed or remains unready.",
+        "Focused tests cover the chosen startup-writer gate and migration failure posture deterministically for the touched path."
+      ],
+      "verification": {
+        "owner": "software-action-db-migration-agent",
+        "sign_off": "required",
+        "focus": [
+          "migration runner failure posture",
+          "single-writer startup seam for migrations and startup-owned seeds",
+          "deterministic migration and startup safety checks"
+        ]
+      },
+      "out_of_scope": [
+        "final cluster-orchestration redesign",
+        "unrelated schema changes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/seed",
+        "../socialpredict/backend/internal/app/runtime"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "700db0a4-da61-4d6f-883a-4bf6d1d5b468"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "The enforcement mechanism may be leader-only mode, a dedicated startup-writer mode, or a DB-backed serialization seam, but it must be explicit.",
+        "Do not leave warning-only migration failure or `AutoMigrate` fallback as the production end state."
+      ],
+      "started_at": "2026-04-29T21:28:36.576071+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/63c28c0d-db5e-4036-a78d-8f2953ead2be_20260429T212836Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/63c28c0d-db5e-4036-a78d-8f2953ead2be_20260429T212836Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/63c28c0d-db5e-4036-a78d-8f2953ead2be_20260429T212836Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/63c28c0d-db5e-4036-a78d-8f2953ead2be_20260429T212836Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/63c28c0d-db5e-4036-a78d-8f2953ead2be_20260429T212836Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb24-d34d-72c0-9960-50676f0b73b0"
+      },
+      "finished_at": "2026-04-29T21:40:47.395140+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `63c28c0d-db5e-4036-a78d-8f2953ead2be`  \ntask_id: `WAVE04-DB-002`  \nstatus: `completed`\n\nSpawned `software-action-dispatcher-agent` first as requested; it coordinated specialists and the final report was updated.\n\nfiles_changed:\n- `backend/main.go`\n- `backend/startup_mutation.go`\n- `backend/startup_mutation_test.go`\n- `backend/migration/migrate.go`\n- `backend/migration/migrate_test.go`\n- `backend/internal/app/runtime/startup_mutation.go`\n- `backend/internal/app/runtime/startup_mutation_test.go`\n\nWhat changed:\n- Added explicit `STARTUP_WRITER` startup mutation gate.\n- Writer processes run migrations plus startup-owned seeds.\n- Non-writer processes only verify applied migrations without mutating schema.\n- Removed warning-only migration continuation and `AutoMigrate` fallback.\n- Added focused tests for writer/non-writer branching, migration failure abort, env parsing, and read-only migration verification.\n\nchecks_run:\n- `go test -count=1 . ./migration ./internal/app/runtime` passed twice with workspace-local Go caches.\n- `go test -count=1 ./...` passed.\n- `go vet ./...` passed.\n- `gofmt` wrapper passed.\n- architecture boundary check passed.\n\nAssumption:\n- Exactly one deployed startup writer will run with `STARTUP_WRITER=true`; request-serving replicas remain unset or false.\n\nfollow_ups:\n- Deploy/configure the single startup writer role before relying on non-writer request-serving startup."
+    },
+    {
+      "uid": "ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d",
+      "id": "WAVE04-DB-003",
+      "title": "WAVE04 Database: Define DB-backed readiness and liveness for serving traffic",
+      "status": "done",
+      "prompt": "With startup mutation policy tightened, make the serving contract reflect real database condition. Replace hard-coded health success with explicit DB-backed readiness and liveness behavior, or equivalent owned runtime signals, that distinguish process aliveness from safe request-serving readiness after startup. Reuse the runtime seam, keep `/v0/system/metrics` separate from health probes, and avoid a broad observability redesign.",
+      "acceptance_criteria": [
+        "Touched runtime or server code distinguishes process liveness from DB-backed readiness instead of reporting unconditional success.",
+        "The readiness decision for the touched path is tied to owned runtime DB condition rather than ad hoc handler behavior or application metrics routes.",
+        "Focused route and runtime tests cover the touched readiness and liveness behavior deterministically."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned readiness and liveness semantics",
+          "DB-backed serving contract",
+          "separation of health probes from application metrics"
+        ]
+      },
+      "out_of_scope": [
+        "tracing rollout",
+        "business-metrics redesign",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/main.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "63c28c0d-db5e-4036-a78d-8f2953ead2be"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep health and readiness operator-facing and separate from application metrics.",
+        "Do not reintroduce a hard-coded `ok` contract once DB condition is available."
+      ],
+      "started_at": "2026-04-29T21:40:47.492831+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d_20260429T214047Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d_20260429T214047Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d_20260429T214047Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d_20260429T214047Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d_20260429T214047Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb2f-fa6b-7d61-8df1-6b670983032c"
+      },
+      "finished_at": "2026-04-29T21:47:49.595644+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d`  \ntask_id: `WAVE04-DB-003`  \nstatus: `done`\n\nSpawned the requested dispatcher coordinator. It used architecture, reliability, and verifier specialists and reported no remaining blockers.\n\nChanged:\n- [server.go](/workspace/socialpredict/backend/server/server.go): routes now use runtime-owned `ServingProbe`; `/health` is liveness and returns `live`; `/readyz` requires runtime readiness plus DB readiness.\n- [serving_probe.go](/workspace/socialpredict/backend/internal/app/runtime/serving_probe.go): added owned runtime liveness/readiness probe.\n- [serving_probe_test.go](/workspace/socialpredict/backend/internal/app/runtime/serving_probe_test.go): added deterministic runtime probe tests.\n- [server_test.go](/workspace/socialpredict/backend/server/server_test.go) and [server_contract_test.go](/workspace/socialpredict/backend/server/server_contract_test.go): updated probe contract assertions.\n\nChecks run:\n- `go test -count=1 ./internal/app/runtime ./server` passed twice with workspace Go caches.\n- `go vet ./...` passed.\n- `run_boundary_checks.sh /workspace/socialpredict` passed.\n- `gofmt -l ...` had no output.\n- `run_reliability_suite.sh /workspace/socialpredict ./server` passed.\n- `run_reliability_suite.sh /workspace/socialpredict ./internal/app/runtime` passed.\n\nAssumption: existing dirty startup/migration/runtime DB files were pre-existing and left intact.  \nfollow_ups: `None`"
+    },
+    {
+      "uid": "7447e831-00b3-4bdc-8a25-a15db51f1c47",
+      "id": "WAVE04-DB-004",
+      "title": "WAVE04 Database: Remove the next raw request-boundary DB leaks behind owned seams",
+      "status": "done",
+      "prompt": "After the runtime and readiness story is explicit, migrate the next raw request-boundary `*gorm.DB` call sites onto owned service or repository seams. Start with the concrete remaining leaks called out by the design context, especially stats, admin add-user, and any adjacent route wiring that still passes raw DB handles into handlers. Preserve endpoint behavior, keep handlers thin, and do not solve this by inventing a new central DAL or generic CRUD facade.",
+      "acceptance_criteria": [
+        "The touched request-boundary handlers no longer take raw `*gorm.DB` when an owned service or repository seam is sufficient.",
+        "Touched server or container wiring passes explicit owned dependencies instead of raw DB handles for the migrated paths.",
+        "Focused tests cover the migrated handler behavior or service seams deterministically for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "request-boundary DB leak removal",
+          "reuse of existing service and repository seams",
+          "avoidance of DAL or generic CRUD regression"
+        ]
+      },
+      "out_of_scope": [
+        "full handler migration sweep",
+        "legacy-model decoupling beyond the touched slice",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/stats",
+        "../socialpredict/backend/handlers/admin/adduser.go",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest vertical slice that removes a real raw DB leak.",
+        "Do not move persistence shaping back into handlers."
+      ],
+      "started_at": "2026-04-29T21:47:49.693091+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/7447e831-00b3-4bdc-8a25-a15db51f1c47_20260429T214749Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/7447e831-00b3-4bdc-8a25-a15db51f1c47_20260429T214749Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/7447e831-00b3-4bdc-8a25-a15db51f1c47_20260429T214749Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/7447e831-00b3-4bdc-8a25-a15db51f1c47_20260429T214749Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/7447e831-00b3-4bdc-8a25-a15db51f1c47_20260429T214749Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb36-6b6d-71b0-9854-03c1bbec1afd"
+      },
+      "finished_at": "2026-04-29T22:51:25.493022+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `7447e831-00b3-4bdc-8a25-a15db51f1c47`  \ntask_id: `WAVE04-DB-004`  \nstatus: `completed`\n\nMoved the targeted stats and admin create-user request-boundary paths off raw `*gorm.DB`:\n- `StatsHandler` now depends on an analytics stats service seam.\n- `AddUserHandler` now depends on a users service seam.\n- Server route wiring passes `analyticsService` and `usersService`.\n- Added focused handler/domain coverage and updated metrics fakes for the expanded analytics repository contract.\n- Architecture and verifier sign-off passed.\n\nfiles_changed:\n`handlers/stats/*`, `handlers/admin/adduser*`, `handlers/metrics/*test.go`, `server/server.go`, `internal/domain/analytics/*`, `internal/domain/users/*`, `internal/repository/users/repository.go`\n\nchecks_run:\n- `run_boundary_checks.sh /workspace/socialpredict`: PASS\n- Focused `go test -count=1 ...`: PASS twice\n- Expanded focused test including metrics/server: PASS\n- `go test ./... -run TestOpenAPISpecValidates -count=1`: PASS\n- `go vet` on touched packages: PASS\n\nfollow_ups:\n- Later cleanup: relocate analytics GORM adapter out of `internal/domain/analytics`.\n- Later cleanup: retire legacy users uniqueness helpers.\n\nReport summary updated at `/workspace/socialpredict/.codex-reports/tasks/7447e831-00b3-4bdc-8a25-a15db51f1c47/summary.json`. Unrelated pre-existing dirty files remain in the worktree outside this task."
+    },
+    {
+      "uid": "d439e58f-93be-42de-bd8c-1cb05cab0705",
+      "id": "WAVE04-DB-005",
+      "title": "WAVE04 Database: Make bet placement atomic and stop-and-review the remaining accounting surface",
+      "status": "done",
+      "prompt": "Finish WAVE04 by turning one high-risk accounting-sensitive workflow into an explicit transaction-scoped unit of work, starting with bet placement unless the touched code reveals an even smaller live compensation path. Define which writes must commit together, where transaction scope begins and ends across repositories, and what primary-DB concurrency protection the touched workflow needs. Preserve integer-first accounting behavior, keep automatic retry or circuit-breaker behavior out of scope, and end the wave with a precise inventory of the remaining sell-position or market-resolution transaction surface while keeping caching or Redis explicitly deferred.",
+      "acceptance_criteria": [
+        "One high-risk accounting-sensitive workflow in the touched code is converted from compensation-style behavior to an explicit transaction-scoped unit of work with clear commit boundaries.",
+        "The touched workflow makes its primary-DB concurrency protection explicit and preserves existing accounting behavior without adding generic automatic retry or circuit-breaker behavior.",
+        "Focused tests prove atomicity-sensitive behavior for the migrated workflow, and the wave ends with an explicit remaining inventory for other accounting-sensitive flows while keeping caching or Redis deferred."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit atomic unit of work for the first accounting-sensitive workflow",
+          "deterministic evidence for touched transaction and concurrency behavior",
+          "precise remaining accounting-surface inventory with caching still deferred"
+        ]
+      },
+      "out_of_scope": [
+        "a generic transaction framework for every workflow",
+        "automatic retry or circuit-breaker rollout around money-moving writes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/handlers/bets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "7447e831-00b3-4bdc-8a25-a15db51f1c47"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start with the smallest high-risk workflow, expected to be bet placement.",
+        "Keep Redis and caching explicitly deferred until runtime ownership and accounting correctness are stronger."
+      ],
+      "started_at": "2026-04-29T22:51:25.588305+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb70-a555-7f43-9b1e-4ba20ceef0ca"
+      },
+      "finished_at": "2026-04-29T23:00:40.350779+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `d439e58f-93be-42de-bd8c-1cb05cab0705`  \ntask_id: `WAVE04-DB-005`  \nstatus: `completed`\n\nSpawned `software-action-dispatcher-agent`; it coordinated specialist review and verifier sign-off.\n\nChanged bet placement to require an explicit transaction unit of work. The GORM adapter now scopes user balance reads/debits and bet insertion to one transaction, with Postgres `FOR UPDATE` protection on the user row. Removed the buy-side compensation ledger path from the active placement workflow and added rollback coverage for failed bet creation.\n\nfiles_changed:\n- `internal/domain/bets/bet_place.go`\n- `internal/domain/bets/bet_support.go`\n- `internal/domain/bets/errors.go`\n- `internal/domain/bets/service.go`\n- `internal/domain/bets/service_helpers_test.go`\n- `internal/domain/bets/service_test.go`\n- `internal/repository/bets/place_transaction.go`\n- `internal/repository/bets/place_transaction_test.go`\n- `README/PRODUCTION-NOTES/BACKEND/04-database-layer.md`\n\nchecks_run:\n- `gofmt`\n- `go test -count=1 ./internal/domain/bets ./internal/repository/bets`\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `run_quality_guardrails.sh /workspace/socialpredict`\n- `run_reliability_suite.sh /workspace/socialpredict ./internal/domain/bets`\n- `run_reliability_suite.sh /workspace/socialpredict ./internal/repository/bets`\n\nfollow_ups:\n- Sell-position and market-resolution transaction/concurrency surfaces remain inventoried but not migrated in this wave.\n- Caching and Redis remain explicitly deferred."
+    }
+  ]
+}
