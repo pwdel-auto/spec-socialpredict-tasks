@@ -1,40 +1,8 @@
 {
   "status": "completed",
-  "generated_at": "2026-04-29T23:00:40.463815+00:00",
-  "task_count": 5,
+  "generated_at": "2026-04-30T05:43:21.281551+00:00",
+  "task_count": 6,
   "tasks": [
-    {
-      "uid": "700db0a4-da61-4d6f-883a-4bf6d1d5b468",
-      "id": "WAVE04-DB-001",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-04-29T21:20:57.498062+00:00",
-      "finished_at": "2026-04-29T21:28:36.479207+00:00"
-    },
-    {
-      "uid": "63c28c0d-db5e-4036-a78d-8f2953ead2be",
-      "id": "WAVE04-DB-002",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-04-29T21:28:36.576071+00:00",
-      "finished_at": "2026-04-29T21:40:47.395140+00:00"
-    },
-    {
-      "uid": "ccfc2ea5-2bbd-4ee7-9205-4c59cec97f7d",
-      "id": "WAVE04-DB-003",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-04-29T21:40:47.492831+00:00",
-      "finished_at": "2026-04-29T21:47:49.595644+00:00"
-    },
-    {
-      "uid": "7447e831-00b3-4bdc-8a25-a15db51f1c47",
-      "id": "WAVE04-DB-004",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-04-29T21:47:49.693091+00:00",
-      "finished_at": "2026-04-29T22:51:25.493022+00:00"
-    },
     {
       "uid": "d439e58f-93be-42de-bd8c-1cb05cab0705",
       "id": "WAVE04-DB-005",
@@ -42,6 +10,46 @@
       "attempts": 1,
       "started_at": "2026-04-29T22:51:25.588305+00:00",
       "finished_at": "2026-04-29T23:00:40.350779+00:00"
+    },
+    {
+      "uid": "97568861-fcab-4748-bd63-957981f94da3",
+      "id": "WAVE05-SEC-001",
+      "status": "done",
+      "attempts": 1,
+      "started_at": "2026-04-30T04:14:17.391953+00:00",
+      "finished_at": "2026-04-30T04:38:27.297007+00:00"
+    },
+    {
+      "uid": "33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf",
+      "id": "WAVE05-SEC-002",
+      "status": "done",
+      "attempts": 1,
+      "started_at": "2026-04-30T04:38:27.388901+00:00",
+      "finished_at": "2026-04-30T05:18:10.989825+00:00"
+    },
+    {
+      "uid": "9df6daaf-aab4-4893-b816-f5f70244ae2e",
+      "id": "WAVE05-SEC-003",
+      "status": "done",
+      "attempts": 1,
+      "started_at": "2026-04-30T05:18:11.085594+00:00",
+      "finished_at": "2026-04-30T05:29:40.302440+00:00"
+    },
+    {
+      "uid": "991c8ea5-19c8-4a16-885e-7d03c7e489e3",
+      "id": "WAVE05-SEC-004",
+      "status": "done",
+      "attempts": 1,
+      "started_at": "2026-04-30T05:29:40.396207+00:00",
+      "finished_at": "2026-04-30T05:36:10.920183+00:00"
+    },
+    {
+      "uid": "0ba7f17a-9086-4ebc-8a2b-75da87826d2b",
+      "id": "WAVE05-SEC-005",
+      "status": "done",
+      "attempts": 1,
+      "started_at": "2026-04-30T05:36:11.013977+00:00",
+      "finished_at": "2026-04-30T05:43:21.179554+00:00"
     }
   ],
   "target_repo": "/workspace/spec-socialpredict-tasks",
