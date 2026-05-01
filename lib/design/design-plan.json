@@ -4,7 +4,7 @@
     "title": "Active Backend Modernization Slice: Configuration Ownership, Runtime Observability, Failure Recovery, Request-Boundary Security Hardening, Database Runtime Hardening, Legacy Model Decoupling, and API Contract Alignment",
     "status": "draft",
     "created_at": "2026-04-17T11:56:27Z",
-    "updated_at": "2026-04-29T05:16:08Z",
+    "updated_at": "2026-05-01T11:34:28Z",
     "source_context": {
         "task_repo": ".",
         "target_repo": "../socialpredict",
@@ -104,7 +104,18 @@
             "https://opentelemetry.io/status/",
             "https://opentelemetry.io/docs/specs/otel/compatibility/logging_trace_context/",
             "https://opentelemetry.io/docs/specs/semconv/general/recording-errors/",
-            "https://opentelemetry.io/docs/specs/otel/logs/sdk_exporters/stdout/"
+            "https://opentelemetry.io/docs/specs/otel/logs/sdk_exporters/stdout/",
+            "../socialpredict/backend/internal/app/runtime/security.go",
+            "../socialpredict/backend/internal/app/runtime/startup_mutation.go",
+            "../socialpredict/backend/startup_mutation.go",
+            "../socialpredict/backend/security/failures.go",
+            "../socialpredict/backend/postgres_startup_integration_test.go",
+            "../socialpredict/backend/internal/repository/bets/place_transaction.go",
+            "../socialpredict/backend/internal/repository/bets/place_transaction_postgres_test.go",
+            "../socialpredict/backend/handlers/authhttp/authhttp.go",
+            "../socialpredict/backend/internal/domain/users/uniqueness.go",
+            "../socialpredict/backend/internal/domain/analytics/repository.go",
+            "../socialpredict/backend/handlers/cms/homepage/repo.go"
         ],
         "related_task_uids": [
             "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
@@ -139,10 +150,15 @@
             "agent": "codex",
             "design_posture": "fowler",
             "notes": "Refreshed the plan against the live post-WAVE01/WAVE02 backend, the wave archive task history, duplicated request-boundary observability seams, remaining DB/runtime ownership gaps, and the rewritten testing-strategy note's package-local verification posture."
+        },
+        {
+            "agent": "codex",
+            "design_posture": "fowler",
+            "notes": "Used the Evans, Fowler, and Martin designer-agent reviews to reconcile current-state claims against /workspace/socialpredict main at 9b22484 and update stale design-plan assertions."
         }
     ],
     "summary": {
-        "one_sentence": "Build the remaining SocialPredict backend modernization work on top of the now-landed configuration and runtime-observability seams, with the next priorities being failure recovery, database-runtime hardening, legacy-model decoupling, and scoped API/auth alignment.",
+        "one_sentence": "Refresh the SocialPredict backend design plan against the landed W01-W07 backend hardening baseline, with remaining work focused on legacy cleanup, clearer domain boundaries, transaction coverage outside place-bet, and production verification policy.",
         "business_outcomes": [
             "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
             "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
@@ -153,11 +169,11 @@
             "Make request-boundary security behavior more explicit across environments by clarifying rate limiting, auth failure ownership, JWT runtime expectations, and CORS or proxy assumptions.",
             "Preserve fast boundary-local verification in the live backend and add source-of-truth DB/runtime checks only where SQLite cannot credibly model behavior."
         ],
-        "proposed_direction": "Treat W01 configuration ownership and W02 runtime observability ownership as landed baseline on the target repo, preserve those ownership decisions, and continue the prerequisite-architecture program with W03 failure recovery and translation, W04 database runtime hardening plus accounting-sensitive transaction direction, W05 legacy-model decoupling, and W06 scoped API/auth/OpenAPI alignment. Request-boundary security hardening and verification stay threaded through those remaining waves instead of becoming separate platform tracks."
+        "proposed_direction": "Treat the landed configuration, runtime observability, failure recovery, database-runtime, security, API-contract, and verification work as current code reality on socialpredict:main. Continue from that baseline by tightening remaining clean-architecture seams: auth transport leakage, misplaced persistence adapters, legacy route error shapes, setup/util compatibility bridges, sell/resolve transaction policy, and opt-in Postgres verification coverage."
     },
     "problem": {
-        "statement": "The backend has already landed the first two prerequisite waves: configuration ownership now lives behind `internal/service/config` with owned application-policy types, source/loader seams, and immutable snapshot access, and runtime observability now standardizes on `backend/logger` with request-boundary correlation plus distinct `/health` and `/readyz` probes. The modernization story is still transitional, but the remaining gaps have shifted. `setup` still survives as a compatibility seam with package-level loaders and accessors for unmigrated callers. Request-boundary observability ownership is duplicated across `logger.RequestLoggingMiddleware` and `security.RequestBoundaryMiddleware`, so one request can still accumulate two IDs and two completion logs. Error handling remains mixed because newer handlers use `handlers.WriteFailure` and a shared `reason` vocabulary while legacy handlers, middleware, and auth flows still leak raw `http.Error` strings or transport-shaped internal types. Request-boundary security hardening is still only partly owned: rate limiting still emits plain-text `429`, auth still exposes transport-shaped `HTTPError`, JWT key handling is still ad hoc, and runtime assumptions around CORS, trusted proxy headers, and header posture are not yet explicit. Database runtime ownership is now the next major gap: startup DB reachability, migration invocation, and seed bootstrapping are still broad per-process startup responsibilities, `internal/app/runtime/db.go` still exposes `SetDB` and `GetDB`, some handlers still take raw `*gorm.DB`, and accounting-sensitive write flows still need clearer atomic transaction and concurrency direction. The live backend already has a broad package-local test suite, but the plan still needs to distinguish convenience SQLite coverage from source-of-truth verification for Postgres-sensitive locking, readiness, migration coordination, and atomic money-moving flows. Those remaining seams are now the main blockers to safe replica operation, cleaner HTTP failure behavior, and later extraction-ready boundaries.",
-        "why_now": "The design plan itself has drifted behind the code. WAVE01 configuration work and WAVE02 logging/readiness work are recorded complete in the wave archives and are already present in the sibling repo, so the shared plan needs to stop treating them as speculative future work before later W03-W06 planning hardens around outdated assumptions. If failure recovery, database runtime ownership, startup-writer semantics, accounting-sensitive transaction direction, and verification truthfulness stay vague while later API/auth and optimization work continues, SocialPredict will freeze unsafe request-boundary assumptions, partial-write risk, auth transport leakage, and SQLite-only false confidence into long-lived seams and create avoidable rework.",
+        "statement": "The backend has now landed the cascading W01-W07 modernization baseline on socialpredict:main. Runtime DB configuration owns env normalization, pool sizing, connection lifetimes, SSL posture validation, readiness ping, and close behavior; startup mutation mode separates writer migrations/seeds from non-writer migration verification; startup mutation failure is fatal; request-boundary panic recovery, request correlation, shared 405/429/500 runtime failure writers, rate-limit JSON failures, trusted-proxy configuration, runtime security config, OpenAPI alignment, and targeted verification work are present. The design problem has shifted from adding those seams to accurately governing what remains: setup and util compatibility paths, transport-shaped auth service APIs, the CMS homepage repository under a handler tree, persistence/model leakage in internal/domain/users/uniqueness.go, the GORM analytics repository under internal/domain/analytics, mixed legacy handler error responses, process-global DB compatibility access, sell-position and resolve-market transaction/concurrency policy, and Postgres-backed checks that exist but remain opt-in and incomplete.",
+        "why_now": "The design plan had drifted behind the code after the seven-PR backend hardening cascade. If the plan continues to describe landed mechanisms as missing, future task planning will reopen solved problems and miss the real residual risks: transport leakage, misplaced adapters, legacy error contracts, operational enforcement of startup-writer policy, and source-of-truth verification gaps.",
         "out_of_scope": [
             "Full microservice decomposition or container rollout in this pass.",
             "Broad frontend or infrastructure redesign.",
@@ -214,44 +230,20 @@
         ]
     },
     "current_state": {
-        "shape": "The backend is a monolith with a materially modernized prerequisite layer: startup uses explicit runtime helpers, the application container and server pass `configService` explicitly, `internal/service/config` owns application-policy types and loader seams, `backend/logger` is the sole runtime logger package, and the HTTP boundary already has request correlation plus separate liveness and readiness probes. Several ownership stories are still transitional. `setup` remains a compatibility seam for unmigrated callers. Error handling is split between envelope routes, legacy raw responses, auth-local transport errors, and middleware-generated plain-text failures. The backend also already has a concrete shared security surface in `backend/security`, but its ownership is mixed across server wiring, auth helpers, and middleware defaults. Runtime observability is now standardized on one package, but request-boundary correlation and completion logging are duplicated across two middlewares. Database runtime ownership is still incomplete: startup DB checks, migration invocation, and seed bootstrapping are still broad per-process startup behaviors; `SetDB`/`GetDB` still preserve process-global fallback state; and accounting-sensitive flows still need clearer atomic transaction and concurrency boundaries. Verification is already substantial but mostly package-local: the live backend has broad OpenAPI, route-parity, server-contract, auth/security/runtime, and Go package coverage, but the plan still needs to separate convenience SQLite coverage from source-of-truth DB/runtime checks and to align control-repo runtime tooling with the live `/health` versus `/readyz` split.",
+        "shape": "As of socialpredict:main at merge commit 9b22484, the backend is a transitional monolith with several hardening seams already implemented. internal/app/runtime owns runtime DB/security/readiness/startup-mutator concerns; the server wires request-boundary security, runtime failure handling, docs, OpenAPI, and route families; domain code is mostly under internal domain packages, with repositories and adapters translating legacy models at the edges. Remaining current-state issues are narrower than the prior plan claimed: auth still exposes HTTP request-shaped service APIs and a JWT env fallback, some persistence adapters live in misleading packages, legacy route families still emit ad hoc errors, place-bet has a transaction and Postgres lock but sell/resolve flows still need explicit transaction policy, and real-Postgres verification exists but is env-gated rather than a default CI source of truth.",
         "pain_points": [
-            "`backend/util` mixes DB bootstrap, env loading, API key logic, and model/domain-adjacent helpers in one catch-all package.",
-            "`internal/app/runtime/db.go` still exposes a shared DB fallback through `SetDB`/`GetDB`, which preserves some legacy global behavior even though startup now has explicit runtime seams.",
-            "Runtime DB bootstrap owns DSN construction and opening but not yet a clear production contract for pool sizing, connection lifetime, SSL posture, readiness semantics, or graceful shutdown.",
-            "Every process still behaves like a startup coordinator by opening the DB, waiting for readiness, invoking migrations, and running seed paths before serving traffic.",
-            "`main.go` logs migration failure as a warning and `migration.MigrateDB` still allows a fallback `AutoMigrate` baseline path, which is too permissive for HA startup discipline.",
-            "The runtime now separates `/health` and `/readyz`, but the owned readiness contract is still intentionally minimal and the surrounding startup-writer semantics, pool policy, and migration-failure posture are not yet explicit enough for HA operation.",
-            "`backend/setup` is still a transitional compatibility seam with embedded YAML, `sync.Once`, and package-level accessors instead of being reduced fully to a source-asset and translation role.",
-            "`internal/service/config` now owns the application-policy boundary, but compatibility bridges such as `FromSetup`/`ToSetup`, `normalizeConfig(any)`, and a few raw `setup.EconomicConfig` consumers still leak legacy shapes into the migrated seam.",
-            "`backend/logger` is now the sole runtime logger package, but legacy compatibility wrappers and string-heavy call sites still preserve inconsistent caller vocabulary and can slow later cleanup.",
-            "`backend/errors` is only a thin legacy package that writes `{ \"error\": ... }` JSON or logs strings; it is not the real production error-handling backbone.",
-            "`internal/service/auth` still defines and propagates its own `HTTPError`, which keeps HTTP-specific concerns inside an internal service seam.",
-            "`internal/service/auth/loggin.go` still reads `JWT_SIGNING_KEY` directly and mixes transport/login behavior with service-package placement instead of relying on a cleaner runtime/bootstrap contract.",
-            "`security.RateLimitMiddleware` and `LoginRateLimitMiddleware` emit plain-text 429 responses before route handlers run, bypassing the shared public `reason` vocabulary.",
-            "`security.RateLimitMiddleware` trusts `X-Forwarded-For` and `X-Real-IP` without an explicit proxy-trust contract, which makes request rejection behavior deployment-sensitive and potentially spoofable.",
-            "`server.buildHandler` still defaults CORS to enabled with wildcard origins, while security headers remain static code-defined defaults with no explicit HSTS or TLS-termination ownership story.",
-            "`server.buildHandler` and the security stack now own request correlation, but they do so in two overlapping middlewares and still do not provide one canonical owner for panic recovery or shared pre-handler failure translation.",
-            "The backend has no explicit rule for which handled business rejections should count as telemetry errors versus expected negative outcomes, making later tracing and metrics likely to drift.",
-            "Validation and sanitization already exist as reusable helpers in `backend/security`, but the architecture still lacks an explicit statement that they are boundary support rather than domain policy or the start of a second security subsystem.",
-            "Some request-boundary code still takes raw `*gorm.DB` directly, including stats and admin flows, which keeps the persistence boundary inconsistent even though repositories already exist.",
-            "Compensation-style money-moving behavior still exists in live bet flows, which is weaker than an explicit atomic transaction boundary for accounting-sensitive operations.",
-            "Some handlers and services still consume too much configuration surface area through whole-tree access or raw `setup` shapes instead of narrow immutable policy slices.",
-            "Internal domain and math packages still depend directly on `socialpredict/models`, which keeps policy code persistence-shaped.",
-            "Newer handlers such as `handlers/markets/failure_helpers.go`, `handlers/users/profile_helpers.go`, and `handlers/bets/selling/sellpositionhandler.go` translate typed domain errors to stable reasons, but legacy handlers such as `handlers/markets/createmarket.go`, `handlers/markets/handler.go` methods like `UpdateLabels` and `GetMarket`, and `handlers/users/publicuser.go` still emit ad hoc strings.",
-            "The API document already acknowledges a mixed contract by carrying both `ReasonResponse` and `PlainTextErrorResponse`, while the production note still assumes a greenfield replacement of the error stack.",
-            "The current nginx/Traefik deployment topology proxies backend application traffic under `/api/`, while the backend serves Swagger at `/swagger/` and the embedded UI fetches `/openapi.yaml` by absolute root path, so API docs publishing is not yet an explicit owned contract across local versus proxied environments.",
-            "Auth and error-handling behavior are inconsistent with the intended `{ ok, result, reason }` envelope direction.",
-            "Most DB-heavy tests still use `modelstesting.NewFakeDB` and in-memory SQLite, so there is no source-of-truth Postgres-backed verification for locking, transaction isolation, migration serialization, startup-writer coordination, or DB-ready runtime behavior.",
-            "`internal/app/runtime/db_test.go` covers DSN, env, and shared-handle behavior, but not real DB readiness, pool, or connection-lifecycle semantics.",
-            "`migration/migrate_test.go` proves ordering and idempotency but not multi-process startup discipline or single-writer migration behavior.",
-            "Some tests still encode transitional seams such as `SetDB` and `GetDB` or `internal/service/auth.HTTPError`, which can slow removal of globals and transport-shaped internal errors.",
-            "The current backend CI path is intentionally simple but shallow: the smoke job only builds, starts, sleeps, and kills `./main`, and the `go test ./...` path is branch-prefix gated rather than a universal architecture guard."
+            "setup and util compatibility paths still need owner-by-owner retirement so they do not become new hidden boundaries.",
+            "internal/service/auth still accepts *http.Request in service-facing APIs and keeps JWT signing-key fallback state, even though HTTP failure translation has moved toward typed auth outcomes plus handlers/authhttp.",
+            "CMS homepage persistence lives under handlers/cms/homepage, internal/domain/analytics contains a GORM repository, and internal/domain/users/uniqueness.go imports GORM/models directly; these are now the concrete persistence-placement violations to track.",
+            "Request-boundary runtime failure handling exists, but legacy handlers still mix ReasonResponse, ad hoc JSON, and http.Error paths.",
+            "Startup writer mode exists, but production still needs an operational guarantee that exactly one writer performs shared startup mutations.",
+            "Place-bet now has a transaction/unit-of-work seam and Postgres row-level locking; sell-position and market-resolution still need explicit transaction and concurrency policy.",
+            "Postgres-backed verification has started for startup and place-bet transaction behavior, but remains opt-in/env-gated and incomplete for other DB-truthful behaviors."
         ],
         "constraints": [
             "The existing container and internal service pattern is real and should be extended rather than replaced.",
             "`backend/setup/setup.yaml` is the current source asset and should remain the source of truth during this slice.",
-            "W01 configuration ownership and W02 runtime observability ownership are already implemented on the target repo and should be treated as design baseline, not reopened as greenfield debates.",
+            "W01-W07 backend hardening work is already landed on socialpredict:main and should be treated as design baseline, not reopened as greenfield debate.",
             "The current backend still uses Gorilla Mux, GORM, and embedded assets; this slice should isolate those details better but not replace them.",
             "Historical docs under `backend/README/BACKEND/API` are informative but not fully current.",
             "Long-term security-platform ideas are intentionally deferred until the runtime, failure, and auth boundary seams are clearer.",
@@ -260,7 +252,7 @@
         ]
     },
     "target_state": {
-        "overview": "The active slice should leave the backend with explicit runtime seams: bootstrap/infrastructure code owns runtime/bootstrap configuration, env loading, DB setup, DB pool and SSL posture, startup-writer semantics for migrations and seeds, runtime diagnostic logging, OpenTelemetry-aligned request correlation, panic recovery, telemetry export wiring, health/readiness wiring, and deployment-sensitive security settings such as JWT key presence, CORS posture, trusted-proxy assumptions, and header/HSTS ownership; an owned application-policy configuration slice owns economics/frontend policy through immutable typed views; a shared request-boundary security adapter owns validation, sanitization, rate limiting, and reusable security middleware support without becoming a second security platform; repositories and adapters own translation from legacy persistence models into internal domain types; accounting-sensitive workflows gain explicit transaction and concurrency direction; a shared failure boundary owns how domain/auth/runtime faults become public responses and runtime telemetry; and API/auth contract changes happen only after those seams are stable, with backend-served docs and OpenAPI exposure paths made explicit across local and proxied environments. Verification remains a supporting capability rather than a new bounded context: tests stay beside the code they verify, backend-root contract tests guard OpenAPI/docs/failure vocabulary seams, SQLite remains a fast convenience path, and only a small amount of targeted Postgres-backed verification is added where DB/runtime behavior depends on real Postgres semantics.",
+        "overview": "The active target remains an evolutionary monolith with explicit runtime seams and clearer business-domain language. Runtime/bootstrap owns DB configuration, pool and SSL posture, startup-writer mode, readiness, runtime diagnostic logging, request correlation, panic recovery, failure writers, and deployment-sensitive security settings. Application-policy configuration owns economics/frontend policy through immutable typed views. Request-boundary security owns validation, sanitization, rate limiting, forwarded-header trust, and security headers. Business domain slices own market, bet/position ledger, participant account, and analytics/reporting policy without treating HTTP or persistence models as native policy language. Repositories and adapter seams translate legacy models and hold transaction-scoped persistence. API/auth contract work maps typed outcomes to stable public reasons and OpenAPI. Verification remains package-local by default, with targeted Postgres checks for behavior SQLite cannot prove.",
         "boundaries": [
             {
                 "name": "Runtime Bootstrap and Infrastructure",
@@ -348,7 +340,7 @@
                 ],
                 "upstream_dependencies": [
                     "Runtime Bootstrap and Infrastructure",
-                    "Domain Core"
+                    "Business Domain Slices"
                 ],
                 "downstream_dependencies": [
                     "API and Auth Contract Boundary",
@@ -386,12 +378,14 @@
                 "reason": "The live `backend/security` package is already a real request-boundary support surface; the architecture should harden and clarify it rather than replacing it with a new security mega-tree."
             },
             {
-                "name": "Domain Core",
-                "kind": "bounded_context",
-                "purpose": "Hold market, bet, math, analytics, user, and auth-adjacent policy without direct dependence on transport or persistence structs.",
+                "name": "Business Domain Slices",
+                "kind": "module",
+                "purpose": "Hold prediction-market, betting/position-ledger, participant-account, analytics/reporting, and business authorization policy without direct dependence on transport or persistence structs.",
                 "owns": [
-                    "Business rules",
-                    "Workflow policy",
+                    "Prediction market rules",
+                    "Bet and position-ledger rules",
+                    "Participant account and profile rules",
+                    "Analytics and reporting policy",
                     "Calculation policy",
                     "Authorization policy checks tied to business state"
                 ],
@@ -405,33 +399,34 @@
                 ],
                 "downstream_dependencies": [
                     "Repository and Legacy Model Adapter Boundary",
-                    "API/Auth Boundary"
+                    "API and Auth Contract Boundary"
                 ],
-                "reason": "The platform cannot become professionally reliable if domain policy stays coupled to framework and persistence details."
+                "reason": "The live code is organized as several business-oriented domain slices rather than one pure bounded context; the design should preserve dependency direction while using domain language instead of a generic technical umbrella."
             },
             {
                 "name": "Repository and Legacy Model Adapter Boundary",
                 "kind": "module",
-                "purpose": "Translate between legacy `socialpredict/models` persistence structs and internal domain-facing types or adapters without turning persistence access into a new generic CRUD facade.",
+                "purpose": "Translate between legacy socialpredict/models persistence structs and internal domain-facing types or adapters, contain GORM-backed persistence, and identify misplaced adapters currently living under domain or handler package trees.",
                 "owns": [
                     "GORM-backed repositories",
                     "Persistence translation",
                     "Legacy-model containment",
                     "Adapter seams",
-                    "Transaction-scoped persistence behavior where a use case explicitly requires it"
+                    "Transaction-scoped persistence behavior where a use case explicitly requires it",
+                    "Relocation plan for GORM adapters currently under domain or handler package trees"
                 ],
                 "does_not_own": [
                     "HTTP behavior",
                     "Pure business policy"
                 ],
                 "upstream_dependencies": [
-                    "Domain Core"
+                    "Business Domain Slices"
                 ],
                 "downstream_dependencies": [
                     "Legacy models",
                     "Database runtime"
                 ],
-                "reason": "Translation should be pushed to the edges so internal policy code stops treating persistence models as its domain language while repositories remain supporting adapters rather than the center of the architecture."
+                "reason": "Translation belongs at the edges; current reality includes repositories under internal/repository, a GORM analytics repository under internal/domain/analytics, and CMS persistence under handlers/cms/homepage, so the plan tracks containment and relocation rather than pretending the boundary is already clean."
             },
             {
                 "name": "API and Auth Contract Boundary",
@@ -452,7 +447,7 @@
                     "Configuration singleton behavior"
                 ],
                 "upstream_dependencies": [
-                    "Domain Core",
+                    "Business Domain Slices",
                     "Configuration Service Slice",
                     "Failure Translation and Recovery Boundary"
                 ],
@@ -481,7 +476,7 @@
                     "Seed Bootstrap"
                 ],
                 "contract": "Schema changes and one-time startup mutations are treated as single-writer work rather than every-replica default behavior; request-serving replicas wait for safe startup state or remain unready.",
-                "notes": "The exact mechanism can later be a migration job, leader-only mode, or an explicit DB-backed lock, but the architectural rule is one startup writer for shared mutations."
+                "notes": "Startup writer mode now exists through STARTUP_WRITER / SP_STARTUP_WRITER; the remaining design issue is operational enforcement or locking when two writers are accidentally enabled."
             },
             {
                 "name": "Runtime Observability Seam",
@@ -512,7 +507,7 @@
                     "HTTP Server Boundary"
                 ],
                 "contract": "The server wraps application routes with owned request-correlation and panic-recovery middleware, uses shared failure writers for method-not-allowed, rate-limited, auth-bootstrap, and internal runtime failures whenever the route contract advertises an envelope, and records unexpected failures once with stable correlation and failure classification.",
-                "notes": "This seam replaces empty 405s, plain-text 429s, ad hoc auth bootstrap failures, and implicit panic handling as the long-term runtime failure story, while keeping OpenTelemetry-style failure telemetry separate from the public response body."
+                "notes": "RequestBoundaryMiddleware and shared runtime failure writers now exist. The remaining work is burning down legacy route-level http.Error and ad hoc JSON paths without claiming universal envelope coverage prematurely."
             },
             {
                 "name": "API Docs Publishing Seam",
@@ -532,14 +527,14 @@
                     "API and Auth Contract Boundary"
                 ],
                 "contract": "Package-local tests remain the default verification posture, backend-root contract tests protect server/docs/OpenAPI/public-failure seams, and DB-specific startup, locking, transaction, migration, and readiness behavior is verified against Postgres only where SQLite cannot credibly model the behavior.",
-                "notes": "This seam keeps verification attached to the owning architecture instead of creating a centralized testing platform, while still making room for a small amount of source-of-truth DB verification in HA-sensitive areas."
+                "notes": "Targeted real-Postgres checks now exist for startup behavior and place-bet transaction behavior, but they are opt-in/env-gated and do not yet cover every DB-truthful invariant."
             },
             {
                 "name": "Request Validation and Sanitization Seam",
                 "participants": [
                     "Request-Boundary Security Surface",
                     "API and Auth Contract Boundary",
-                    "Domain Core"
+                    "Business Domain Slices"
                 ],
                 "contract": "Request-boundary code validates and sanitizes DTOs through shared security helpers before use-case entry, while domain and application policy operate on typed clean input rather than re-running transport-shaped checks internally.",
                 "notes": "This seam keeps validation/sanitization reusable without turning `backend/security` into domain policy or a separate validation platform."
@@ -547,18 +542,18 @@
             {
                 "name": "Accounting Unit of Work Seam",
                 "participants": [
-                    "Domain Core",
+                    "Business Domain Slices",
                     "Repository and Legacy Model Adapter Boundary",
                     "Runtime Bootstrap and Infrastructure"
                 ],
                 "contract": "Accounting-sensitive workflows explicitly define which writes must commit together, what concurrency protection they require, and where transaction scope begins and ends; compensation plus metrics are not treated as the primary correctness model.",
-                "notes": "This seam is most urgent for bet placement, sell-position, and market-resolution style flows."
+                "notes": "Place-bet now has an explicit transaction/unit-of-work seam and Postgres row-level locking. Sell-position and market-resolution style flows remain the next transaction and concurrency-policy candidates."
             },
             {
                 "name": "Configuration Access Seam",
                 "participants": [
                     "Configuration Service Slice",
-                    "Domain Core"
+                    "Business Domain Slices"
                 ],
                 "contract": "Consumers obtain owned typed policy views through explicit interfaces or container-provided services, not `setup.EconomicsConfig()` or `LoadEconomicsConfig()` globals, raw `setup` types, or broad whole-tree traversal.",
                 "notes": "Most high-volume consumers have already migrated. The remaining hotspots are legacy handler compatibility paths, broad `Current()` access, tests using raw `setup` shapes, and a few callers such as create-market flows that still take `setup.EconomicConfig` directly."
@@ -566,7 +561,7 @@
             {
                 "name": "Domain to Legacy Model Translation Seam",
                 "participants": [
-                    "Domain Core",
+                    "Business Domain Slices",
                     "Repository and Legacy Model Adapter Boundary"
                 ],
                 "contract": "Repositories and narrow adapters own conversion between legacy persistence models and internal domain-facing types.",
@@ -577,7 +572,7 @@
                 "participants": [
                     "Failure Translation and Recovery Boundary",
                     "API and Auth Contract Boundary",
-                    "Domain Core"
+                    "Business Domain Slices"
                 ],
                 "contract": "Handlers map policy outcomes to `{ ok, result, reason }` or explicit legacy plain-text failures at the HTTP boundary with sanitized, stable semantics, middleware-generated failures use the same public vocabulary for migrated route families, and public `reason` values stay distinct from telemetry fields such as `error.type`.",
                 "notes": "This seam should tighten must-change-password enforcement, remove `internal/service/auth` as the long-term owner of HTTP error strings, defer the broader login token redesign, and avoid treating every business rejection as a failed span."
@@ -585,12 +580,12 @@
             {
                 "name": "Auth Failure Translation Seam",
                 "participants": [
-                    "Domain Core",
+                    "Business Domain Slices",
                     "Failure Translation and Recovery Boundary",
                     "API and Auth Contract Boundary"
                 ],
                 "contract": "Authentication and authorization code returns typed internal outcomes that the HTTP boundary translates into stable public reasons, rather than letting an internal service type own route-visible status and message policy.",
-                "notes": "`internal/service/auth.HTTPError` is an acceptable migration bridge but not the target architecture."
+                "notes": "Typed auth failures plus handlers/authhttp are now the direction; the remaining violation is HTTP request-shaped auth service APIs and JWT fallback state inside internal/service/auth."
             }
         ],
         "ubiquitous_language": [
@@ -753,6 +748,127 @@
                 "confused_with": [
                     "transport failure",
                     "server crash"
+                ]
+            },
+            {
+                "term": "Market",
+                "definition": "A prediction question with outcomes, creator, resolution time/state, and probability history.",
+                "synonyms_to_avoid": [
+                    "poll"
+                ],
+                "confused_with": [
+                    "Bet",
+                    "Position"
+                ]
+            },
+            {
+                "term": "Resolution",
+                "definition": "The server-side act of closing a market with a winning outcome and applying payout/refund policy.",
+                "synonyms_to_avoid": [
+                    "client close"
+                ],
+                "confused_with": [
+                    "Market status"
+                ]
+            },
+            {
+                "term": "Outcome",
+                "definition": "A valid market side such as yes/no or custom labels used by bets, shares, probability, and resolution policy.",
+                "synonyms_to_avoid": [
+                    "option string"
+                ],
+                "confused_with": [
+                    "Resolution"
+                ]
+            },
+            {
+                "term": "Bet",
+                "definition": "A participant action that spends account balance to buy exposure to one outcome in a market.",
+                "synonyms_to_avoid": [
+                    "trade record when discussing domain rules"
+                ],
+                "confused_with": [
+                    "Position"
+                ]
+            },
+            {
+                "term": "Position",
+                "definition": "The net participant exposure in a market after buys, sells, and valuation calculations.",
+                "synonyms_to_avoid": [
+                    "single bet"
+                ],
+                "confused_with": [
+                    "Portfolio"
+                ]
+            },
+            {
+                "term": "Shares",
+                "definition": "Outcome-specific exposure units produced by market math and used for position valuation and payout.",
+                "synonyms_to_avoid": [
+                    "dollars"
+                ],
+                "confused_with": [
+                    "Account balance"
+                ]
+            },
+            {
+                "term": "Dust",
+                "definition": "Small residual value created by market math or sell calculations that must be handled explicitly for accounting correctness.",
+                "synonyms_to_avoid": [
+                    "rounding noise"
+                ],
+                "confused_with": [
+                    "Fee"
+                ]
+            },
+            {
+                "term": "Payout",
+                "definition": "Account-balance credit produced by market resolution or sale policy.",
+                "synonyms_to_avoid": [
+                    "refund unless policy says refund"
+                ],
+                "confused_with": [
+                    "Potential value"
+                ]
+            },
+            {
+                "term": "Account Balance",
+                "definition": "Integer-first participant credit available for market actions and accounting workflows.",
+                "synonyms_to_avoid": [
+                    "floating cash"
+                ],
+                "confused_with": [
+                    "Shares"
+                ]
+            },
+            {
+                "term": "Maximum Debt",
+                "definition": "The configured or computed lower bound on how far a participant account may go negative under SocialPredict economics policy.",
+                "synonyms_to_avoid": [
+                    "credit score"
+                ],
+                "confused_with": [
+                    "Account balance"
+                ]
+            },
+            {
+                "term": "Creator",
+                "definition": "The participant responsible for creating a market and paying any associated creation cost.",
+                "synonyms_to_avoid": [
+                    "admin by default"
+                ],
+                "confused_with": [
+                    "Resolved-by user"
+                ]
+            },
+            {
+                "term": "Must Change Password",
+                "definition": "An account state that restricts authenticated access until the user completes the password-change flow.",
+                "synonyms_to_avoid": [
+                    "login failure"
+                ],
+                "confused_with": [
+                    "Unauthorized"
                 ]
             }
         ],
@@ -1079,8 +1195,8 @@
             "id": "DP-011",
             "title": "Treat error handling as boundary translation and recovery, not a new universal error hierarchy",
             "status": "accepted",
-            "context": "The live backend already mixes envelope helpers, domain sentinel errors, auth-local `HTTPError`, and legacy plain-text `http.Error` responses, while `backend/errors` is only a thin legacy helper package.",
-            "decision": "Keep typed domain and auth outcomes close to their owned boundaries, use shared translation at middleware and handler edges to produce public `reason` values or explicit legacy plain-text responses, and treat `backend/errors` as deletion-only compatibility scope rather than the future architecture.",
+            "context": "The live backend now has shared envelope helpers, domain sentinel errors, typed auth failures translated through handlers/authhttp, and some remaining legacy http.Error or ad hoc JSON responses; backend/errors is still only a thin legacy helper package.",
+            "decision": "Keep typed domain and auth outcomes close to their owned boundaries, use shared translation at middleware and handler edges to produce public reason values or explicit legacy responses, and treat backend/errors as deletion-only compatibility scope rather than the future architecture.",
             "consequences": [
                 "Migration can proceed route family by route family instead of through a flag-day rewrite.",
                 "The design avoids inventing a large error-type taxonomy that the current codebase does not need."
@@ -1090,11 +1206,11 @@
             "id": "DP-012",
             "title": "Own panic recovery and middleware-generated failures at the server boundary",
             "status": "accepted",
-            "context": "The current server stack has no application-owned recovery middleware, router 405 handling writes an empty response, and security rate limiting emits plain-text 429s before handlers run.",
-            "decision": "Preserve the already-landed request-correlation baseline, then add panic-recovery middleware plus shared failure writers for method-not-allowed, rate-limited, auth-bootstrap, and sanitized internal-failure responses at the server or middleware boundary.",
+            "context": "The current server stack now has RequestBoundaryMiddleware, request correlation, panic recovery, shared runtime failure writers, JSON 405/429/500 behavior, and runtime failure logging. Remaining work is route-level convergence and preventing legacy middleware from becoming a second production boundary.",
+            "decision": "Treat the server/request-boundary failure baseline as landed, then focus follow-up work on legacy handler error paths, auth bootstrap translation, public reason vocabulary, and one-time telemetry classification.",
             "consequences": [
-                "HA-oriented fault containment and diagnosis improve without changing domain behavior.",
-                "OpenAPI and production notes can describe a credible runtime failure story rather than assuming handlers own every failure."
+                "HA-oriented fault containment and diagnosis now have an owned production baseline.",
+                "OpenAPI and production notes can describe landed runtime failure behavior while still tracking legacy route-family cleanup."
             ]
         },
         {
@@ -1156,22 +1272,22 @@
             "id": "DP-018",
             "title": "Treat shared startup mutations as single-writer work",
             "status": "accepted",
-            "context": "Every process currently opens the DB, waits for readiness, invokes migrations, and runs seed paths before serving, which is too broad for HA replica startup.",
-            "decision": "Schema-changing and one-time startup mutations such as migrations and startup-owned seeds must not be every-replica default behavior; request-serving replicas should wait for safe startup state or remain unready.",
+            "context": "Startup writer mode now exists: writer instances run migrations and startup-owned seeds, while non-writers verify applied migrations before readiness. The remaining design concern is preventing accidental multiple writers in deployment or with an additional DB-backed mechanism.",
+            "decision": "Treat the current writer/non-writer startup mode as the baseline for shared startup mutations, and decide separately whether deployment policy, a dedicated job, or DB-backed locking should enforce exactly-one-writer behavior.",
             "consequences": [
-                "Migration failure and schema incompatibility become startup safety concerns rather than best-effort warnings.",
-                "The design can later choose a migration job, leader-only mode, or DB-backed lock without changing the architectural requirement."
+                "The design no longer treats every-replica migration/seed execution as current code reality.",
+                "Migration failure and schema incompatibility remain startup safety concerns, but the next decision is enforcement strength rather than introducing the initial seam."
             ]
         },
         {
             "id": "DP-019",
             "title": "Require explicit atomic unit-of-work direction for accounting-sensitive flows",
             "status": "accepted",
-            "context": "Live bet and related flows still show compensation-style behavior, while balances and other economically sensitive writes can become inconsistent under partial commit or overlap.",
-            "decision": "For accounting-sensitive workflows such as place-bet, sell-position, and resolve-market flows, define explicit transaction scope and concurrency policy; compensation plus metrics is not the primary correctness strategy.",
+            "context": "Place-bet now has an explicit unit-of-work seam, GORM transaction, and Postgres row-level locking, while sell-position and market-resolution style flows still need transaction and concurrency analysis.",
+            "decision": "Preserve place-bet as the landed transaction baseline and extend explicit unit-of-work and concurrency policy only to the next high-risk accounting workflows; compensation plus metrics is not the primary correctness strategy for those remaining flows.",
             "consequences": [
-                "The backend can preserve economic correctness more deliberately in the next database wave.",
-                "Planner work can focus on narrow transaction-bearing flows instead of generic database abstractions."
+                "Planner work can target sell-position and market-resolution instead of reopening place-bet from scratch.",
+                "Transaction design remains narrow and accounting-driven rather than becoming a generic DAL rewrite."
             ]
         },
         {
@@ -1200,22 +1316,22 @@
             "id": "DP-022",
             "title": "Treat deployment-sensitive security posture as runtime/bootstrap ownership",
             "status": "accepted",
-            "context": "JWT signing-key presence, trusted-proxy assumptions, CORS defaults, and HSTS/TLS ownership are currently split across server wiring and auth helpers, even though they are deployment-sensitive runtime concerns.",
-            "decision": "Validate and wire JWT signing-key presence, proxy-trust assumptions, CORS posture, and header/HSTS ownership from runtime/bootstrap rather than reading them ad hoc inside auth helpers or treating them as application-policy configuration.",
+            "context": "Runtime security config now validates and wires JWT signing-key presence, CORS posture, trusted-proxy assumptions, and HSTS/header behavior, though legacy JWT fallback helpers and production deployment policy still need cleanup.",
+            "decision": "Treat deployment-sensitive security posture as landed runtime/bootstrap ownership, and focus follow-up work on production configuration policy plus retirement of ad hoc fallback paths.",
             "consequences": [
-                "Security behavior becomes more deterministic across environments and replicas.",
-                "Auth and request-boundary helpers can rely on explicit runtime assumptions instead of inventing their own deployment rules."
+                "The design no longer describes proxy trust, JSON rate-limit failures, or HSTS ownership as wholly absent from code.",
+                "Remaining work is operational hardening and compatibility burn-down."
             ]
         },
         {
             "id": "DP-023",
             "title": "Keep active auth and security cleanup scoped to boundary translation and request-boundary hardening",
             "status": "accepted",
-            "context": "The live backend already has `mustChangePassword`, envelope-based login failures, and transport-shaped auth errors, while broader token/session redesign and distributed rate limiting remain future concerns.",
-            "decision": "Preserve the current login and change-password exception behavior, retire `internal/service/auth.HTTPError` over time, keep the in-process rate limiter as the active-slice baseline, and defer MFA, RBAC, session redesign, distributed rate limiting, request signing, and compliance work unless a later decision explicitly reactivates them.",
+            "context": "The live backend now has typed auth failures and handlers/authhttp translation, plus runtime JWT key injection; the remaining issue is HTTP request-shaped auth service APIs and JWT fallback state, while broader token/session redesign remains future scope.",
+            "decision": "Keep active auth cleanup scoped to removing transport leakage from internal auth seams and converging route-visible failure translation; defer MFA, RBAC, session redesign, distributed rate limiting, request signing, and compliance work unless a later decision reactivates them.",
             "consequences": [
-                "The active slice remains focused on boundary cleanup and deterministic request handling instead of speculative security-platform expansion.",
-                "Long-term security work has an explicit deferred home without becoming accidental current-wave scope."
+                "Auth cleanup stays grounded in the landed boundary-translation baseline.",
+                "Long-term security platform work remains visible but outside active scope."
             ]
         },
         {
@@ -1233,11 +1349,11 @@
             "id": "DP-025",
             "title": "Treat SQLite-backed helpers as convenience coverage, not DB truth",
             "status": "accepted",
-            "context": "The live suite relies heavily on `modelstesting.NewFakeDB`, which is fast and useful but cannot credibly prove Postgres-specific locking, isolation, startup coordination, or readiness semantics.",
-            "decision": "Continue using SQLite-backed helpers for broad fast coverage, but require targeted real-Postgres verification for behaviors whose correctness depends on Postgres semantics such as locking, transaction isolation, migration serialization, startup coordination, readiness, and accounting-sensitive write behavior.",
+            "context": "The suite still relies heavily on SQLite helpers, but targeted Postgres checks now exist for startup/readiness/migration posture and place-bet transaction behavior.",
+            "decision": "Continue using SQLite-backed helpers for broad fast coverage, keep the existing Postgres checks as opt-in source-of-truth evidence, and add new Postgres companions only for behaviors whose correctness depends on Postgres semantics.",
             "consequences": [
-                "The backend keeps fast local feedback without mistaking convenience DB coverage for authoritative HA/runtime proof.",
-                "The first heavier DB verification can stay small and focused on the highest-risk runtime and accounting seams."
+                "The design no longer claims there is no real-Postgres verification at all.",
+                "The first heavier DB verification path remains small and focused."
             ]
         },
         {
@@ -1249,6 +1365,17 @@
             "consequences": [
                 "The active slice stays focused on runtime, DB, security, and contract risks instead of speculative test-platform expansion.",
                 "Future infrastructure ideas remain visible without distorting current workstream priorities."
+            ]
+        },
+        {
+            "id": "DP-027",
+            "title": "Ground design-plan current state in socialpredict main after W01-W07",
+            "status": "accepted",
+            "context": "The design plan had stale current-state claims after the seven backend hardening PRs landed, including claims that DB runtime ownership, startup writer mode, request-boundary failure handling, rate-limit JSON failures, proxy-trust configuration, and Postgres verification were still absent.",
+            "decision": "Treat socialpredict:main at merge commit 9b22484 as the ground truth for current-state claims, and update the plan so future work starts from landed runtime/security/API/testing seams rather than re-planning them as missing work.",
+            "consequences": [
+                "Future task planning can focus on remaining concrete violations instead of stale gaps.",
+                "Designer-agent reviews remain useful as a periodic drift-control mechanism for this design artifact."
             ]
         }
     ],
@@ -1269,7 +1396,7 @@
         },
         {
             "name": "W03 Failure Recovery and Translation Ownership",
-            "objective": "Build on the landed request-correlation baseline by adding panic recovery, shared middleware failure writers, and one canonical request-boundary observability chain before broader API/auth cleanup, including security-adjacent `429`, `405`, and auth-bootstrap failures.",
+            "objective": "Build on the landed request-correlation and request-boundary runtime-failure baseline by consolidating existing panic recovery, shared failure writers, and public reason translation, then burn down legacy handler http.Error and ad hoc JSON paths without claiming universal envelope coverage prematurely.",
             "depends_on": [
                 "W02 Runtime Observability Ownership"
             ],
@@ -1277,15 +1404,15 @@
         },
         {
             "name": "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction",
-            "objective": "Clarify runtime DB ownership, startup-writer semantics, readiness behavior, remaining request-boundary DB leaks, and explicit atomic transaction direction for accounting-sensitive workflows while keeping caching deferred, then add only the smallest real-Postgres verification needed for DB-truthful readiness, migration, and concurrency behavior.",
+            "objective": "Build on the landed runtime DB config, startup writer mode, readiness, close, and place-bet transaction baseline by clarifying operational writer enforcement, reducing global DB compatibility, and extending explicit transaction/concurrency policy to sell-position and market-resolution style workflows.",
             "depends_on": [
                 "W03 Failure Recovery and Translation Ownership"
             ],
-            "notes": "This wave should not create a new `database/` or `dal/` architecture; it should extend `internal/app/runtime`, the composition root, and existing repositories. It is also the first justified point for a small source-of-truth Postgres-backed verification slice covering readiness, startup-writer discipline, and accounting-sensitive transaction behavior."
+            "notes": "This wave should not create a new database/ or dal/ architecture; it should extend internal/app/runtime, the composition root, and existing repositories. Postgres-backed verification has already started for startup and place-bet behavior, so the next slice should add only narrow companions for uncovered DB-truthful invariants."
         },
         {
             "name": "W05 Legacy Model Decoupling",
-            "objective": "Introduce boundary types and adapters so internal domain/math code no longer depends directly on legacy persistence models where cleanly avoidable.",
+            "objective": "Continue boundary-type and adapter work from the now-narrower ground truth: most internal domain code is decoupled from legacy models, but internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, and CMS homepage persistence placement still need cleanup.",
             "depends_on": [
                 "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction"
             ],
@@ -1293,11 +1420,11 @@
         },
         {
             "name": "W06 Scoped API and Auth Alignment",
-            "objective": "Replace auth-local HTTP transport leakage with boundary-safe translation, converge touched handlers and middleware on shared failure writers, tighten must-change-password behavior, keep public `reason` values separate from telemetry fields, and align OpenAPI/docs route-by-route with the implemented post-prerequisite backend behavior while extending route/spec and shared-failure contract tests.",
+            "objective": "Continue from typed auth failures, shared failure writers, route/spec alignment, and runtime security config by removing HTTP request-shaped auth service seams, tightening must-change-password behavior, and completing route-family error contract convergence.",
             "depends_on": [
                 "W05 Legacy Model Decoupling"
             ],
-            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should explicitly retire `internal/service/auth.HTTPError`, preserve the login/change-password `mustChangePassword` exceptions intentionally, track which routes still use `PlainTextErrorResponse`, avoid turning every business rejection into a telemetry error, and keep OpenAPI/route parity plus shared `reason` vocabulary checks as first-class exit criteria."
+            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should remove HTTP request-shaped auth service seams, preserve the login/change-password mustChangePassword exceptions intentionally, track which routes still use PlainTextErrorResponse or ad hoc errors, avoid turning every business rejection into a telemetry error, and keep OpenAPI/route parity plus shared reason vocabulary checks as first-class exit criteria."
         }
     ],
     "risks": [
@@ -1328,8 +1455,8 @@
         },
         {
             "severity": "high",
-            "statement": "Relying on the standard library's implicit panic handling instead of application-owned recovery leaves SocialPredict with weak diagnostics, broken connection semantics, and no stable failure response shape under runtime faults.",
-            "mitigation": "Build on the landed request-correlation baseline, add panic-recovery middleware in W03, and log sanitized failure context through one canonical runtime-owned request-boundary chain."
+            "statement": "Assuming request-boundary recovery is complete can hide remaining legacy handler error contracts and duplicated compatibility surfaces.",
+            "mitigation": "Treat RequestBoundaryMiddleware and shared runtime failure writers as landed, then focus W03/W06 on route-level error convergence and explicit ownership of any legacy logger middleware surface."
         },
         {
             "severity": "medium",
@@ -1353,8 +1480,8 @@
         },
         {
             "severity": "high",
-            "statement": "Implicit forwarded-header trust, broad default CORS behavior, and undefined HSTS/TLS ownership can make request-boundary security posture drift across environments or accept spoofed client identity information.",
-            "mitigation": "Treat proxy trust, JWT key presence, CORS defaults, and header/HSTS ownership as explicit runtime/bootstrap concerns with documented production posture."
+            "statement": "Misconfigured trusted-proxy, broad CORS defaults, or unclear ingress-versus-app HSTS ownership can still make request-boundary security posture drift across environments.",
+            "mitigation": "Treat proxy trust, JWT key presence, CORS defaults, and HSTS/header behavior as runtime-owned settings that exist in code and need production configuration policy."
         },
         {
             "severity": "medium",
@@ -1393,13 +1520,13 @@
         },
         {
             "severity": "high",
-            "statement": "If every replica continues to run migrations and startup-owned seed writes by default, multi-replica rollout can race shared-state mutation and make startup behavior unsafe.",
-            "mitigation": "Adopt single-writer startup semantics for shared mutations and treat schema incompatibility or failed migration as a startup safety concern."
+            "statement": "Startup writer mode exists, but accidental multiple writers or weak deployment policy can still race shared-state mutation during rollout.",
+            "mitigation": "Keep writer/non-writer startup mode as the current baseline and decide whether deployment policy, a dedicated job, or DB-backed locking should enforce exactly-one-writer behavior."
         },
         {
             "severity": "high",
-            "statement": "If accounting-sensitive flows continue to rely on compensation-style behavior without explicit transaction and concurrency policy, partial commit can leave economic state inconsistent.",
-            "mitigation": "Define narrow atomic units of work for economically sensitive workflows and choose deliberate concurrency protection on the primary system of record."
+            "statement": "Place-bet now has explicit transaction and row-lock behavior, but sell-position and market-resolution style workflows still need explicit transaction and concurrency policy.",
+            "mitigation": "Preserve the place-bet unit-of-work baseline and extend the same deliberate transaction analysis only to the next highest-risk accounting workflows."
         },
         {
             "severity": "medium",
@@ -1408,8 +1535,8 @@
         },
         {
             "severity": "medium",
-            "statement": "SQLite-heavy confidence can hide W04 defects in locking, isolation, migration coordination, startup discipline, and readiness semantics if those behaviors are never verified against Postgres.",
-            "mitigation": "Keep SQLite-backed tests as convenience coverage only and add a small targeted real-Postgres verification slice for DB-truthful behavior once W04 identifies the first concrete invariants."
+            "statement": "SQLite-heavy confidence can still hide DB-specific defects, even though targeted Postgres checks now exist for startup and place-bet transaction behavior.",
+            "mitigation": "Keep existing Postgres checks as opt-in source-of-truth evidence and add narrow companions for remaining locking, migration, readiness, sell-position, and resolve-market invariants as they are designed."
         },
         {
             "severity": "medium",
@@ -1474,8 +1601,8 @@
             "blocking": false
         },
         {
-            "question": "Which middleware should be the canonical owner of request ID generation, traceparent extraction, and completion logging at the HTTP boundary?",
-            "why_it_matters": "W02 landed request correlation, but two middlewares currently participate. W03 needs one durable owner before panic recovery and shared failure writers can be added cleanly.",
+            "question": "Should security.RequestBoundaryMiddleware be formally documented as the canonical production owner of request ID generation, traceparent extraction, panic recovery, and completion logging, with logger.RequestLoggingMiddleware retained only as legacy/test compatibility?",
+            "why_it_matters": "The active server path now uses request-boundary security middleware, but the design still needs to prevent old logger middleware from becoming a second production chain.",
             "blocking": false
         },
         {
@@ -1484,18 +1611,18 @@
             "blocking": false
         },
         {
-            "question": "Should `internal/service/auth` migrate to typed auth outcomes, typed internal errors, or a small explicit failure enum before HTTP mapping occurs?",
-            "why_it_matters": "That choice determines whether auth becomes a cleaner domain/service seam or keeps leaking transport policy through a different wrapper type.",
+            "question": "How should internal/service/auth remove HTTP request-shaped APIs and JWT fallback state now that typed auth failures and handlers/authhttp translation exist?",
+            "why_it_matters": "The stale HTTPError concern has shifted to transport leakage and runtime-key ownership inside the auth service seam.",
             "blocking": false
         },
         {
-            "question": "What runtime owner and failure posture should govern JWT signing-key presence and any later rotation expectations?",
-            "why_it_matters": "Auth behavior becomes inconsistent across environments if JWT key assumptions remain ad hoc instead of being validated and owned at bootstrap.",
+            "question": "What production policy should govern the runtime-owned JWT signing-key setting and any later rotation expectations?",
+            "why_it_matters": "Runtime security config now owns JWT key validation, but legacy fallback helpers still exist and future rotation is not designed.",
             "blocking": false
         },
         {
-            "question": "What exact proxy-trust model should govern `X-Forwarded-For` and `X-Real-IP` handling for rate limiting and security-sensitive request attribution?",
-            "why_it_matters": "Request rejection and abuse handling become spoofable or inconsistent if the backend does not explicitly define when forwarded headers are trusted.",
+            "question": "What deployment policy should set trusted-proxy mode for X-Forwarded-For and X-Real-IP handling?",
+            "why_it_matters": "The code now has explicit proxy-trust configuration; the remaining risk is production misconfiguration, not unconditional header trust.",
             "blocking": false
         },
         {
@@ -1519,13 +1646,13 @@
             "blocking": false
         },
         {
-            "question": "What exact mechanism should enforce single-writer startup semantics for migrations and any remaining startup-owned seeds: dedicated job, leader-only mode, or explicit DB-backed lock?",
-            "why_it_matters": "The architecture now requires one startup writer for shared mutations, but the enforcement mechanism still affects rollout safety and operational ergonomics.",
+            "question": "Should startup writer mode be enforced only by deployment policy, by a dedicated migration/seed job, or by an additional DB-backed advisory lock?",
+            "why_it_matters": "The writer/non-writer code seam exists, but HA rollout safety still depends on preventing two accidental writers.",
             "blocking": true
         },
         {
-            "question": "Which accounting-sensitive workflows must be atomic in one transaction, and which repository operations need a shared transaction scope to support them?",
-            "why_it_matters": "The database wave should focus on the smallest high-risk flows first rather than introducing a generic transaction framework everywhere.",
+            "question": "After place-bet, which accounting-sensitive workflows must be atomic in one transaction, especially sell-position and market-resolution flows?",
+            "why_it_matters": "The place-bet unit-of-work has landed, so transaction design should now target the remaining high-risk workflows instead of restarting the analysis.",
             "blocking": true
         },
         {
@@ -1554,8 +1681,8 @@
             "blocking": false
         },
         {
-            "question": "Which exact W04 behaviors require the first real-Postgres verification: readiness under DB loss, migration serialization, single-writer startup enforcement, place-bet concurrency, sell-position concurrency, or resolve-market atomicity?",
-            "why_it_matters": "The testing strategy now distinguishes convenience coverage from DB truth, so the first heavier verification slice should target the narrowest high-risk behaviors first.",
+            "question": "Which remaining W04 behaviors need the next real-Postgres verification companion after startup and place-bet transaction checks?",
+            "why_it_matters": "Postgres-truth verification has started, so the next check should cover the narrowest uncovered DB-specific invariant.",
             "blocking": true
         },
         {
@@ -1579,28 +1706,28 @@
         "Back the next queue slice with the rewritten database-layer production note and keep the database-caching note explicitly deferred.",
         "Add an ADR or equivalent design note for runtime security posture covering JWT signing-key presence, trusted-proxy assumptions, CORS defaults, and HSTS/TLS ownership.",
         "Decide and document the explicit staging/production publishing path for backend-served docs such as `/swagger/` and `/openapi.yaml`, including whether access should be public, proxied, or restricted.",
-        "Decide the expected startup-failure posture for migrations and schema incompatibility before implementation starts so W04 does not inherit warning-only behavior by default.",
-        "Define the first narrow accounting-sensitive units of work, likely starting with place-bet, sell-position, and market-resolution style flows.",
-        "Inventory the remaining request-boundary raw `*gorm.DB` call sites and rank which ones should move behind existing service or repository seams first.",
-        "Define the minimum production contract for `internal/app/runtime/db.go`, including pool sizing, connection lifetime, SSL/TLS posture, and readiness semantics.",
+        "Document the landed startup-failure posture: startup mutation failure is fatal; writer mode runs migrations/seeds; non-writer mode verifies applied migrations; the remaining decision is exactly-one-writer enforcement.",
+        "Treat place-bet as the landed first unit-of-work baseline, then define transaction and concurrency policy for sell-position and market-resolution style flows.",
+        "Inventory remaining raw GORM and misplaced adapter seams, prioritizing CMS homepage repository placement, internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, and global DB compatibility access.",
+        "Record the implemented internal/app/runtime/db.go production contract for pool sizing, connection lifetime, SSL mode validation, readiness ping, and close behavior, then decide only the remaining deployment defaults and shutdown guarantees.",
         "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
         "Inventory current uses of `backend/security` and auth-path validation/sanitization so reusable request-boundary hardening is preserved without growing a second security subsystem.",
-        "Choose one canonical request-boundary observability chain and retire duplicate request logging or correlation ownership between `logger` and `security` middleware.",
+        "Document security.RequestBoundaryMiddleware as the canonical production request-boundary chain or explicitly justify any remaining logger.RequestLoggingMiddleware compatibility surface.",
         "Retire or confine compatibility-only logger wrappers and keep `backend/logger` as the sole runtime logging package without reintroducing `backend/logging`.",
         "Decide the first acceptable OpenTelemetry export posture for the active slice without binding business code directly to a stdout exporter or SDK-specific surface.",
-        "Add an ADR for server-owned failure handling covering request correlation, panic recovery, shared 405/429 behavior, and the relationship between middleware failures and `ReasonResponse`.",
+        "Update the server-owned failure-handling ADR to reflect landed request correlation, panic recovery, and shared 405/429/500 writers, then focus it on legacy route error convergence and telemetry classification.",
         "Add an ADR or equivalent design note covering how public `reason` values relate to OpenTelemetry telemetry fields such as `error.type`, span error status, and one-time exception recording.",
         "Record the landed runtime/bootstrap versus application-policy configuration taxonomy in ADRs or equivalent guidance so later work does not re-open W01 design decisions casually.",
         "Retire remaining config compatibility bridges such as `ToSetup`/`FromSetup`, raw `setup.EconomicConfig` seams, and unnecessary `Current()` whole-tree consumers as later waves touch those paths.",
         "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
-        "Inventory the highest-value legacy-model dependencies in `internal/domain/markets`, `internal/domain/bets`, `internal/domain/math`, and analytics before W05 task breakdown.",
+        "Inventory the now-specific legacy persistence leaks: internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, CMS homepage GORM repository placement, and any remaining model imports found by targeted search.",
         "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
-        "Inventory `/v0` routes and middleware paths that still emit raw `http.Error`, empty 405s, or plain-text 429s, then rank the highest-value route families for W06 convergence.",
+        "Inventory /v0 routes that still emit raw http.Error or ad hoc JSON now that 405 and 429 runtime failures use shared writers, then rank route families for W06 convergence.",
         "Draft the initial public `reason` vocabulary and route-family migration matrix for W06 so the API/auth cleanup does not improvise string contracts during implementation.",
         "Keep `README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` explicitly out of the active wave queue unless a later design decision reactivates part of it.",
         "Add the rewritten testing notes, `backend.yml`, and the key runtime/OpenAPI/security test files to the design-plan source context so verification posture stays reviewable.",
         "Define explicit verification exit criteria for W03, W04, and W06 before breaking those waves into delivery tasks.",
-        "Inventory SQLite-backed tests that appear to cover DB semantics and mark which ones need a later Postgres-truth replacement or companion check.",
-        "Decide whether backend CI should gain one narrow Postgres-backed job after W04 clarifies the first DB-specific invariants."
+        "Inventory SQLite-backed tests that appear to cover DB semantics and mark which need a Postgres companion beyond the existing startup and place-bet transaction checks.",
+        "Decide whether the existing env-gated Postgres checks should become a narrow CI job and which uncovered DB-specific invariant should be added next."
     ]
 }
