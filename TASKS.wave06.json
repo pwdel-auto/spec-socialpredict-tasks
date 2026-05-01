@@ -7,10 +7,69 @@
   ],
   "tasks": [
     {
+      "uid": "0ba7f17a-9086-4ebc-8a2b-75da87826d2b",
+      "id": "WAVE05-SEC-005",
+      "title": "WAVE05 Security: Stop and review remaining boundary-security gaps and deferred platform topics",
+      "status": "done",
+      "prompt": "Finish WAVE05 with a security-specific stop-and-review point. Remove or document any touched leftover plain-text security failures that still bypass the shared boundary contract, inventory the remaining spoofable-header, raw auth, or ad hoc validation hotspots after this wave, and refresh the active security note so the next queue slice is a precise auth or boundary-hardening seam instead of a vague platform backlog. Keep `FUTURE/01-long-term-security-hardening.md` explicitly deferred and do not pull MFA, RBAC, distributed rate limiting, request signing, session redesign, or compliance work into the active queue.",
+      "acceptance_criteria": [
+        "The touched remaining boundary-security exceptions are either removed or made explicit with a precise next migration seam.",
+        "The active security note reflects what this wave actually hardened, what remains, and which long-term topics stay deferred.",
+        "The wave ends with a concrete follow-on security or auth seam rather than a broad speculative platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining boundary-security inventory",
+          "active-note accuracy versus touched code",
+          "continued deferral of long-term security-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating FUTURE security-platform topics",
+        "distributed rate limiting, MFA, RBAC, or request signing implementation",
+        "broad compliance-program planning"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE05 stop-and-review point before broader auth or API convergence work.",
+        "Keep security hardening threaded through existing seams instead of reopening a separate platform buildout."
+      ],
+      "started_at": "2026-04-30T05:36:11.013977+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddce3-362b-7dd0-a64f-bbfa346fec52"
+      },
+      "finished_at": "2026-04-30T05:43:21.179554+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `0ba7f17a-9086-4ebc-8a2b-75da87826d2b`  \ntask_id: `WAVE05-SEC-005`  \nstatus: `completed`\n\nChanged the active security note to close WAVE05 with a stop-and-review inventory, document remaining boundary-security exceptions, and name `backend/handlers/markets/resolvemarket.go` as the next precise auth-boundary seam. Updated `backend/docs/API-ISSUES.md` so security-boundary cleanup is not framed as a broad API backlog. The canonical summary report is updated at `/workspace/socialpredict/.codex-reports/tasks/0ba7f17a-9086-4ebc-8a2b-75da87826d2b/summary.json`.\n\nfiles_changed:\n`README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`, `backend/docs/API-ISSUES.md`, plus the existing WAVE05 backend security/auth/runtime/server diff files recorded in `summary.json`.\n\nchecks_run:\n`git diff --check`; `RUNS=2 run_reliability_suite.sh /workspace/socialpredict ./security`; `go test ./internal/app/runtime ./internal/service/auth ./server ./handlers/admin -count=1` twice; `go vet ./internal/app/runtime ./internal/service/auth ./server ./handlers/admin`; verifier ran scoped `gofmt -l`.\n\nfollow_ups:\nNext slice should migrate `backend/handlers/markets/resolvemarket.go` to injected `AuthService` plus `authhttp`/shared failure envelopes, removing direct JWT parsing and handler-local `JWT_SIGNING_KEY` reads. Keep `FUTURE/01-long-term-security-hardening.md` deferred; no MFA, RBAC, distributed rate limiting, request signing, session redesign, or compliance work was activated."
+    },
+    {
       "uid": "4e2d1e16-7b98-4a04-990e-70af6fdaa60a",
       "id": "WAVE06-API-001",
       "title": "WAVE06 API: Publish the route-family migration matrix and touched public reason vocabulary",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/06-api-design.md`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md`, and `../socialpredict/backend/docs/API-ISSUES.md` as the binding design context for WAVE06 API alignment. Start the wave by making the mixed contract explicit instead of improvising it during code cleanup. Add an initial route-family migration matrix for the touched `/v0` families plus infra docs routes, classify which paths are envelope-based, mixed raw-success plus `ReasonResponse`, or legacy plain-text, capture the touched public `reason` vocabulary, and make every touched `PlainTextErrorResponse` usage explicit migration state. Keep `backend/server/server.go` as the source of truth and align `backend/docs/openapi.yaml`, route/spec checks, and API follow-up notes to that matrix without introducing a universal wrapper, `/v1`, header-based versioning, or generated-client workflow.",
       "acceptance_criteria": [
         "The touched docs and OpenAPI contract include a route-family migration matrix that matches live route behavior for the chosen families and infra docs routes.",
@@ -42,7 +101,7 @@
       "depends_on": [
         "0ba7f17a-9086-4ebc-8a2b-75da87826d2b"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -50,13 +109,28 @@
       "notes": [
         "Track middleware and handler response families together in the matrix.",
         "Keep the source-of-truth order explicit: `server.go` -> touched handlers or DTOs -> `openapi.yaml` -> `API-ISSUES.md`."
-      ]
+      ],
+      "started_at": "2026-04-30T12:13:14.266803+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/4e2d1e16-7b98-4a04-990e-70af6fdaa60a_20260430T121314Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/4e2d1e16-7b98-4a04-990e-70af6fdaa60a_20260430T121314Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/4e2d1e16-7b98-4a04-990e-70af6fdaa60a_20260430T121314Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/4e2d1e16-7b98-4a04-990e-70af6fdaa60a_20260430T121314Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/4e2d1e16-7b98-4a04-990e-70af6fdaa60a_20260430T121314Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dde4e-b99d-7191-8ff6-0783b79978ed"
+      },
+      "finished_at": "2026-04-30T12:26:03.201865+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `4e2d1e16-7b98-4a04-990e-70af6fdaa60a`  \ntask_id: `WAVE06-API-001`  \nstatus: `completed`\n\nImplemented the WAVE06 API contract alignment. Added the route-family migration matrix to OpenAPI and docs, documented public `reason` vocabulary as client contract vocabulary separate from telemetry/runtime terms, documented `PlainTextErrorResponse` as migration state, added the trailing-slash market projection alias to the contract, and constrained `/swagger` routes to `GET` to match the documented infra docs surface. OpenAPI specialist sign-off is approved.\n\nfiles_changed:\n- `backend/server/server.go`\n- `backend/docs/openapi.yaml`\n- `backend/docs/API-ISSUES.md`\n- `backend/openapi_test.go`\n- `backend/server/server_contract_test.go`\n- `README/PRODUCTION-NOTES/BACKEND/06-api-design.md`\n\nchecks_run:\n- `gofmt -w openapi_test.go server/server.go server/server_contract_test.go`\n- `go test ./...`\n- `check_api_contract_sync.sh /workspace/socialpredict HEAD`\n- focused OpenAPI matrix/reason/plain-text tests\n- focused server contract tests\n- `git diff --check`\n\nfollow_ups:\n- Staging/production proxy publishing for `/swagger/` and `/openapi.yaml` remains an operations follow-up, now documented."
     },
     {
       "uid": "a8738d53-e5b3-494c-8ca1-6a9c30126f2f",
       "id": "WAVE06-API-002",
       "title": "WAVE06 API: Introduce boundary-safe auth outcomes for the first protected route family",
-      "status": "pending",
+      "status": "done",
       "prompt": "With the migration matrix in place, start retiring auth transport leakage in code rather than just documenting it. Replace `internal/service/auth.HTTPError` usage on one coherent protected route family, such as the current-user/profile, admin, or create-market slice, with typed internal outcomes or an equivalent boundary-safe translation seam that keeps HTTP mapping at the handler or boundary helper. Preserve the existing `POST /v0/login` token response and the intentional `/v0/changepassword` exception when `mustChangePassword` is set, keep public `reason` values separate from telemetry classification, and update OpenAPI or notes only for the touched routes instead of claiming wave-wide completion.",
       "acceptance_criteria": [
         "The chosen auth path no longer requires `internal/service/auth.HTTPError` as the internal contract for the touched protected route family, and HTTP mapping stays at the boundary.",
@@ -90,7 +164,7 @@
       "depends_on": [
         "4e2d1e16-7b98-4a04-990e-70af6fdaa60a"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -98,13 +172,28 @@
       "notes": [
         "Choose one coherent protected family instead of scattering single-callsite changes across the tree.",
         "Preserve the existing login and change-password exception behavior intentionally while retiring transport leakage in the touched slice."
-      ]
+      ],
+      "started_at": "2026-04-30T12:26:03.297682+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/a8738d53-e5b3-494c-8ca1-6a9c30126f2f_20260430T122603Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/a8738d53-e5b3-494c-8ca1-6a9c30126f2f_20260430T122603Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/a8738d53-e5b3-494c-8ca1-6a9c30126f2f_20260430T122603Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/a8738d53-e5b3-494c-8ca1-6a9c30126f2f_20260430T122603Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/a8738d53-e5b3-494c-8ca1-6a9c30126f2f_20260430T122603Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dde5a-75f3-7f61-8ccf-4726f42b87dc"
+      },
+      "finished_at": "2026-04-30T13:01:04.140852+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `a8738d53-e5b3-494c-8ca1-6a9c30126f2f`  \ntask_id: `WAVE06-API-002`  \nstatus: `completed`\n\nChanged the private-users protected route family to use `handlers/authhttp` boundary helpers:\n- `CurrentUser` enforces `mustChangePassword` for private profile/profile-change routes.\n- `TokenUser` preserves the intentional `/v0/changepassword` exception.\n- Added focused tests to confirm public `reason` envelopes do not leak raw auth messages.\n- Updated OpenAPI/API notes for the touched private-users routes only.\n- Updated canonical report summary at `/workspace/socialpredict/.codex-reports/tasks/a8738d53-e5b3-494c-8ca1-6a9c30126f2f/summary.json`.\n\nfiles_changed:\n`handlers/authhttp/authhttp.go`, `handlers/users/privateuser/privateuser.go`, `handlers/users/changepassword.go`, `handlers/users/changedescription.go`, `handlers/users/changedisplayname.go`, `handlers/users/changeemoji.go`, `handlers/users/changepersonallinks.go`, related focused tests, `docs/API-ISSUES.md`, `docs/openapi.yaml`.\n\nchecks_run:\nfocused Go tests twice, focused server/OpenAPI tests twice, architecture boundary checks, API contract sync, quality guardrails/go vet, architecture sign-off, verifier review.\n\nfollow_ups:\nFull `go test ./...` should run in CI or a clean environment with sufficient cache space. Remaining auth leakage outside private-users, such as `userposition`, is intentionally deferred."
     },
     {
       "uid": "78131017-967a-43e2-9fd0-fc523891b1ce",
       "id": "WAVE06-API-003",
       "title": "WAVE06 API: Converge the first client-visible legacy route family on shared failure writers",
-      "status": "pending",
+      "status": "done",
       "prompt": "After the first auth-translation seam lands, migrate one client-visible legacy route family that still returns raw JSON success with plain-text or ad hoc `http.Error` failures, such as search markets or a public-user reporting slice, onto the shared failure-writer direction. Keep success payloads truthful to the current family unless the route already advertises an envelope, update the route-family migration matrix and OpenAPI route-by-route, and only retire `PlainTextErrorResponse` for the paths whose handler and middleware behavior have actually converged. Do not attempt a flag-day public route redesign or a universal response wrapper.",
       "acceptance_criteria": [
         "The chosen legacy route family no longer emits touched ad hoc plain-text failures where the shared boundary-failure path now applies.",
@@ -137,7 +226,7 @@
       "depends_on": [
         "a8738d53-e5b3-494c-8ca1-6a9c30126f2f"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -145,13 +234,28 @@
       "notes": [
         "Prefer a route family with existing contract tests or clear client visibility.",
         "Migrate middleware and handler behavior together for the chosen family."
-      ]
+      ],
+      "started_at": "2026-04-30T13:01:04.253217+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/78131017-967a-43e2-9fd0-fc523891b1ce_20260430T130104Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/78131017-967a-43e2-9fd0-fc523891b1ce_20260430T130104Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/78131017-967a-43e2-9fd0-fc523891b1ce_20260430T130104Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/78131017-967a-43e2-9fd0-fc523891b1ce_20260430T130104Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/78131017-967a-43e2-9fd0-fc523891b1ce_20260430T130104Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dde7a-8555-7031-8658-9854908987d8"
+      },
+      "finished_at": "2026-04-30T13:12:13.146739+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `78131017-967a-43e2-9fd0-fc523891b1ce`  \ntask_id: `WAVE06-API-003`  \nstatus: `completed`\n\nSpawned the requested dispatcher coordination path; specialists signed off. Migrated the market-search route family so `SearchMarketsHandler` now uses shared `ReasonResponse` failures while preserving raw `SearchResponse` success payloads. Updated focused tests, OpenAPI migration matrix/docs, and removed the stale production-note plain-text example for `searchmarkets.go`.\n\nfiles_changed:\n- `handlers/markets/searchmarkets.go`\n- `handlers/markets/searchmarkets_handler_test.go`\n- `docs/openapi.yaml`\n- `docs/API-ISSUES.md`\n- `README/PRODUCTION-NOTES/BACKEND/06-api-design.md`\n- `openapi_test.go`\n\nchecks_run:\n- `gofmt -l ...`\n- `go test -count=1 ./handlers/markets` twice\n- `go test -count=1 ./handlers/markets -run 'TestSearchMarketsHandler|TestHandlerSearchMarkets'`\n- `go test -count=1 ./... -run 'TestOpenAPI|Test.*Contract|TestSearchMarkets'`\n- API contract sync script\n- architecture boundary checks\n- quality guardrails\n\nAssumption: market-search is the scoped client-visible family for this wave; broader markets/plain-text compatibility handlers remain explicit migration state.  \nfollow_ups: none."
     },
     {
       "uid": "da866ab1-b53d-48f6-82d6-eb0d58d2a723",
       "id": "WAVE06-API-004",
       "title": "WAVE06 API: Make Swagger and OpenAPI publishing explicit across proxy environments",
-      "status": "pending",
+      "status": "done",
       "prompt": "Once the active contract inventory is explicit, make backend-served docs an owned publishing contract across local, staging, and production. Preserve `/swagger/` and `/openapi.yaml` as the canonical backend endpoints, update the repo's proxy or deployment templates and operator-facing notes so those paths are published deliberately instead of being hidden behind `/api/` prefix routing, and keep the backend as the single Swagger or OpenAPI source of truth. Do not solve this by cloning Swagger into the frontend, inventing a new docs platform, or starting generated-client rollout.",
       "acceptance_criteria": [
         "The chosen staging or production publishing path for `/swagger/` and `/openapi.yaml` is explicit in the touched proxy or deployment config and operator docs rather than implicit prefix routing.",
@@ -185,7 +289,7 @@
       "depends_on": [
         "78131017-967a-43e2-9fd0-fc523891b1ce"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -193,13 +297,28 @@
       "notes": [
         "Choose one explicit external docs path or hostname and document any access-restriction decision.",
         "Do not let `/api/` proxy rules accidentally own the docs contract."
-      ]
+      ],
+      "started_at": "2026-04-30T13:12:13.257378+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/da866ab1-b53d-48f6-82d6-eb0d58d2a723_20260430T131213Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/da866ab1-b53d-48f6-82d6-eb0d58d2a723_20260430T131213Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/da866ab1-b53d-48f6-82d6-eb0d58d2a723_20260430T131213Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/da866ab1-b53d-48f6-82d6-eb0d58d2a723_20260430T131213Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/da866ab1-b53d-48f6-82d6-eb0d58d2a723_20260430T131213Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dde84-ba64-7702-a251-2fecfc040363"
+      },
+      "finished_at": "2026-04-30T13:21:41.893055+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `da866ab1-b53d-48f6-82d6-eb0d58d2a723`  \ntask_id: `WAVE06-API-004`  \nstatus: `completed`\n\nfiles_changed:\n- `backend/openapi_test.go`\n- `backend/docs/README.md`\n- `backend/docs/API-ISSUES.md`\n- `README/PRODUCTION-NOTES/BACKEND/06-api-design.md`\n- `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`\n- `data/nginx/vhosts/dev/default.conf.template`\n- `data/nginx/vhosts/prod/default.conf.template`\n- `data/traefik/config/traefik.template`\n\nwhat changed:\n- Explicitly published backend-owned docs at `/openapi.yaml`, `/swagger`, and `/swagger/` in dev/prod nginx before `/api/` and frontend catch-all routing.\n- Documented primary-domain root publishing as the chosen path, with Traefik owning host/TLS and nginx owning docs path routing.\n- Kept backend-served Swagger/OpenAPI as the single contract surface; no frontend Swagger copy or new docs platform added.\n- Added contract tests for Swagger initializer and proxy template docs publishing.\n\nchecks_run:\n- `go test ./server`: passed\n- API contract sync script with workspace Go caches: passed\n- Verifier ran `go test . ./server`: passed\n- Verifier ran gofmt check for touched Go files: passed\n- Nginx location/order brace check: passed\n- Full nginx syntax validation not run because `nginx` is not installed\n\nfollow_ups:\n- If operations later restricts docs access, apply it at proxy/host layer without adding a frontend-owned Swagger copy."
     },
     {
       "uid": "f8cf6368-bd2e-4dbc-9548-6431f21e7b25",
       "id": "WAVE06-API-005",
       "title": "WAVE06 API: Stop and review remaining auth leakage, PlainTextErrorResponse families, and deferred platform ideas",
-      "status": "pending",
+      "status": "done",
       "prompt": "Finish WAVE06 with an API-specific stop-and-review point. Remove or document any touched remaining auth transport leakage or plain-text boundary failures that still bypass the current shared contract, refresh the route-family migration matrix with what this wave actually changed, and leave a precise next seam for the remaining `PlainTextErrorResponse` families or auth call sites. Keep `FUTURE/02-long-term-api-design.md` explicitly deferred, and do not pull HATEOAS, XML content negotiation, universal `APIResponse` wrappers, header-based versioning, `/v1`, generated-client-first workflow, or an API service or platform layer back into the active queue.",
       "acceptance_criteria": [
         "The remaining touched auth transport leaks and remaining `PlainTextErrorResponse` route families are either removed or explicitly inventoried with a precise next migration seam.",
@@ -232,7 +351,7 @@
       "depends_on": [
         "da866ab1-b53d-48f6-82d6-eb0d58d2a723"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -240,7 +359,22 @@
       "notes": [
         "This is the WAVE06 stop-and-review point before any broader API platform or versioning discussion.",
         "Keep the next slice framed as a concrete route family or auth seam."
-      ]
+      ],
+      "started_at": "2026-04-30T13:21:41.993154+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/f8cf6368-bd2e-4dbc-9548-6431f21e7b25_20260430T132142Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/f8cf6368-bd2e-4dbc-9548-6431f21e7b25_20260430T132142Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/f8cf6368-bd2e-4dbc-9548-6431f21e7b25_20260430T132142Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/f8cf6368-bd2e-4dbc-9548-6431f21e7b25_20260430T132142Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/f8cf6368-bd2e-4dbc-9548-6431f21e7b25_20260430T132142Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dde8d-678c-74b0-8c3c-62db2ec9ace9"
+      },
+      "finished_at": "2026-04-30T13:31:17.612999+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `f8cf6368-bd2e-4dbc-9548-6431f21e7b25`  \ntask_id: `WAVE06-API-005`  \nstatus: `completed`\n\nSpawned `software-action-dispatcher-agent` first as requested. WAVE06 stop-and-review is complete, report summary is updated, and verifier sign-off passed.\n\nfiles_changed:\n`README/PRODUCTION-NOTES/BACKEND/06-api-design.md`, `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`, `README/PRODUCTION-NOTES/BACKEND/FUTURE/02-long-term-api-design.md`, `backend/docs/API-ISSUES.md`, `backend/docs/README.md`, `backend/docs/openapi.yaml`, auth/user/market/server handler/test files, nginx dev/prod templates, and Traefik template.\n\nchecks_run:\n- `run_gofmt.sh /workspace/socialpredict check ./handlers/authhttp ./handlers/markets ./handlers/users ./server`\n- API contract sync script with workspace Go caches\n- `go test -count=1 ./server ./handlers/authhttp ./handlers/markets ./handlers/users ./internal/service/auth`\n- `git diff --check`\n\nfollow_ups:\nNext concrete API slice is markets route-family cleanup: retire unused compatibility entry points and convert any still-routed market handler failures to `ReasonResponse`, without reviving platform backlog topics."
     }
   ]
 }
