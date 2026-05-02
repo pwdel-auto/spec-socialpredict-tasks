@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-7e68-8ee2-fef5c961b0c6",
+      "id": "WAVE12-CACHE-001",
+      "title": "WAVE12 Cache: Choose one future cache candidate without adding cache runtime",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md` as the binding context for this deferred WAVE12 caching queue. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by choosing one plausible future cache target from the note's non-authoritative read surfaces, using the current runtime or performance evidence and the live codebase rather than guesswork. Name the candidate explicitly and tighten the owning service or repository seam enough that the handler can consume a stable snapshot or query result without introducing Redis, cache-aside helpers, or hidden memoization.",
+      "acceptance_criteria": [
+        "One non-authoritative read surface is chosen explicitly as the first future cache candidate and exposed through a stable owned seam.",
+        "The touched handler or service behavior stays stable while becoming easier to cache later without contract churn.",
+        "No cache runtime, cache helper abstraction, or hidden memoization is introduced in this slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "stable future-cache seam for one non-authoritative read surface",
+          "preservation of current handler and service boundaries",
+          "continued deferral of real cache runtime work"
+        ]
+      },
+      "out_of_scope": [
+        "Redis rollout or cache runtime introduction",
+        "blanket caching across route families",
+        "any cache target touching balances, bets, or resolution correctness"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose one candidate surface only; the point is to preserve optionality, not to prebuild caching everywhere.",
+        "Stay on public or derived reads, not authoritative accounting state."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7562-b048-dcc423d5540c",
+      "id": "WAVE12-CACHE-002",
+      "title": "WAVE12 Cache: Guard do-not-cache accounting paths and source-of-truth boundaries",
+      "status": "pending",
+      "prompt": "While the first future cache candidate is isolated, harden the do-not-cache boundary in the money-moving paths. Add the smallest useful tests or code-level guards in touched betting, selling, balance, or resolution services to make it explicit that authoritative accounting state still comes directly from Postgres and must not be satisfied through cache shortcuts. Do not add read-through, write-through, invalidation machinery, or speculative coordination state.",
+      "acceptance_criteria": [
+        "The touched accounting-sensitive paths make their source-of-truth boundary explicit through focused tests or narrowly scoped code guards.",
+        "The task reduces the risk of accidental cache shortcuts in money-moving code without introducing new runtime dependencies.",
+        "Postgres remains clearly authoritative for the touched accounting behavior."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "source-of-truth protection for accounting-sensitive paths",
+          "narrow regression coverage preventing accidental cache shortcuts",
+          "continued absence of live cache infrastructure"
+        ]
+      },
+      "out_of_scope": [
+        "cache invalidation implementation",
+        "read-through or write-through caching behavior",
+        "changes that weaken accounting correctness for performance"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/backend/internal/domain/users",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/internal/repository/markets",
+        "../socialpredict/backend/internal/repository/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-7e68-8ee2-fef5c961b0c6"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer explicit tests and narrow guards over large comments-only sweeps.",
+        "The purpose is to make future caching safer by protecting the places that must never use it."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7fc2-9052-77a493096b90",
+      "id": "WAVE12-CACHE-003",
+      "title": "WAVE12 Cache: Stop and review invalidation ownership, tolerated staleness, and continued deferral",
+      "status": "pending",
+      "prompt": "Finish WAVE12 by updating the caching draft or adjacent docs with the chosen future cache candidate, its invalidation owner, tolerated staleness, and the concrete blockers that still keep caching deferred. Keep Redis, generalized cache layers, and coordination use cases explicitly out of the active slice and do not claim caching is now active backend reality.",
+      "acceptance_criteria": [
+        "The caching draft or touched docs name one concrete future cache target and make its invalidation owner and tolerated staleness explicit.",
+        "The remaining blockers to real cache runtime work are stated clearly and narrowly.",
+        "Redis and broader cache-platform work remain explicitly deferred at the end of the wave."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "accuracy of the documented future cache target and invalidation owner",
+          "explicit remaining blockers to any real cache rollout",
+          "continued deferral of Redis and generalized cache-platform work"
+        ]
+      },
+      "out_of_scope": [
+        "actual cache runtime activation",
+        "generalized cache-layer abstraction design",
+        "coordination-platform ideas such as queues or distributed locks"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/12-database-caching.md",
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/internal/domain/markets"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-7562-b048-dcc423d5540c"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This stop-and-review point is part of the deferral posture, not a signal to build Redis next.",
+        "Keep the next seam tied to one chosen read surface and its invalidation owner."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-755b-9e26-a37bcec4ee8a",
+      "id": "WAVE09-MON-001",
+      "title": "WAVE09 Monitoring: Publish the current operational signal inventory and separate it from business metrics",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/09-monitoring-alerting.md` as the binding context for WAVE09 monitoring and alerting. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by making the current operator-facing signal contract explicit at the backend boundary: `/health`, `/readyz`, startup exit and failure behavior, and the existing shared request-failure surface. At the same time, make it explicit in touched docs or tests that `/v0/system/metrics` is a business or accounting output, not the operational monitoring surface. Keep changes close to `server`, backend docs, and existing contract tests; do not add Prometheus, Grafana, Alertmanager, or a new monitoring package.",
+      "acceptance_criteria": [
+        "The touched docs or contract tests distinguish operator-facing health and failure signals from the existing business-metrics surface.",
+        "The touched signal inventory stays truthful to live server wiring and startup behavior instead of promising a broader monitoring stack.",
+        "The first monitoring slice improves operator clarity without inventing a new monitoring architecture."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "truthful operator-facing signal inventory",
+          "explicit separation of business metrics from runtime monitoring signals",
+          "avoidance of platform-heavy monitoring scope drift"
+        ]
+      },
+      "out_of_scope": [
+        "Prometheus, Grafana, Alertmanager, ELK, Loki, or collector rollout",
+        "business-metrics redesign",
+        "new top-level monitoring or observability package trees"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/server/server_contract_test.go",
+        "../socialpredict/backend/docs/README.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/09-monitoring-alerting.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep `/v0/system/metrics` documented as economics output even if touched during the monitoring wave.",
+        "Prefer making the current signal contract explicit before adding any new export surface."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7ddb-96b8-1ea971557d1b",
+      "id": "WAVE09-MON-002",
+      "title": "WAVE09 Monitoring: Standardize runtime log events for startup, readiness, and severe boundary failures",
+      "status": "pending",
+      "prompt": "Once the signal inventory is explicit, use `backend/logger` and the existing runtime or middleware seams to emit stable, sanitized operational log events for startup incompatibility or migration failure, readiness-open and readiness-closed transitions, and shared severe request-failure paths. Keep public `reason` vocabulary separate from telemetry field names and do not reintroduce duplicate logging packages or a second monitoring architecture.",
+      "acceptance_criteria": [
+        "The touched startup, readiness, or shared-failure paths emit stable operational log events with consistent field names and sanitized payloads.",
+        "Focused tests or deterministic log-facing checks cover the chosen events without leaking public failure vocabulary into internal telemetry fields.",
+        "The change stays within current logger, runtime, server, or middleware ownership instead of creating a new monitoring layer."
+      ],
+      "verification": {
+        "owner": "software-action-logging-agent",
+        "sign_off": "required",
+        "focus": [
+          "stable runtime log vocabulary for monitoring consumption",
+          "sanitized startup and failure event payloads",
+          "continued single-owner logging architecture"
+        ]
+      },
+      "out_of_scope": [
+        "OTel collector deployment or external log platform rollout",
+        "duplicating public `reason` values as internal telemetry vocabulary",
+        "new logging packages outside `backend/logger`"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-755b-9e26-a37bcec4ee8a"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer a small stable event set over verbose speculative telemetry.",
+        "Keep shared failure writers and runtime transitions aligned under the same logger vocabulary."
+      ]
+    },
+    {
+      "uid": "019de369-df09-71af-984a-0de4796352c2",
+      "id": "WAVE09-MON-003",
+      "title": "WAVE09 Monitoring: Add the smallest app-owned operational metrics seam for the first alert set",
+      "status": "pending",
+      "prompt": "After log-based signal ownership is clearer, add the smallest backend-owned operational metrics seam that can support the first alert set from the note: backend down or unready, startup failure, and severe request-failure spikes. Keep the implementation inside the current runtime, server, or logger ownership, prefer a minimal export surface over a platform commitment, and do not conflate these metrics with `/v0/system/metrics` or roll out a full external monitoring stack.",
+      "acceptance_criteria": [
+        "The touched backend now exposes a minimal operational metrics seam or status export that is clearly separate from business or economics metrics.",
+        "The first alert set supported by that seam is explicit in focused tests or docs for the touched paths.",
+        "The implementation remains narrow and app-owned instead of committing the repo to a broader monitoring platform."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "minimal app-owned operational metrics scope",
+          "clear separation from business metrics and route vocabulary",
+          "use of existing runtime and server ownership rather than a new platform tree"
+        ]
+      },
+      "out_of_scope": [
+        "broad dashboard or alert-routing platform buildout",
+        "relabeling business endpoints as operational telemetry",
+        "full metrics taxonomy design for every backend behavior"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/logger",
+        "../socialpredict/backend/docs/README.md",
+        "../socialpredict/backend/docs/openapi.yaml"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-7ddb-96b8-1ea971557d1b"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "If a route is added, keep it explicitly operator-facing and outside the business metrics namespace.",
+        "The goal is the smallest credible alert surface, not a full observability stack."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7003-99f7-177b9be306d8",
+      "id": "WAVE09-MON-004",
+      "title": "WAVE09 Monitoring: Stop and review the first alert surface and deferred platform topics",
+      "status": "pending",
+      "prompt": "Finish WAVE09 with a monitoring-specific stop-and-review point. Update the monitoring note and any adjacent operator docs to reflect the landed signal contract, name the first alert set the current backend can support, and inventory what still blocks broader dashboards or external-platform adoption. Do not reactivate Prometheus, Grafana, paging-platform, or long-term observability backlog work.",
+      "acceptance_criteria": [
+        "The active monitoring note and touched operator docs accurately describe the app-owned signal contract and the first supported alert set.",
+        "Remaining monitoring gaps are stated as narrow next seams rather than a broad external-platform wish list.",
+        "Larger monitoring-platform topics remain explicitly deferred at the end of the wave."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "accuracy of the documented first alert surface",
+          "explicit remaining monitoring gap inventory",
+          "continued deferral of platform-heavy monitoring topics"
+        ]
+      },
+      "out_of_scope": [
+        "reviving Prometheus, Grafana, Alertmanager, or centralized log-platform rollout",
+        "formal SLO or error-budget program creation",
+        "new backlog buckets without a concrete next signal seam"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/09-monitoring-alerting.md",
+        "../socialpredict/backend/docs/README.md",
+        "../socialpredict/backend/docs/openapi.yaml"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-71af-984a-0de4796352c2"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE09 stop-and-review point before any future monitoring-platform discussion.",
+        "Keep the next seam tied to the owned runtime signal contract, not to tool choice."
+      ]
+    }
+  ]
+}
