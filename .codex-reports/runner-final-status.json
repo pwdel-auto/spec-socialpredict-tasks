@@ -1,55 +1,39 @@
 {
   "status": "completed",
-  "generated_at": "2026-05-01T03:42:57.968603+00:00",
-  "task_count": 6,
+  "generated_at": "2026-05-02T16:43:16.079904+00:00",
+  "task_count": 4,
   "tasks": [
     {
-      "uid": "f8cf6368-bd2e-4dbc-9548-6431f21e7b25",
-      "id": "WAVE06-API-005",
+      "uid": "019de369-df09-7b67-8f06-e98931e26caa",
+      "id": "WAVE08-DEPLOY-001",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-04-30T13:21:41.993154+00:00",
-      "finished_at": "2026-04-30T13:31:17.612999+00:00"
+      "started_at": "2026-05-02T16:16:57.784242+00:00",
+      "finished_at": "2026-05-02T16:23:15.920819+00:00"
     },
     {
-      "uid": "661835f8-0764-4ce6-bb3e-6a4ec53925eb",
-      "id": "WAVE07-TEST-001",
+      "uid": "019de369-df09-776f-8d91-c25d95bd455a",
+      "id": "WAVE08-DEPLOY-002",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-01T03:09:09.148599+00:00",
-      "finished_at": "2026-05-01T03:16:20.335376+00:00"
+      "started_at": "2026-05-02T16:23:16.014975+00:00",
+      "finished_at": "2026-05-02T16:28:16.096310+00:00"
     },
     {
-      "uid": "bc2d6801-7904-406d-b2f4-b23ccd6998bb",
-      "id": "WAVE07-TEST-002",
+      "uid": "019de369-df09-74c0-a71f-e257b6fc59f1",
+      "id": "WAVE08-DEPLOY-003",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-01T03:16:20.443937+00:00",
-      "finished_at": "2026-05-01T03:25:20.431869+00:00"
+      "started_at": "2026-05-02T16:28:16.177509+00:00",
+      "finished_at": "2026-05-02T16:39:19.320790+00:00"
     },
     {
-      "uid": "5547ad2a-a236-4e90-b9ab-cd3d133295b3",
-      "id": "WAVE07-TEST-003",
+      "uid": "019de369-df09-735b-be03-0039d90dc3fe",
+      "id": "WAVE08-DEPLOY-004",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-01T03:25:20.516219+00:00",
-      "finished_at": "2026-05-01T03:31:28.000787+00:00"
-    },
-    {
-      "uid": "b309821d-deb6-4a6b-a78b-ef1637cc765f",
-      "id": "WAVE07-TEST-004",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-05-01T03:31:28.106018+00:00",
-      "finished_at": "2026-05-01T03:37:43.450847+00:00"
-    },
-    {
-      "uid": "dcf47cd2-ea9e-42dc-b8d9-5bc4f765b669",
-      "id": "WAVE07-TEST-005",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-05-01T03:37:43.548406+00:00",
-      "finished_at": "2026-05-01T03:42:57.862269+00:00"
+      "started_at": "2026-05-02T16:39:19.421535+00:00",
+      "finished_at": "2026-05-02T16:43:15.957044+00:00"
     }
   ],
   "target_repo": "/workspace/spec-socialpredict-tasks",
