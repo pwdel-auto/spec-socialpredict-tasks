@@ -71,9 +71,15 @@ The workflow commits each repo's local wave artifacts, pushes only to the writab
 
 8. Final status.
    - Recheck `git status --short --branch` in all repos.
+   - Record the checked-out branch for each repo after any next-wave branch creation.
    - Return a table with repo, old branch, commit, push status, PR URL, new branch, and new branch push status.
    - Include checks run and any blocker.
    - End with a clear `READY_FOR_NEXT_RUN` signal only when all required repos are on their next wave branches; use a qualified signal such as `READY_FOR_NEXT_RUN_LOCAL` if anything remains local-only.
+   - If the requested handoff uses `READY_FOR_NEXT_PLAN`, use that signal instead of `READY_FOR_NEXT_RUN`.
+   - Immediately after the readiness signal, show the current checked-out branches for:
+     - `/workspace/spec-socialpredict-tasks`
+     - `/workspace/socialpredict`
+     - `/workspace/log-socialpredict-tasks`
 
 ## Command Patterns
 
@@ -110,4 +116,5 @@ Keep the final concise and operational:
 - a results table
 - checks run
 - blockers or follow-ups
-- `READY_FOR_NEXT_RUN` or a qualified readiness signal
+- `READY_FOR_NEXT_RUN`, `READY_FOR_NEXT_PLAN`, or a qualified readiness signal
+- current branches for the task, target, and log repos immediately after the readiness signal
