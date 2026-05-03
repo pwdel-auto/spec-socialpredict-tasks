@@ -10,7 +10,7 @@
       "uid": "019de369-df09-7c64-9c85-726295a4323c",
       "id": "WAVE13-JOBS-001",
       "title": "WAVE13 Jobs: Extract one future async-safe candidate behind an idempotent service seam while keeping it synchronous",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md` as the binding context for this deferred WAVE13 background-jobs queue. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by choosing one clearly non-financial candidate already adjacent to the live codebase, expected to be a derived snapshot, export-like helper, or other recomputable side effect, and extract or tighten its service seam so it can be invoked without HTTP coupling while remaining synchronous in the current runtime. Do not add a jobs package, Redis queue, cron framework, or worker deployment role.",
       "acceptance_criteria": [
         "One clearly non-financial candidate operation is exposed through an owned service seam that can be invoked without HTTP coupling.",
@@ -39,7 +39,7 @@
       ],
       "working_dir": "../socialpredict/backend",
       "depends_on": [],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -47,13 +47,28 @@
       "notes": [
         "Choose a derived or recomputable candidate only; money-moving flows are explicitly non-targets.",
         "The point is to preserve a future async seam without changing current runtime shape."
-      ]
+      ],
+      "started_at": "2026-05-03T11:22:46.009930+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-7c64-9c85-726295a4323c_20260503T112246Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-7c64-9c85-726295a4323c_20260503T112246Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-7c64-9c85-726295a4323c_20260503T112246Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-7c64-9c85-726295a4323c_20260503T112246Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-7c64-9c85-726295a4323c_20260503T112246Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ded93-991d-7293-90ae-6718141f1771"
+      },
+      "finished_at": "2026-05-03T11:44:59.466164+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-7c64-9c85-726295a4323c`  \ntask_id: `WAVE13-JOBS-001`  \nstatus: `completed`\n\nChanged `handlers/cms/homepage/service.go` to expose CMS homepage render/sanitize as `Service.RenderContent(RenderInput)`, an HTTP-free, derived, recomputable service seam. `UpdateHome` still calls it inline, so runtime behavior remains synchronous and no jobs, queues, schedulers, workers, Redis, or async infrastructure were added.\n\nfiles_changed:\n- `backend/handlers/cms/homepage/service.go`\n- `backend/handlers/cms/homepage/service_test.go`\n\nchecks_run:\n- `go test -count=1 ./handlers/cms/homepage/...` passed twice with workspace-local Go caches\n- `go vet ./handlers/cms/homepage/...` passed\n- `go vet ./...` passed\n- `run_boundary_checks.sh /workspace/socialpredict` passed\n- `gofmt -l` on touched files passed\n- `git diff --check` passed\n- Architecture sign-off passed; dispatcher summary updated\n\nfollow_ups:\n- Later CMS cleanup could move the legacy homepage repository out from under `handlers`.\n- Workspace-local Go caches were needed because `/home/agent/go` was not writable."
     },
     {
       "uid": "019de369-df09-79f9-83d5-515bbd142837",
       "id": "WAVE13-JOBS-002",
       "title": "WAVE13 Jobs: Prove idempotency or replay safety for the chosen candidate and keep financial flows synchronous",
-      "status": "pending",
+      "status": "done",
       "prompt": "After the candidate seam exists, add deterministic tests that prove the chosen operation can be retried or replayed safely in-process, and make the non-target boundary explicit for bet placement, sell settlement, market resolution, or other accounting-sensitive flows touched by the task. Do not add retry loops, dead-letter handling, background execution, or hidden async fallbacks.",
       "acceptance_criteria": [
         "The chosen candidate has deterministic tests proving its repeatability or idempotent behavior in-process.",
@@ -84,7 +99,7 @@
       "depends_on": [
         "019de369-df09-7c64-9c85-726295a4323c"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -92,13 +107,28 @@
       "notes": [
         "Prefer repeatability tests close to the owning service over a generic async test harness.",
         "Make the synchronous non-target boundary explicit for any touched financial path."
-      ]
+      ],
+      "started_at": "2026-05-03T11:44:59.651646+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-79f9-83d5-515bbd142837_20260503T114459Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-79f9-83d5-515bbd142837_20260503T114459Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-79f9-83d5-515bbd142837_20260503T114459Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-79f9-83d5-515bbd142837_20260503T114459Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-79f9-83d5-515bbd142837_20260503T114459Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019deda7-f238-71d0-a4eb-82ca83faa96c"
+      },
+      "finished_at": "2026-05-03T11:52:52.485106+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-79f9-83d5-515bbd142837`  \ntask_id: `WAVE13-JOBS-002`  \nstatus: `completed`\n\nChanged:\n- Added deterministic replay/read-only coverage for `ComputeSystemMetrics` in `internal/domain/analytics/systemmetrics_test.go`.\n- Made accounting-sensitive paths explicitly synchronous in bets placement, sell settlement, and market resolution comments/interfaces.\n- Updated canonical report summary at `/workspace/socialpredict/.codex-reports/tasks/019de369-df09-79f9-83d5-515bbd142837`.\n\nfiles_changed:\n- `internal/domain/analytics/systemmetrics_test.go`\n- `internal/domain/bets/bet_place.go`\n- `internal/domain/bets/bet_sell.go`\n- `internal/domain/bets/service.go`\n- `internal/domain/markets/market_resolution.go`\n- `internal/domain/markets/service.go`\n\nchecks_run:\n- Focused `ComputeSystemMetrics` replay tests twice: passed\n- `go test ./internal/domain/bets ./internal/domain/markets -count=1` twice: passed\n- Architecture boundary checks: passed\n- Reliability suite for `./internal/domain/analytics`, including OpenAPI validation and `go vet`: passed\n\nfollow_ups:\n- Unrelated dirty homepage files remain in the worktree and were not part of this task."
     },
     {
       "uid": "019de369-df09-7bcf-86ba-7be35c882531",
       "id": "WAVE13-JOBS-003",
       "title": "WAVE13 Jobs: Stop and review runtime-role prerequisites, failure visibility, and continued deferral",
-      "status": "pending",
+      "status": "done",
       "prompt": "Finish WAVE13 by updating the background-jobs draft or adjacent docs with the precise prerequisites still missing for any real worker or queue rollout: runtime roles, retry and dead-letter policy, lag and failure visibility, and one concrete next async seam if it remains justified. Keep queue tables, outbox rollout, scheduler frameworks, and Redis or worker platform work deferred.",
       "acceptance_criteria": [
         "The background-jobs draft or touched docs accurately describe the chosen candidate seam and the prerequisites still missing for any real async rollout.",
@@ -129,7 +159,7 @@
       "depends_on": [
         "019de369-df09-79f9-83d5-515bbd142837"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -137,7 +167,22 @@
       "notes": [
         "This stop-and-review point is part of the deferral posture, not a signal to activate workers next.",
         "Keep the next seam tied to one safe candidate and its missing prerequisites."
-      ]
+      ],
+      "started_at": "2026-05-03T11:52:52.576814+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-7bcf-86ba-7be35c882531_20260503T115252Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-7bcf-86ba-7be35c882531_20260503T115252Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-7bcf-86ba-7be35c882531_20260503T115252Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-7bcf-86ba-7be35c882531_20260503T115252Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-7bcf-86ba-7be35c882531_20260503T115252Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019dedaf-29a1-76b0-ac91-1ce0fb6dee0f"
+      },
+      "finished_at": "2026-05-03T11:57:29.377090+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-7bcf-86ba-7be35c882531`  \ntask_id: `WAVE13-JOBS-003`  \nstatus: `completed`\n\nUpdated [13-background-jobs.md](/workspace/socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md) with the WAVE13 stop-and-review conclusion. The chosen next async seam is `homepage_render_warmup` for homepage CMS render/sanitize warm-up after `PUT /v0/admin/content/home`, explicitly non-financial and deferred until runtime roles, retry/dead-letter policy, lag/failure visibility, logging, DB ownership, and release-safety prerequisites exist.\n\nfiles_changed:\n- `/workspace/socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md`\n- canonical report files under `/workspace/socialpredict/.codex-reports/tasks/019de369-df09-7bcf-86ba-7be35c882531`\n\nchecks_run:\n- `git diff --check -- ../README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md`\n- targeted `rg` acceptance-term check\n- `python3 -m json.tool` on `summary.json`\n\nfollow_ups: none. Verifier sign-off was recorded. Existing unrelated modified Go files were left untouched."
     }
   ]
 }
