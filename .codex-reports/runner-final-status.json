@@ -1,39 +1,31 @@
 {
   "status": "completed",
-  "generated_at": "2026-05-02T23:59:20.147524+00:00",
-  "task_count": 4,
+  "generated_at": "2026-05-03T03:14:14.909253+00:00",
+  "task_count": 3,
   "tasks": [
     {
-      "uid": "019de369-df09-7241-835a-e8c54bbbcb78",
-      "id": "WAVE11-PERF-001",
+      "uid": "019de369-df09-7e68-8ee2-fef5c961b0c6",
+      "id": "WAVE12-CACHE-001",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-02T23:37:49.220393+00:00",
-      "finished_at": "2026-05-02T23:43:31.191095+00:00"
+      "started_at": "2026-05-03T02:54:12.061348+00:00",
+      "finished_at": "2026-05-03T03:01:36.773724+00:00"
     },
     {
-      "uid": "019de369-df09-707b-975c-866559bfda5c",
-      "id": "WAVE11-PERF-002",
+      "uid": "019de369-df09-7562-b048-dcc423d5540c",
+      "id": "WAVE12-CACHE-002",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-02T23:43:31.283397+00:00",
-      "finished_at": "2026-05-02T23:50:28.044999+00:00"
+      "started_at": "2026-05-03T03:01:36.872480+00:00",
+      "finished_at": "2026-05-03T03:08:09.903358+00:00"
     },
     {
-      "uid": "019de369-df09-7740-a702-8edaec847c28",
-      "id": "WAVE11-PERF-003",
+      "uid": "019de369-df09-7fc2-9052-77a493096b90",
+      "id": "WAVE12-CACHE-003",
       "status": "done",
       "attempts": 1,
-      "started_at": "2026-05-02T23:50:28.152928+00:00",
-      "finished_at": "2026-05-02T23:55:30.067043+00:00"
-    },
-    {
-      "uid": "019de369-df09-74cf-beab-ff77f9576bce",
-      "id": "WAVE11-PERF-004",
-      "status": "done",
-      "attempts": 1,
-      "started_at": "2026-05-02T23:55:30.151437+00:00",
-      "finished_at": "2026-05-02T23:59:20.040034+00:00"
+      "started_at": "2026-05-03T03:08:10.003450+00:00",
+      "finished_at": "2026-05-03T03:14:14.800650+00:00"
     }
   ],
   "target_repo": "/workspace/spec-socialpredict-tasks",
