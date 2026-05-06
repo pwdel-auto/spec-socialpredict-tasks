@@ -8,7 +8,8 @@ Use this skill to prepare a local backend base URL for runtime conformance tests
 - Backend entrypoint: `../socialpredict/backend/main.go`
 - DB config loader: `../socialpredict/backend/internal/app/runtime/db.go`
 - Server port: `BACKEND_PORT`, default `8080`
-- Health endpoint: `GET /health`
+- Readiness endpoint: `GET /readyz`
+- Liveness endpoint: `GET /health`
 
 ## Environment Mapping
 

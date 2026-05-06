@@ -9,7 +9,7 @@ description: Start or check a local non-Docker SocialPredict backend runtime for
 
 - Schemathesis or other runtime API tests need a running local backend.
 - Docker is unavailable, unsafe, or intentionally avoided in this Codex environment.
-- The task needs deterministic setup checks for backend env, Postgres reachability, and `/health`.
+- The task needs deterministic setup checks for backend env, Postgres reachability, and backend readiness at `/readyz`.
 
 ## Workflow
 

@@ -35,14 +35,14 @@ if ! command -v schemathesis >/dev/null 2>&1; then
   exit 127
 fi
 
-echo "[1/2] Confirm backend responds at $BASE_URL"
+echo "[1/2] Confirm backend is ready at $BASE_URL"
 if command -v curl >/dev/null 2>&1; then
-  curl --fail --silent --show-error --max-time 5 "$BASE_URL/health" >/dev/null || {
-    echo "Backend did not respond successfully at $BASE_URL/health" >&2
+  curl --fail --silent --show-error --max-time 5 "$BASE_URL/readyz" >/dev/null || {
+    echo "Backend did not report ready at $BASE_URL/readyz" >&2
     exit 1
   }
 else
-  echo "curl is not available; skipping health preflight"
+  echo "curl is not available; skipping readiness preflight"
 fi
 
 echo "[2/2] Run Schemathesis against backend/docs/openapi.yaml"
