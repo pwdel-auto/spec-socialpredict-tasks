@@ -10,7 +10,7 @@
       "uid": "019de369-df09-7241-835a-e8c54bbbcb78",
       "id": "WAVE11-PERF-001",
       "title": "WAVE11 Performance: Make effective DB pool and connection-lifecycle posture explicit",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md` as the binding context for WAVE11 runtime performance tuning. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by making the runtime-owned `sql.DB` pool and lifetime settings explicit and observable: normalize effective values, log them safely at startup, and document the current env knobs per deployment shape without changing query architecture. Preserve current ownership in `backend/internal/app/runtime/db.go` and do not introduce a new performance subsystem.",
       "acceptance_criteria": [
         "The touched runtime path makes effective pool and connection-lifecycle values explicit without leaking secrets or changing unrelated DB behavior.",
@@ -38,7 +38,7 @@
       ],
       "working_dir": "../socialpredict/backend",
       "depends_on": [],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -46,13 +46,28 @@
       "notes": [
         "Expose effective DB-pool posture safely; never log secrets or full DSNs.",
         "Keep the first slice focused on the owned runtime knobs that already exist."
-      ]
+      ],
+      "started_at": "2026-05-02T23:37:49.220393+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-7241-835a-e8c54bbbcb78_20260502T233749Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-7241-835a-e8c54bbbcb78_20260502T233749Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-7241-835a-e8c54bbbcb78_20260502T233749Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-7241-835a-e8c54bbbcb78_20260502T233749Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-7241-835a-e8c54bbbcb78_20260502T233749Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019deb0e-3320-7b21-bd3f-e670fe214399"
+      },
+      "finished_at": "2026-05-02T23:43:31.191095+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-7241-835a-e8c54bbbcb78`  \ntask_id: `WAVE11-PERF-001`  \nstatus: `complete`\n\nChanged:\n- `backend/internal/app/runtime/db.go`\n- `backend/internal/app/runtime/db_test.go`\n- `backend/logger/simplelogging.go`\n- `README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`\n\nSummary:\n- Added explicit effective DB pool posture normalization for max open, max idle, connection lifetime, and idle time.\n- Startup now logs `db_pool.configured` with safe effective values only, without DSNs, host/user/db names, passwords, or secrets.\n- Added focused runtime tests for defaults, invalid env fallback, negative normalization, and idle cap behavior.\n- Updated the performance tuning note with current env knobs, defaults, safe observability, and deployment-shape guidance.\n\nChecks run:\n- `go test ./internal/app/runtime`: PASS\n- reliability suite for `./internal/app/runtime`: PASS\n- architecture boundary checks: PASS\n- dispatcher-reported API contract sync, `gofmt`, and `go vet`: PASS\n\nFollow-ups:\n- None for code.\n- Report summary is updated at `/workspace/socialpredict/.codex-reports/tasks/019de369-df09-7241-835a-e8c54bbbcb78/summary.json`."
     },
     {
       "uid": "019de369-df09-707b-975c-866559bfda5c",
       "id": "WAVE11-PERF-002",
       "title": "WAVE11 Performance: Add the smallest repeatable measurement seam for pool saturation and latency",
-      "status": "pending",
+      "status": "done",
       "prompt": "Before tuning values, add a small repeatable measurement seam close to the owning runtime or server packages, such as targeted benchmarks, opt-in real-Postgres checks, or deterministic instrumentation around pool waits and readiness, so pool changes can be compared against evidence. Do not create a generalized load-testing platform, always-on profiling program, or `pprof` rollout.",
       "acceptance_criteria": [
         "The repo contains a repeatable measurement seam tied to the current runtime or server packages for the touched pool-related behavior.",
@@ -81,7 +96,7 @@
       "depends_on": [
         "019de369-df09-7241-835a-e8c54bbbcb78"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -89,13 +104,28 @@
       "notes": [
         "Prefer opt-in real-Postgres checks where SQLite cannot prove the behavior.",
         "The goal is comparative evidence for tuning, not a full benchmark suite."
-      ]
+      ],
+      "started_at": "2026-05-02T23:43:31.283397+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-707b-975c-866559bfda5c_20260502T234331Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-707b-975c-866559bfda5c_20260502T234331Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-707b-975c-866559bfda5c_20260502T234331Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-707b-975c-866559bfda5c_20260502T234331Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-707b-975c-866559bfda5c_20260502T234331Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019deb13-6b04-79d3-8b98-37cf487f72c0"
+      },
+      "finished_at": "2026-05-02T23:50:28.044999+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-707b-975c-866559bfda5c`  \ntask_id: `WAVE11-PERF-002`  \nstatus: `completed`\n\nAdded narrow DB pool measurement coverage:\n- Runtime-local benchmark/test seam in `internal/app/runtime/db_pool_measurement_test.go`\n- Dispatcher-coordinated runtime/server `/ops/status.dbPool` counters for pool saturation and wait-latency visibility\n- OpenAPI/docs updates for the `/ops/status` response shape\n\nfiles_changed:\n- `backend/internal/app/runtime/db.go`\n- `backend/internal/app/runtime/db_test.go`\n- `backend/internal/app/runtime/db_pool_measurement_test.go`\n- `backend/server/server.go`\n- `backend/server/server_test.go`\n- `backend/docs/openapi.yaml`\n- `backend/docs/README.md`\n\nchecks_run:\n- `go test ./internal/app/runtime -run TestMeasureDBPoolWaitDifferentiatesSaturation -count=1`\n- `go test ./internal/app/runtime -run '^$' -bench BenchmarkDBPoolWaitUnderSaturation -benchtime=5x -count=1`\n- `go test ./internal/app/runtime -count=1` twice\n- `go vet ./...`\n- boundary checks\n- quality guardrails\n- runtime reliability suite\n- dispatcher/specialist verification including server tests, OpenAPI contract sync, server reliability suite, targeted vet, and `git diff --check`\n\nBenchmark evidence: saturated `max_open=1` recorded `1.000 pool_waits/op`; headroom `max_open=2` recorded `0 pool_waits/op`.\n\nfollow_ups: `None`"
     },
     {
       "uid": "019de369-df09-7740-a702-8edaec847c28",
       "id": "WAVE11-PERF-003",
       "title": "WAVE11 Performance: Set initial deployment defaults for DB pool knobs from measured behavior",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use evidence from the measurement seam to choose initial `DB_MAX_*` and connection-lifetime defaults for the current deployment shapes, update the current env or compose templates, and explain the tradeoff in operator-facing docs. Keep the change reversible, tie it directly to the measured evidence, and do not speculate about caching, background workers, or query rewrites.",
       "acceptance_criteria": [
         "The touched env or deployment templates encode explicit initial pool defaults or documented overrides for the current backend runtime.",
@@ -125,7 +155,7 @@
       "depends_on": [
         "019de369-df09-707b-975c-866559bfda5c"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -133,13 +163,28 @@
       "notes": [
         "Keep deployment defaults explicit where the repo already owns them.",
         "Do not let a lack of perfect data justify speculative performance settings."
-      ]
+      ],
+      "started_at": "2026-05-02T23:50:28.152928+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-7740-a702-8edaec847c28_20260502T235028Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-7740-a702-8edaec847c28_20260502T235028Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-7740-a702-8edaec847c28_20260502T235028Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-7740-a702-8edaec847c28_20260502T235028Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-7740-a702-8edaec847c28_20260502T235028Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019deb19-c7d7-7461-9e38-5c8c0530c960"
+      },
+      "finished_at": "2026-05-02T23:55:30.067043+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-7740-a702-8edaec847c28`  \ntask_id: `WAVE11-PERF-003`  \nstatus: `completed`\n\nfiles_changed:\n- `backend/.env.dev`\n- `scripts/docker-compose-prod.yaml`\n- `README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`\n\nwhat changed:\n- Encoded explicit initial DB pool/lifetime defaults: `DB_MAX_OPEN_CONNS=25`, `DB_MAX_IDLE_CONNS=5`, `DB_CONN_MAX_LIFETIME=30m`, `DB_CONN_MAX_IDLE_TIME=5m`.\n- Added production compose defaults for both `backend-startup-writer` and `backend`, with env overrides.\n- Documented why the defaults stay aligned with current runtime behavior: WAVE11-PERF-002 showed `max_open=1` saturates while `max_open=2` clears the controlled seam, but did not justify speculative changes beyond existing defaults.\n- Documented revisit signals using `/ops/status.dbPool` wait counters, request/readiness symptoms, DB connection capacity, and lifecycle closure counters.\n\nchecks_run:\n- `git diff --check -- backend/.env.dev scripts/docker-compose-prod.yaml README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`\n- `node/js-yaml` parse/assertion for `scripts/docker-compose-prod.yaml`\n- `go test ./internal/app/runtime -run TestMeasureDBPoolWaitDifferentiatesSaturation -count=1`\n- `go test ./internal/app/runtime -run '^$' -bench BenchmarkDBPoolWaitUnderSaturation -benchtime=5x -count=1`\n\nfollow_ups:\n- `docker compose config` was not run because `docker` is unavailable in this environment; run it in a Docker-equipped deploy environment if compose render validation is required.\n\nDispatcher and verifier sign-off were recorded in `.codex-reports/tasks/019de369-df09-7740-a702-8edaec847c28`."
     },
     {
       "uid": "019de369-df09-74cf-beab-ff77f9576bce",
       "id": "WAVE11-PERF-004",
       "title": "WAVE11 Performance: Stop and review the first measured hotspot and next evidence-backed seam",
-      "status": "pending",
+      "status": "done",
       "prompt": "Finish WAVE11 with a performance-specific stop-and-review point. Summarize what the pool-tuning work changed, record whether the first bottleneck moved or disappeared, and only name a concrete query or index follow-up if the measurements justify it. Keep caching, background jobs, compression middleware, and broader performance-platform work deferred.",
       "acceptance_criteria": [
         "The active performance note accurately reflects the measured tuning outcome for the touched runtime seam.",
@@ -169,7 +214,7 @@
       "depends_on": [
         "019de369-df09-7740-a702-8edaec847c28"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -177,7 +222,22 @@
       "notes": [
         "This is the WAVE11 stop-and-review point before any query or index work is queued.",
         "Only queue a follow-up hotspot if the measurement seam actually justifies it."
-      ]
+      ],
+      "started_at": "2026-05-02T23:55:30.151437+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-74cf-beab-ff77f9576bce_20260502T235530Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-74cf-beab-ff77f9576bce_20260502T235530Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-74cf-beab-ff77f9576bce_20260502T235530Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-74cf-beab-ff77f9576bce_20260502T235530Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-74cf-beab-ff77f9576bce_20260502T235530Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019deb1e-62e0-7552-8134-4b23e7e7c4aa"
+      },
+      "finished_at": "2026-05-02T23:59:20.040034+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-74cf-beab-ff77f9576bce`  \ntask_id: `WAVE11-PERF-004`  \nstatus: `complete`\n\nUpdated the WAVE11 performance stop-and-review in [11-runtime-performance-tuning.md](/workspace/socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md): the active note now says the first measured hotspot was the DB pool wait seam, the one-connection bottleneck is no longer represented by the explicit active defaults, and no query/index follow-up is justified without concrete dbPool wait plus request-path evidence. Caching, workers, compression middleware, profiling/load-testing, autoscaling, and broader platform work remain deferred.\n\nfiles_changed:\n`README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`, plus the already-coordinated WAVE11 runtime/contract files recorded in the canonical summary.\n\nchecks_run:\n`git diff --check -- README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md`; dispatcher/verifier also recorded passing Go formatting, boundary, API contract, quality, reliability, repeated `go test -count=1 ./server ./internal/app/runtime`, and the DB pool benchmark.\n\nfollow_ups:\nOnly create a migration-owned query or index follow-up after `/ops/status.dbPool` wait counters and request-path evidence identify a concrete slow query or missing index."
     }
   ]
 }
