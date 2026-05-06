@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "d439e58f-93be-42de-bd8c-1cb05cab0705",
+      "id": "WAVE04-DB-005",
+      "title": "WAVE04 Database: Make bet placement atomic and stop-and-review the remaining accounting surface",
+      "status": "done",
+      "prompt": "Finish WAVE04 by turning one high-risk accounting-sensitive workflow into an explicit transaction-scoped unit of work, starting with bet placement unless the touched code reveals an even smaller live compensation path. Define which writes must commit together, where transaction scope begins and ends across repositories, and what primary-DB concurrency protection the touched workflow needs. Preserve integer-first accounting behavior, keep automatic retry or circuit-breaker behavior out of scope, and end the wave with a precise inventory of the remaining sell-position or market-resolution transaction surface while keeping caching or Redis explicitly deferred.",
+      "acceptance_criteria": [
+        "One high-risk accounting-sensitive workflow in the touched code is converted from compensation-style behavior to an explicit transaction-scoped unit of work with clear commit boundaries.",
+        "The touched workflow makes its primary-DB concurrency protection explicit and preserves existing accounting behavior without adding generic automatic retry or circuit-breaker behavior.",
+        "Focused tests prove atomicity-sensitive behavior for the migrated workflow, and the wave ends with an explicit remaining inventory for other accounting-sensitive flows while keeping caching or Redis deferred."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit atomic unit of work for the first accounting-sensitive workflow",
+          "deterministic evidence for touched transaction and concurrency behavior",
+          "precise remaining accounting-surface inventory with caching still deferred"
+        ]
+      },
+      "out_of_scope": [
+        "a generic transaction framework for every workflow",
+        "automatic retry or circuit-breaker rollout around money-moving writes",
+        "caching or Redis rollout"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/handlers/bets",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/04-database-layer.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start with the smallest high-risk workflow, expected to be bet placement.",
+        "Keep Redis and caching explicitly deferred until runtime ownership and accounting correctness are stronger."
+      ],
+      "started_at": "2026-04-29T22:51:25.588305+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/d439e58f-93be-42de-bd8c-1cb05cab0705_20260429T225125Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddb70-a555-7f43-9b1e-4ba20ceef0ca"
+      },
+      "finished_at": "2026-04-29T23:00:40.350779+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `d439e58f-93be-42de-bd8c-1cb05cab0705`  \ntask_id: `WAVE04-DB-005`  \nstatus: `completed`\n\nSpawned `software-action-dispatcher-agent`; it coordinated specialist review and verifier sign-off.\n\nChanged bet placement to require an explicit transaction unit of work. The GORM adapter now scopes user balance reads/debits and bet insertion to one transaction, with Postgres `FOR UPDATE` protection on the user row. Removed the buy-side compensation ledger path from the active placement workflow and added rollback coverage for failed bet creation.\n\nfiles_changed:\n- `internal/domain/bets/bet_place.go`\n- `internal/domain/bets/bet_support.go`\n- `internal/domain/bets/errors.go`\n- `internal/domain/bets/service.go`\n- `internal/domain/bets/service_helpers_test.go`\n- `internal/domain/bets/service_test.go`\n- `internal/repository/bets/place_transaction.go`\n- `internal/repository/bets/place_transaction_test.go`\n- `README/PRODUCTION-NOTES/BACKEND/04-database-layer.md`\n\nchecks_run:\n- `gofmt`\n- `go test -count=1 ./internal/domain/bets ./internal/repository/bets`\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `run_quality_guardrails.sh /workspace/socialpredict`\n- `run_reliability_suite.sh /workspace/socialpredict ./internal/domain/bets`\n- `run_reliability_suite.sh /workspace/socialpredict ./internal/repository/bets`\n\nfollow_ups:\n- Sell-position and market-resolution transaction/concurrency surfaces remain inventoried but not migrated in this wave.\n- Caching and Redis remain explicitly deferred."
+    },
+    {
+      "uid": "97568861-fcab-4748-bd63-957981f94da3",
+      "id": "WAVE05-SEC-001",
+      "title": "WAVE05 Security: Make runtime/bootstrap own JWT, proxy-trust, CORS, and header posture",
+      "status": "done",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` as the binding design context for WAVE05 security hardening. Complete the first useful slice by moving deployment-sensitive security posture behind an explicit runtime/bootstrap seam. Make JWT signing-key presence, trusted-proxy rules for forwarded headers, CORS defaults, and header or HSTS ownership assumptions explicit in runtime code and operator-facing docs; remove ad hoc env reads from auth or server code where the touched path can now depend on injected runtime settings. Preserve current login and serving behavior where safe, fail closed on missing JWT signing material for the touched auth-serving path, and do not create a new `security/*` platform tree.",
+      "acceptance_criteria": [
+        "The touched runtime/bootstrap path owns JWT signing-key presence, trusted-proxy rules, CORS defaults, and header or HSTS posture explicitly instead of leaving them split across ad hoc helpers.",
+        "Touched auth or server code no longer reads deployment-sensitive security settings ad hoc when an injected runtime seam is available.",
+        "Focused tests and operator-facing note updates cover the chosen runtime security posture and missing-key failure behavior for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime ownership of deployment-sensitive security posture",
+          "removal of ad hoc env reads from touched auth and server paths",
+          "explicit fail-closed JWT key behavior for the touched slice"
+        ]
+      },
+      "out_of_scope": [
+        "token or session redesign",
+        "MFA, RBAC, or request-signing rollout",
+        "distributed rate limiting or compliance-program work"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/security",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "d439e58f-93be-42de-bd8c-1cb05cab0705"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep deployment-sensitive security posture separate from application-policy configuration.",
+        "Do not hide runtime security ownership back inside `setup`, auth helpers, or a new middleware platform tree."
+      ],
+      "started_at": "2026-04-30T04:14:17.391953+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/97568861-fcab-4748-bd63-957981f94da3_20260430T041417Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/97568861-fcab-4748-bd63-957981f94da3_20260430T041417Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/97568861-fcab-4748-bd63-957981f94da3_20260430T041417Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/97568861-fcab-4748-bd63-957981f94da3_20260430T041417Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/97568861-fcab-4748-bd63-957981f94da3_20260430T041417Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddc98-3c15-7af1-a637-9610d64a567d"
+      },
+      "finished_at": "2026-04-30T04:38:27.297007+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `97568861-fcab-4748-bd63-957981f94da3`  \ntask_id: `WAVE05-SEC-001`  \nstatus: `completed`\n\nImplemented the runtime/bootstrap security posture seam. Runtime now loads and validates JWT signing material, proxy-header trust, CORS defaults, and HSTS/header posture; server/auth consume injected settings; missing JWT signing key fails closed before serving. Operator notes were updated in `README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`.\n\nfiles_changed:\n`backend/internal/app/runtime/security.go`, `backend/internal/app/runtime/security_test.go`, `backend/main.go`, `backend/server/server.go`, `backend/server/server_test.go`, `backend/internal/app/container.go`, `backend/internal/service/auth/*`, `backend/security/*`, `README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`\n\nchecks_run:\n`go test -count=1 ./internal/app/runtime ./security ./internal/service/auth ./server` passed twice; `go vet ./...` passed; boundary checks passed; quality guardrails passed; API contract sync passed.\n\nfollow_ups:\nRemaining direct JWT parsing in `handlers/markets/resolvemarket.go` is still a later auth/API cleanup slice, as documented. Architecture dispatcher and specialist sign-off completed with no blockers."
+    },
+    {
+      "uid": "33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf",
+      "id": "WAVE05-SEC-002",
+      "title": "WAVE05 Security: Harden client-IP extraction and keep the in-process limiter honest",
+      "status": "done",
+      "prompt": "After the runtime-owned proxy rules exist, harden `backend/security` rate limiting around an explicit client-identity extractor that respects the new proxy-trust contract instead of blindly trusting `X-Forwarded-For` or `X-Real-IP`. Keep the current in-process limiter as the active-slice baseline, reuse the boundary failure path for `429` behavior rather than reintroducing transport-rough strings, and make the limitation to per-process enforcement explicit in code, tests, and the active security note without pulling in Redis or shared rate limiting.",
+      "acceptance_criteria": [
+        "The touched rate-limiting path no longer blindly trusts forwarded headers and instead uses an explicit proxy-trust or client-identity contract.",
+        "Touched `429` behavior stays on the shared boundary-failure path rather than raw transport strings.",
+        "Focused tests and note updates make the in-process limiter baseline and its replica-level limitations explicit for the touched slice."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "deterministic proxy-trust and client-identity behavior",
+          "stable shared `429` behavior for touched middleware paths",
+          "explicit in-process limiter baseline without distributed-scope drift"
+        ]
+      },
+      "out_of_scope": [
+        "Redis or distributed rate limiting",
+        "IP reputation or abuse-platform work",
+        "public route taxonomy changes"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "97568861-fcab-4748-bd63-957981f94da3"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep the active-slice limiter local and honest about its limits.",
+        "Do not reintroduce plain-text `429` behavior while tightening proxy trust."
+      ],
+      "started_at": "2026-04-30T04:38:27.388901+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf_20260430T043827Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf_20260430T043827Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf_20260430T043827Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf_20260430T043827Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf_20260430T043827Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddcae-5cb0-7d32-a482-e7c651bdb411"
+      },
+      "finished_at": "2026-04-30T05:18:10.989825+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf`  \ntask_id: `WAVE05-SEC-002`  \nstatus: `completed`\n\nImplemented the rate-limit hardening behind an explicit `ClientIdentityExtractor`, wired it through rate limiting and request-boundary logging, preserved shared JSON `429` responses via `WriteRateLimited`, and documented/tested the limiter as in-memory and per-process only. Assumption: existing dirty runtime/auth/security posture changes were task lineage from the dependent slice and were preserved.\n\nfiles_changed:\n- `backend/security/ratelimit.go`\n- `backend/security/ratelimit_test.go`\n- `backend/security/requestboundary.go`\n- `backend/security/requestboundary_test.go`\n- `backend/docs/openapi.yaml`\n- `README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`\n\nchecks_run:\n- `go test ./security -count=1` passed twice\n- `go test ./internal/app/runtime -count=1` passed after workspace cache retry\n- `go test ./server -count=1` passed\n- `go test ./internal/service/auth -count=1` passed\n- boundary checks passed\n- API contract sync/OpenAPI validation passed\n- reliability suite for `./security` passed\n- `go vet ./security ./internal/app/runtime ./server` passed\n- `go vet ./internal/service/auth` passed\n- `gofmt -l` on touched Go files passed\n\nfollow_ups: none."
+    },
+    {
+      "uid": "9df6daaf-aab4-4893-b816-f5f70244ae2e",
+      "id": "WAVE05-SEC-003",
+      "title": "WAVE05 Security: Inject shared validation and sanitization into the first auth and write-path slices",
+      "status": "done",
+      "prompt": "Keep `backend/security` as shared request-boundary support instead of a hidden constructor call in every handler. Migrate the first high-value touched slices that still instantiate `security.NewSecurityService()` ad hoc, starting with login plus one write-heavy boundary path such as admin add-user or create-market, onto injected or otherwise owned reusable validation and sanitization dependencies through the existing server or container seams. Preserve current validation and sanitization behavior, keep handlers thin, and do not invent a new validation platform or move boundary checks into domain policy.",
+      "acceptance_criteria": [
+        "The touched auth and write-path slices no longer create fresh security services ad hoc when a shared boundary seam is sufficient.",
+        "Reusable validation and sanitization ownership is explicit in the touched server, container, or handler wiring without leaking transport checks into domain policy.",
+        "Focused tests preserve current validation and sanitization behavior for the migrated slices."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "owned validation and sanitization seam reuse",
+          "removal of ad hoc `security.NewSecurityService()` creation from touched paths",
+          "preservation of boundary-only validation responsibilities"
+        ]
+      },
+      "out_of_scope": [
+        "schema-wide validation redesign",
+        "domain-policy validation rewrites",
+        "new top-level security or validation subsystems"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/security"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "33b438cf-9ff0-4dc7-8bc9-301f1d24d0cf"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest reusable seam that removes a real ad hoc security-service construction.",
+        "Do not turn `backend/security` into domain policy or a second platform architecture."
+      ],
+      "started_at": "2026-04-30T05:18:11.085594+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/9df6daaf-aab4-4893-b816-f5f70244ae2e_20260430T051811Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/9df6daaf-aab4-4893-b816-f5f70244ae2e_20260430T051811Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/9df6daaf-aab4-4893-b816-f5f70244ae2e_20260430T051811Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/9df6daaf-aab4-4893-b816-f5f70244ae2e_20260430T051811Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/9df6daaf-aab4-4893-b816-f5f70244ae2e_20260430T051811Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddcd2-bbed-7261-99ea-b4a258f222f1"
+      },
+      "finished_at": "2026-04-30T05:29:40.302440+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `9df6daaf-aab4-4893-b816-f5f70244ae2e`  \ntask_id: `WAVE05-SEC-003`  \nstatus: `completed`\n\nChanged:\n- `backend/internal/app/container.go`\n- `backend/internal/app/container_test.go`\n- `backend/internal/service/auth/auth.go`\n- `backend/internal/service/auth/auth_service.go`\n- `backend/internal/service/auth/loggin.go`\n- `backend/internal/service/auth/middleware_test.go`\n- `backend/handlers/admin/adduser.go`\n- `backend/handlers/admin/adduser_http_test.go`\n- `backend/server/server.go`\n\nSummary:\n- Spawned the requested dispatcher path and got architecture plus verifier signoff.\n- Moved login and admin add-user onto a container-owned request-boundary `security.SecurityService`.\n- Removed ad hoc per-handler `security.NewSecurityService()` construction from those migrated production slices.\n- Kept validation/sanitization at the HTTP boundary and did not move policy into domain services.\n- Fixed the verifier-found auth fallback regression so empty injected auth keys still use the configured process/env fallback, while malformed bearer tokens still return `INVALID_TOKEN`.\n\nChecks run:\n- Boundary checks: pass\n- Focused tests: `go test -count=1 ./internal/app ./internal/service/auth ./handlers/admin` pass, repeated\n- Regression/focused sweep: `go test -count=1 ./internal/app ./internal/service/auth ./handlers/admin ./handlers/users` pass\n- Full suite: `go test -count=1 ./...` pass\n- `go vet ./...` pass\n- `git diff --check` pass\n\nFollow-ups:\n- Non-blocking: `AuthService` snapshots the JWT signing key at construction, so runtime key rotation would require rebuilding or reinjecting the service. The canonical report summary was updated at `/workspace/socialpredict/.codex-reports/tasks/9df6daaf-aab4-4893-b816-f5f70244ae2e/summary.json`."
+    },
+    {
+      "uid": "991c8ea5-19c8-4a16-885e-7d03c7e489e3",
+      "id": "WAVE05-SEC-004",
+      "title": "WAVE05 Security: Make must-change-password enforcement explicit across the next protected route family",
+      "status": "done",
+      "prompt": "With reusable auth and boundary helpers in place, make the `mustChangePassword` rule explicit across the next protected route family rather than relying on whichever handlers already happen to call the auth helper correctly. Preserve the intentional exceptions for login and `/v0/changepassword`, block the chosen authenticated slice consistently with the shared failure reason, and update route tests plus OpenAPI or production-note text for the touched endpoints without claiming universal route-family completion.",
+      "acceptance_criteria": [
+        "The chosen protected route family enforces `mustChangePassword` consistently at the boundary with the shared failure reason instead of mixed ad hoc behavior.",
+        "Login and `/v0/changepassword` remain intentionally usable when `mustChangePassword` is set.",
+        "Focused route tests and touched API documentation reflect the migrated enforcement behavior without overstating wider coverage."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit `mustChangePassword` boundary behavior for the touched route family",
+          "preserved login and change-password exceptions",
+          "accurate contract documentation for the migrated slice"
+        ]
+      },
+      "out_of_scope": [
+        "broader token redesign",
+        "full authenticated-route sweep in one task",
+        "authorization framework redesign"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/handlers/users",
+        "../socialpredict/backend/handlers/admin",
+        "../socialpredict/backend/handlers/bets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "9df6daaf-aab4-4893-b816-f5f70244ae2e"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Preserve the current login and change-password exception behavior intentionally.",
+        "Prefer one coherent protected route family over a broad unaudited auth sweep."
+      ],
+      "started_at": "2026-04-30T05:29:40.396207+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/991c8ea5-19c8-4a16-885e-7d03c7e489e3_20260430T052940Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/991c8ea5-19c8-4a16-885e-7d03c7e489e3_20260430T052940Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/991c8ea5-19c8-4a16-885e-7d03c7e489e3_20260430T052940Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/991c8ea5-19c8-4a16-885e-7d03c7e489e3_20260430T052940Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/991c8ea5-19c8-4a16-885e-7d03c7e489e3_20260430T052940Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddcdd-4090-7881-b91a-f80e42ec2183"
+      },
+      "finished_at": "2026-04-30T05:36:10.920183+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `991c8ea5-19c8-4a16-885e-7d03c7e489e3`  \ntask_id: `WAVE05-SEC-004`  \nstatus: `completed`\n\nImplemented explicit `mustChangePassword` boundary enforcement for the private action route family: `/v0/bet`, `/v0/sell`, and `/v0/userposition/{marketId}`. Login and `/v0/changepassword` remain outside that wrapper and intentionally usable when `MustChangePassword` is set.\n\nfiles_changed:\n- `server/server.go`\n- `server/server_test.go`\n- `docs/openapi.yaml`\n- `../README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`\n\nchecks_run:\n- `go test -count=1 ./server ./handlers/bets/buying ./handlers/bets/selling ./handlers/users` twice\n- `go test -count=1 ./internal/service/auth`\n- `check_api_contract_sync.sh /workspace/socialpredict HEAD`\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `run_quality_guardrails.sh /workspace/socialpredict HEAD`\n\nfollow_ups: None.\n\nNote: the worktree already had unrelated modified files before this task; I left them untouched. The first Go test attempt hit an unwritable default module cache under `/home/agent/go`, then passed with explicit writable cache paths."
+    },
+    {
+      "uid": "0ba7f17a-9086-4ebc-8a2b-75da87826d2b",
+      "id": "WAVE05-SEC-005",
+      "title": "WAVE05 Security: Stop and review remaining boundary-security gaps and deferred platform topics",
+      "status": "done",
+      "prompt": "Finish WAVE05 with a security-specific stop-and-review point. Remove or document any touched leftover plain-text security failures that still bypass the shared boundary contract, inventory the remaining spoofable-header, raw auth, or ad hoc validation hotspots after this wave, and refresh the active security note so the next queue slice is a precise auth or boundary-hardening seam instead of a vague platform backlog. Keep `FUTURE/01-long-term-security-hardening.md` explicitly deferred and do not pull MFA, RBAC, distributed rate limiting, request signing, session redesign, or compliance work into the active queue.",
+      "acceptance_criteria": [
+        "The touched remaining boundary-security exceptions are either removed or made explicit with a precise next migration seam.",
+        "The active security note reflects what this wave actually hardened, what remains, and which long-term topics stay deferred.",
+        "The wave ends with a concrete follow-on security or auth seam rather than a broad speculative platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining boundary-security inventory",
+          "active-note accuracy versus touched code",
+          "continued deferral of long-term security-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating FUTURE security-platform topics",
+        "distributed rate limiting, MFA, RBAC, or request signing implementation",
+        "broad compliance-program planning"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "991c8ea5-19c8-4a16-885e-7d03c7e489e3"
+      ],
+      "attempts": 1,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE05 stop-and-review point before broader auth or API convergence work.",
+        "Keep security hardening threaded through existing seams instead of reopening a separate platform buildout."
+      ],
+      "started_at": "2026-04-30T05:36:11.013977+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/0ba7f17a-9086-4ebc-8a2b-75da87826d2b_20260430T053611Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019ddce3-362b-7dd0-a64f-bbfa346fec52"
+      },
+      "finished_at": "2026-04-30T05:43:21.179554+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `0ba7f17a-9086-4ebc-8a2b-75da87826d2b`  \ntask_id: `WAVE05-SEC-005`  \nstatus: `completed`\n\nChanged the active security note to close WAVE05 with a stop-and-review inventory, document remaining boundary-security exceptions, and name `backend/handlers/markets/resolvemarket.go` as the next precise auth-boundary seam. Updated `backend/docs/API-ISSUES.md` so security-boundary cleanup is not framed as a broad API backlog. The canonical summary report is updated at `/workspace/socialpredict/.codex-reports/tasks/0ba7f17a-9086-4ebc-8a2b-75da87826d2b/summary.json`.\n\nfiles_changed:\n`README/PRODUCTION-NOTES/BACKEND/05-security-hardening.md`, `backend/docs/API-ISSUES.md`, plus the existing WAVE05 backend security/auth/runtime/server diff files recorded in `summary.json`.\n\nchecks_run:\n`git diff --check`; `RUNS=2 run_reliability_suite.sh /workspace/socialpredict ./security`; `go test ./internal/app/runtime ./internal/service/auth ./server ./handlers/admin -count=1` twice; `go vet ./internal/app/runtime ./internal/service/auth ./server ./handlers/admin`; verifier ran scoped `gofmt -l`.\n\nfollow_ups:\nNext slice should migrate `backend/handlers/markets/resolvemarket.go` to injected `AuthService` plus `authhttp`/shared failure envelopes, removing direct JWT parsing and handler-local `JWT_SIGNING_KEY` reads. Keep `FUTURE/01-long-term-security-hardening.md` deferred; no MFA, RBAC, distributed rate limiting, request signing, session redesign, or compliance work was activated."
+    }
+  ]
+}

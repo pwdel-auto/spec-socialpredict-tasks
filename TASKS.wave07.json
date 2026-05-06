@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "661835f8-0764-4ce6-bb3e-6a4ec53925eb",
+      "id": "WAVE07-TEST-001",
+      "title": "WAVE07 Testing: Clarify convenience versus source-of-truth verification at the owning packages",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json`, `../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md`, and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md` as the binding context for WAVE07 verification hardening. Start by tightening the existing package-local runtime, migration, and accounting-sensitive test files so they explicitly distinguish SQLite convenience coverage from behaviors that still require real-Postgres proof. Keep the changes close to the owning packages, refresh the active testing note only as needed to reflect the concrete source-of-truth targets chosen for this wave, and do not create a new shared test framework, top-level `testing/` tree, or CI program.",
+      "acceptance_criteria": [
+        "The touched runtime, migration, or accounting-sensitive test files make it clear which checks are convenience-only and which behaviors are still awaiting real-Postgres verification.",
+        "The first real-Postgres targets for this wave are narrowed to concrete W04 and W06 risks rather than a broad integration backlog.",
+        "Any touched testing note changes stay consistent with package-local test ownership and keep long-term infrastructure ideas explicitly deferred."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "package-local verification ownership",
+          "explicit SQLite-versus-Postgres truth boundary",
+          "continued deferral of new testing-platform structure"
+        ]
+      },
+      "out_of_scope": [
+        "introducing a top-level `testing/` subsystem or shared `TestSuite` base",
+        "broad CI orchestration or coverage-gating redesign",
+        "testcontainers-first rollout or generalized integration harness work"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/markets",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "f8cf6368-bd2e-4dbc-9548-6431f21e7b25"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer comments, naming, and helper extraction inside the owning packages over a central test taxonomy.",
+        "Use the smallest documentation edit that makes the chosen truth boundary explicit."
+      ]
+    },
+    {
+      "uid": "bc2d6801-7904-406d-b2f4-b23ccd6998bb",
+      "id": "WAVE07-TEST-002",
+      "title": "WAVE07 Testing: Add Postgres-truthful runtime and migration verification for readiness and startup-writer behavior",
+      "status": "pending",
+      "prompt": "With the target seams narrowed, add the first real-Postgres verification where SQLite is not credible: runtime DB readiness after startup, migration failure posture, and the chosen startup-writer or migration-serialization behavior from W04. Keep the tests beside `internal/app/runtime` and `migration` or in the smallest justified backend-root contract location, reuse existing helpers where practical, and avoid broad container-orchestration or CI redesign. If minimal production seams must change to make the behavior testable, keep them owned by runtime or migration code rather than inventing a new test platform.",
+      "acceptance_criteria": [
+        "Real-Postgres-backed checks exist for the touched readiness, startup-writer, or migration behaviors whose correctness depends on Postgres semantics.",
+        "The new DB-truthful checks live with the owning runtime or migration code, or in a narrowly justified backend-root contract test, without introducing a central test subsystem.",
+        "The touched verification makes failure posture explicit for DB loss, schema incompatibility, or startup-writer discipline without widening into general deployment orchestration."
+      ],
+      "verification": {
+        "owner": "software-action-db-migration-agent",
+        "sign_off": "required",
+        "focus": [
+          "real-Postgres verification for readiness and startup mutation behavior",
+          "migration failure posture under the owned startup seam",
+          "package-local or narrowly justified contract-test placement"
+        ]
+      },
+      "out_of_scope": [
+        "generalized multi-node orchestration harnesses",
+        "backend-wide CI redesign",
+        "caching, Redis, or unrelated database architecture changes"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "661835f8-0764-4ce6-bb3e-6a4ec53925eb"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer the smallest real-Postgres cases that prove the runtime contract; do not duplicate every SQLite case against Postgres.",
+        "If startup-writer behavior cannot be proven entirely package-local, use backend-root or `server` only for the narrow cross-boundary seam."
+      ]
+    },
+    {
+      "uid": "5547ad2a-a236-4e90-b9ab-cd3d133295b3",
+      "id": "WAVE07-TEST-003",
+      "title": "WAVE07 Testing: Add Postgres-truthful verification for the first atomic accounting workflow",
+      "status": "pending",
+      "prompt": "Add the next small real-Postgres verification slice to the first accounting-sensitive workflow that W04 made atomic, expected to be bet placement unless the completed W04 slice leaves a smaller live unit of work. Prove transaction boundaries, rollback behavior, and the chosen primary-DB concurrency protection under overlapping requests or equivalent direct repository or service calls. Keep the tests in the owning domain or repository packages, preserve integer-first accounting assumptions, and do not grow a generalized transaction-test framework.",
+      "acceptance_criteria": [
+        "The first migrated atomic workflow has real-Postgres verification for transaction success, rollback, and the touched concurrency-control behavior.",
+        "The verification stays in the owning domain or repository packages and does not depend on a new shared transaction-test platform.",
+        "The tests preserve accounting semantics and avoid speculative coverage of workflows that the active queue has not yet migrated."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "transaction and rollback truth under Postgres",
+          "concurrency protection for the first atomic workflow",
+          "preservation of integer-first accounting behavior"
+        ]
+      },
+      "out_of_scope": [
+        "sell-position or market-resolution sweeps beyond the first migrated workflow",
+        "automatic retry or circuit-breaker experimentation",
+        "load, stress, or benchmark infrastructure"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/repository/bets",
+        "../socialpredict/backend/internal/repository/users"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "bc2d6801-7904-406d-b2f4-b23ccd6998bb"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Start with the workflow W04 actually migrated instead of inventing a new accounting surface.",
+        "Add only the smallest concurrency cases needed to prove the chosen locking or update semantics."
+      ]
+    },
+    {
+      "uid": "b309821d-deb6-4a6b-a78b-ef1637cc765f",
+      "id": "WAVE07-TEST-004",
+      "title": "WAVE07 Testing: Harden boundary contract tests for auth, rate limiting, and shared failure vocabulary",
+      "status": "pending",
+      "prompt": "Strengthen the request-boundary verification that earlier waves introduced by extending existing auth, security, server, and OpenAPI contract tests around must-change-password exceptions, shared `405`, `429`, or sanitized `500` behavior, proxy-sensitive client-IP assumptions, and any touched public `reason` vocabulary. Keep the tests package-local or backend-root where they already live, and update `openapi.yaml` only if the hardened contract checks expose real drift. Do not reopen route redesign, distributed rate limiting, or generated-client work.",
+      "acceptance_criteria": [
+        "Existing auth, security, server, or OpenAPI contract tests cover the touched shared-failure behaviors and documented auth exceptions more explicitly than before.",
+        "Any touched public `reason` vocabulary or route-spec expectations stay aligned between implementation and `openapi.yaml`.",
+        "The verification remains attached to the owning packages and backend-root contract tests rather than moving into a new shared test layer."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared failure vocabulary and auth-exception contract coverage",
+          "proxy-sensitive rate-limit and boundary-failure behavior",
+          "route-spec parity for any touched public failure shapes"
+        ]
+      },
+      "out_of_scope": [
+        "distributed rate-limiting rollout",
+        "broader API versioning or generated-client changes",
+        "reopening unrelated handler migrations just to chase test coverage"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/service/auth",
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/openapi_test.go"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "5547ad2a-a236-4e90-b9ab-cd3d133295b3"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer extending existing contract tests over adding duplicate suites.",
+        "Keep proxy-trust and shared-failure expectations explicit in test names and fixtures."
+      ]
+    },
+    {
+      "uid": "dcf47cd2-ea9e-42dc-b8d9-5bc4f765b669",
+      "id": "WAVE07-TEST-005",
+      "title": "WAVE07 Testing: Stop and review remaining DB-truth gaps and deferred test-platform ideas",
+      "status": "pending",
+      "prompt": "Finish WAVE07 with a verification-specific stop-and-review point. Reconcile what this wave actually proved against the remaining SQLite-only convenience coverage, make the next real-Postgres candidate explicit if one still remains, and keep `FUTURE/03-long-term-test-infrastructure.md` clearly deferred. Do not pull `testcontainers-go`, a top-level `testing/` tree, shared `TestSuite` architecture, broad fast/slow taxonomy work, performance suites, or CI-platform redesign into the active queue unless the touched evidence now reveals a specific uncovered behavior that cannot be handled with the current package-local posture.",
+      "acceptance_criteria": [
+        "The remaining DB or runtime behaviors that still lack source-of-truth Postgres verification are explicitly inventoried after the wave's concrete test additions.",
+        "The active and future testing notes accurately distinguish completed hardening from still-deferred infrastructure ideas.",
+        "The wave ends with a precise next verification seam rather than a revived platform backlog."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "explicit remaining DB-truth verification inventory",
+          "accuracy of active versus deferred testing notes",
+          "continued rejection of speculative testing-platform expansion"
+        ]
+      },
+      "out_of_scope": [
+        "testcontainers adoption or container-orchestration rollout",
+        "broad CI or workflow taxonomy redesign",
+        "centralized shared test framework or helper-repo extraction"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/migration",
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/server",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/07-testing-strategy.md",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/FUTURE/03-long-term-test-infrastructure.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "b309821d-deb6-4a6b-a78b-ef1637cc765f"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE07 stop-and-review point before any heavier verification or CI discussion.",
+        "Keep the next slice framed as one concrete uncovered behavior, not a testing-platform program."
+      ]
+    }
+  ]
+}
