@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INNER_SCRIPT="${SCRIPT_DIR}/codex-runner.sh"
+TARGET_REPO="${SCRIPT_DIR}/../socialpredict"
+LOGS_REPO="${SCRIPT_DIR}/../log-socialpredict-tasks"
+
+usage() {
+  cat <<'EOF'
+SocialPredict yolo runner wrapper
+
+Purpose:
+  Run codex-runner.sh in yolo mode against the standard sibling target and logs
+  repos for this workspace, while accepting only a TASKS file path.
+
+Usage:
+  ./runner-yolo <tasks-file>
+  ./runner-yolo --help
+
+Behavior:
+  - Runs codex-runner.sh with --mode yolo
+  - Uses this repo as --control-repo
+  - Uses ../socialpredict as --target-repo
+  - Uses ../log-socialpredict-tasks as --logs-repo
+  - Resolves relative TASKS paths from this control repo root
+
+Example:
+  ./runner-yolo TASKS.wave03.json
+EOF
+}
+
+die() {
+  printf 'runner-yolo error: %s\n' "$*" >&2
+  exit 2
+}
+
+abs_path_from_repo_root() {
+  python3 - "$SCRIPT_DIR" "$1" <<'PY'
+import os
+import sys
+
+repo_root, value = sys.argv[1:]
+if os.path.isabs(value):
+    print(os.path.abspath(value))
+else:
+    print(os.path.abspath(os.path.join(repo_root, value)))
+PY
+}
+
+case "${1:-}" in
+"" )
+  usage
+  exit 2
+  ;;
+help|--help|-h)
+  usage
+  exit 0
+  ;;
+esac
+
+if [[ $# -ne 1 ]]; then
+  die "expected exactly one TASKS file argument"
+fi
+
+if [[ ! -x "${INNER_SCRIPT}" ]]; then
+  die "expected executable script at ${INNER_SCRIPT}"
+fi
+
+TASKS_FILE="$(abs_path_from_repo_root "$1")"
+
+[[ -f "$TASKS_FILE" ]] || die "TASKS file not found: ${TASKS_FILE}"
+[[ -d "$TARGET_REPO" ]] || die "target repo not found: ${TARGET_REPO}"
+[[ -d "$LOGS_REPO" ]] || die "logs repo not found: ${LOGS_REPO}"
+
+exec "${INNER_SCRIPT}" \
+  --control-repo "${SCRIPT_DIR}" \
+  --tasks "${TASKS_FILE}" \
+  --mode yolo \
+  --target-repo "${TARGET_REPO}" \
+  --logs-repo "${LOGS_REPO}"
