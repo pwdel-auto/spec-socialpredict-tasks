@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-7241-835a-e8c54bbbcb78",
+      "id": "WAVE11-PERF-001",
+      "title": "WAVE11 Performance: Make effective DB pool and connection-lifecycle posture explicit",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md` as the binding context for WAVE11 runtime performance tuning. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by making the runtime-owned `sql.DB` pool and lifetime settings explicit and observable: normalize effective values, log them safely at startup, and document the current env knobs per deployment shape without changing query architecture. Preserve current ownership in `backend/internal/app/runtime/db.go` and do not introduce a new performance subsystem.",
+      "acceptance_criteria": [
+        "The touched runtime path makes effective pool and connection-lifecycle values explicit without leaking secrets or changing unrelated DB behavior.",
+        "Focused tests cover normalization or default-selection behavior for the touched pool settings.",
+        "Operator-facing docs or touched runtime notes reflect the current performance knobs honestly instead of promising a broader optimization platform."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "runtime ownership of DB pool and lifecycle settings",
+          "safe observability of effective performance knobs",
+          "avoidance of speculative performance-platform growth"
+        ]
+      },
+      "out_of_scope": [
+        "caching, Redis, or worker rollout",
+        "query rewrites or index changes before evidence exists",
+        "new top-level performance packages"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/logger",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Expose effective DB-pool posture safely; never log secrets or full DSNs.",
+        "Keep the first slice focused on the owned runtime knobs that already exist."
+      ]
+    },
+    {
+      "uid": "019de369-df09-707b-975c-866559bfda5c",
+      "id": "WAVE11-PERF-002",
+      "title": "WAVE11 Performance: Add the smallest repeatable measurement seam for pool saturation and latency",
+      "status": "pending",
+      "prompt": "Before tuning values, add a small repeatable measurement seam close to the owning runtime or server packages, such as targeted benchmarks, opt-in real-Postgres checks, or deterministic instrumentation around pool waits and readiness, so pool changes can be compared against evidence. Do not create a generalized load-testing platform, always-on profiling program, or `pprof` rollout.",
+      "acceptance_criteria": [
+        "The repo contains a repeatable measurement seam tied to the current runtime or server packages for the touched pool-related behavior.",
+        "That seam can differentiate at least one saturation or latency dimension affected by pool tuning.",
+        "The measurement stays package-local or narrowly scoped instead of becoming a broad performance-testing framework."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "repeatable evidence for pool-related runtime behavior",
+          "narrow measurement ownership in runtime or server packages",
+          "avoidance of generalized load-testing infrastructure"
+        ]
+      },
+      "out_of_scope": [
+        "broad load or stress testing platforms",
+        "always-on profiling exposure",
+        "cache or compression middleware experiments"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/backend/server"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-7241-835a-e8c54bbbcb78"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer opt-in real-Postgres checks where SQLite cannot prove the behavior.",
+        "The goal is comparative evidence for tuning, not a full benchmark suite."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7740-a702-8edaec847c28",
+      "id": "WAVE11-PERF-003",
+      "title": "WAVE11 Performance: Set initial deployment defaults for DB pool knobs from measured behavior",
+      "status": "pending",
+      "prompt": "Use evidence from the measurement seam to choose initial `DB_MAX_*` and connection-lifetime defaults for the current deployment shapes, update the current env or compose templates, and explain the tradeoff in operator-facing docs. Keep the change reversible, tie it directly to the measured evidence, and do not speculate about caching, background workers, or query rewrites.",
+      "acceptance_criteria": [
+        "The touched env or deployment templates encode explicit initial pool defaults or documented overrides for the current backend runtime.",
+        "The chosen values are tied to the measured behavior from the preceding slice instead of guesswork.",
+        "Touched docs make it clear when those values should be revisited and what signal would justify doing so."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "evidence-backed pool-default selection",
+          "alignment between runtime knobs and deployment templates",
+          "reversible performance tuning without speculative scope growth"
+        ]
+      },
+      "out_of_scope": [
+        "cache rollout or Redis introduction",
+        "query or index changes without measured justification",
+        "deployment-platform redesign beyond touched runtime defaults"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/.env.dev",
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "019de369-df09-707b-975c-866559bfda5c"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep deployment defaults explicit where the repo already owns them.",
+        "Do not let a lack of perfect data justify speculative performance settings."
+      ]
+    },
+    {
+      "uid": "019de369-df09-74cf-beab-ff77f9576bce",
+      "id": "WAVE11-PERF-004",
+      "title": "WAVE11 Performance: Stop and review the first measured hotspot and next evidence-backed seam",
+      "status": "pending",
+      "prompt": "Finish WAVE11 with a performance-specific stop-and-review point. Summarize what the pool-tuning work changed, record whether the first bottleneck moved or disappeared, and only name a concrete query or index follow-up if the measurements justify it. Keep caching, background jobs, compression middleware, and broader performance-platform work deferred.",
+      "acceptance_criteria": [
+        "The active performance note accurately reflects the measured tuning outcome for the touched runtime seam.",
+        "If a bottleneck remains, the next follow-up is stated as a concrete migration-owned query or index seam rather than a speculative optimization backlog.",
+        "Caching, worker, and platform-heavy performance ideas remain explicitly deferred at the end of the wave."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "accuracy of the post-wave performance inventory",
+          "evidence-backed identification of the next hotspot if one remains",
+          "continued deferral of speculative optimization programs"
+        ]
+      },
+      "out_of_scope": [
+        "caching or Redis activation",
+        "background-job or worker topology buildout",
+        "reviving broad performance-platform backlog items"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/11-runtime-performance-tuning.md",
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/backend/internal/app/runtime"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "019de369-df09-7740-a702-8edaec847c28"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE11 stop-and-review point before any query or index work is queued.",
+        "Only queue a follow-up hotspot if the measurement seam actually justifies it."
+      ]
+    }
+  ]
+}

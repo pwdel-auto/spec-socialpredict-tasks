@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-759d-b8e5-8cca9f3b9aed",
+      "id": "WAVE10-VALID-001",
+      "title": "WAVE10 Validation: Remove ad hoc validator and sanitizer construction from the next route family",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/10-data-validation.md` as the binding context for WAVE10 data validation. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by migrating one coherent route family that still constructs validation or sanitization helpers ad hoc, expected to be `handlers/markets` because the reviewed baseline still uses `security.NewSecurityService()` and `security.NewSanitizer()` there, onto shared or injected `backend/security` ownership through the existing server or container seams. Preserve current rejection behavior, keep handlers thin, and do not build a new validation platform.",
+      "acceptance_criteria": [
+        "The chosen route family no longer constructs its own validation or sanitization helpers where a shared boundary seam is sufficient.",
+        "Validation and sanitization remain boundary-owned for the touched slice and do not leak into domain policy or persistence code.",
+        "Focused tests preserve the current rejection behavior for the migrated route family."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared request-boundary validation ownership",
+          "removal of ad hoc helper construction from the chosen route family",
+          "preservation of thin-handler boundaries"
+        ]
+      },
+      "out_of_scope": [
+        "new top-level validation or sanitization subsystems",
+        "rewriting domain business invariants as middleware rules",
+        "broad route-family migration outside the chosen slice"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/container.go",
+        "../socialpredict/backend/security"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer one coherent route family over scattered one-call-site edits.",
+        "Keep `backend/security` as the reusable boundary seam instead of a hidden per-handler constructor."
+      ]
+    },
+    {
+      "uid": "019de369-df09-78f2-96b1-16098f92ce27",
+      "id": "WAVE10-VALID-002",
+      "title": "WAVE10 Validation: Converge the chosen route family on shared sanitized validation failures",
+      "status": "pending",
+      "prompt": "After shared helper ownership is explicit, migrate the same route family's validation and sanitization failures off ad hoc text or raw parser responses onto shared sanitized boundary failure writers and stable public `reason` vocabulary. Keep success payloads stable, preserve the touched request shape, and do not leak domain-policy details or internal parser strings into the client contract.",
+      "acceptance_criteria": [
+        "The chosen route family's validation and sanitization failures use shared sanitized boundary failure writers and stable public reasons.",
+        "Success payloads and domain behavior remain stable for the migrated routes.",
+        "Focused tests and any touched contract docs stay aligned on the public validation-failure vocabulary for the migrated slice."
+      ],
+      "verification": {
+        "owner": "software-action-openapi-contract-agent",
+        "sign_off": "required",
+        "focus": [
+          "shared sanitized validation-failure behavior",
+          "stable success-shape preservation for the migrated slice",
+          "contract alignment for the touched public reason vocabulary"
+        ]
+      },
+      "out_of_scope": [
+        "flag-day response-wrapper redesign",
+        "repo-wide validation-failure normalization in one task",
+        "mixing internal parser errors into public contract fields"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/docs/openapi.yaml",
+        "../socialpredict/backend/docs/API-ISSUES.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-759d-b8e5-8cca9f3b9aed"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep public validation reasons stable and separate from internal parser or telemetry strings.",
+        "Migrate failure shaping with the same route family whose helper ownership was cleaned up."
+      ]
+    },
+    {
+      "uid": "019de369-df09-72f3-98e0-5c893b2485c8",
+      "id": "WAVE10-VALID-003",
+      "title": "WAVE10 Validation: Pull one duplicated boundary-only rule into backend or security and keep business invariants in domain services",
+      "status": "pending",
+      "prompt": "While the chosen route family is open, move one duplicated boundary-only validation or sanitization rule into `backend/security` or an adjacent shared boundary helper, such as repeated query or title sanitization, while leaving business invariants like market-eligibility, resolution-time, or probability policy in the domain service layer. Keep the extracted rule small, reversible, and covered by focused tests.",
+      "acceptance_criteria": [
+        "One duplicated boundary-only validation concern in the touched slice is consolidated under the shared boundary seam.",
+        "The touched domain services still own business invariants and do not regress into handler or middleware policy leakage.",
+        "Focused tests make the boundary-versus-domain split explicit for the chosen rule."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "small shared-helper extraction for a true boundary-only rule",
+          "preserved domain ownership of business invariants",
+          "reversible validation consolidation without framework growth"
+        ]
+      },
+      "out_of_scope": [
+        "DB-backed rules engines or generic rule registries",
+        "moving business invariants into middleware",
+        "broad output-sanitization campaigns"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/security",
+        "../socialpredict/backend/handlers/markets",
+        "../socialpredict/backend/internal/domain/markets"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-78f2-96b1-16098f92ce27"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Extract only a true boundary concern; do not recast domain policy as generic validation.",
+        "Prefer the smallest helper that reduces real duplication in the chosen slice."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7028-ab2e-d9345ad18d21",
+      "id": "WAVE10-VALID-004",
+      "title": "WAVE10 Validation: Stop and review remaining validation bypasses and deferred framework ideas",
+      "status": "pending",
+      "prompt": "Finish WAVE10 with a validation-specific stop-and-review point. Update the validation note and any adjacent contract docs with what this wave actually consolidated, inventory the remaining route families that still bypass the shared boundary seam, and keep framework-heavy registry, middleware, and platform ideas out of scope.",
+      "acceptance_criteria": [
+        "The active validation note and touched docs accurately reflect the landed boundary-validation consolidation and remaining hotspots.",
+        "The next validation seam is stated as a concrete route family or shared helper gap rather than a framework program.",
+        "Large validation-platform ideas remain explicitly deferred at the end of the wave."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "accuracy of the post-wave validation inventory",
+          "explicit remaining route-family or helper seams",
+          "continued deferral of validation-platform work"
+        ]
+      },
+      "out_of_scope": [
+        "new top-level validation frameworks or rule registries",
+        "generic request-body rewriting middleware",
+        "new backlog buckets without a precise next validation seam"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/10-data-validation.md",
+        "../socialpredict/backend/docs/API-ISSUES.md",
+        "../socialpredict/backend/docs/openapi.yaml"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-72f3-98e0-5c893b2485c8"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE10 stop-and-review point before any broader validation-platform discussion.",
+        "Keep the next seam tied to the existing boundary and domain owners."
+      ]
+    }
+  ]
+}

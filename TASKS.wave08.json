@@ -1,0 +1,190 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-7b67-8f06-e98931e26caa",
+      "id": "WAVE08-DEPLOY-001",
+      "title": "WAVE08 Deploy: Wire image and compose health policy to backend-owned liveness and readiness",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md` as the binding context for WAVE08 deployment infrastructure. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by wiring the current backend Docker image and production compose topology to the backend-owned `/health` and `/readyz` contract instead of placeholder or implicit path checks. Keep backend-served docs publishing explicit where touched, preserve the current single backend binary shape, and do not introduce Kubernetes, Helm, Terraform, or a second deployment platform.",
+      "acceptance_criteria": [
+        "The touched backend image and production compose path consume the current `/health` and `/readyz` contract intentionally instead of relying on placeholder checks or root-path assumptions.",
+        "The touched deployment artifacts stay aligned with the live backend docs and infra route ownership for `/swagger/` and `/openapi.yaml` where that surface is affected.",
+        "Focused verification proves the current deployment health policy matches the backend serving contract without widening into orchestration-platform work."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "image and compose consumption of backend health semantics",
+          "continued explicit docs publishing through the current proxy topology",
+          "avoidance of speculative deployment-platform expansion"
+        ]
+      },
+      "out_of_scope": [
+        "Kubernetes, Helm, Terraform, or autoscaling rollout",
+        "frontend or proxy redesign outside touched health and docs publishing paths",
+        "new worker or sidecar deployment topology"
+      ],
+      "touched_paths": [
+        "../socialpredict/docker/backend/Dockerfile",
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/data/nginx/vhosts/prod/default.conf.template",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Keep the backend binary as the source of truth for liveness, readiness, and docs-serving paths.",
+        "Prefer the smallest deployment-artifact change that makes health consumption explicit."
+      ]
+    },
+    {
+      "uid": "019de369-df09-776f-8d91-c25d95bd455a",
+      "id": "WAVE08-DEPLOY-002",
+      "title": "WAVE08 Deploy: Make the startup-writer role explicit in the deployable topology",
+      "status": "pending",
+      "prompt": "After health policy is explicit, update the current compose or deployment artifacts so exactly one runtime path is responsible for `STARTUP_WRITER=true` and request-serving replicas are explicit non-writers. Keep the current one-binary deployment shape, preserve fail-closed startup behavior, and do not add DB advisory-lock infrastructure, leader-election code, or a broader platform control plane.",
+      "acceptance_criteria": [
+        "The touched deployment artifacts encode an explicit writer versus non-writer distinction instead of relying on implicit startup defaults.",
+        "The current operational contract for migrations and startup-owned seeds is documented where operators will actually use it.",
+        "The chosen change keeps the existing backend startup seam intact and does not reopen the design question as a cluster-platform feature buildout."
+      ],
+      "verification": {
+        "owner": "software-action-db-migration-agent",
+        "sign_off": "required",
+        "focus": [
+          "deployment enforcement of the startup-writer contract",
+          "non-writer serving posture around migrations and startup-owned seeds",
+          "preservation of fail-closed startup mutation behavior"
+        ]
+      },
+      "out_of_scope": [
+        "DB-backed advisory locking or new startup leader-election logic",
+        "generalized multi-cluster orchestration redesign",
+        "schema or seed behavior changes outside the deployment contract"
+      ],
+      "touched_paths": [
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/.github/workflows/deploy-to-staging.yml",
+        "../socialpredict/.github/workflows/deploy-to-production.yml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "019de369-df09-7b67-8f06-e98931e26caa"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Operational enforcement is the point of this slice; do not replace it with another code-path abstraction.",
+        "Keep the exact-one-writer assumption explicit in touched deployment docs."
+      ]
+    },
+    {
+      "uid": "019de369-df09-74c0-a71f-e257b6fc59f1",
+      "id": "WAVE08-DEPLOY-003",
+      "title": "WAVE08 Deploy: Add graceful shutdown and rollout discipline to the current backend runtime",
+      "status": "pending",
+      "prompt": "With health and writer roles explicit, harden the current backend runtime and deployment contract for graceful shutdown. Make readiness close before shutdown, give the current server path an explicit drain window, and align any touched compose or operator docs with the actual serving contract. Keep the change in `main.go`, `server`, `internal/app/runtime`, and current deployment artifacts rather than inventing a worker or sidecar topology.",
+      "acceptance_criteria": [
+        "The touched runtime path stops advertising readiness before shutdown and gives the current server path an explicit, testable drain window.",
+        "Any touched deployment artifacts reflect the backend's real shutdown expectations instead of assuming immediate kill semantics.",
+        "Focused tests cover the chosen graceful-shutdown behavior without widening into generalized orchestration or background-job work."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "readiness transition and shutdown sequencing",
+          "deterministic server-drain behavior for the touched runtime path",
+          "alignment between runtime shutdown behavior and deployment expectations"
+        ]
+      },
+      "out_of_scope": [
+        "new worker roles, sidecars, or background processing topology",
+        "proxy-wide timeout redesign outside touched rollout settings",
+        "long-term platform migration work"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/main.go",
+        "../socialpredict/backend/server",
+        "../socialpredict/backend/internal/app/runtime",
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "019de369-df09-776f-8d91-c25d95bd455a"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer closing readiness over adding special-case liveness behavior during shutdown.",
+        "Keep the graceful-shutdown contract explicit in both code and touched operator-facing artifacts."
+      ]
+    },
+    {
+      "uid": "019de369-df09-735b-be03-0039d90dc3fe",
+      "id": "WAVE08-DEPLOY-004",
+      "title": "WAVE08 Deploy: Stop and review remaining proxy or rollout gaps and deferred platform topics",
+      "status": "pending",
+      "prompt": "Finish WAVE08 with a deployment-specific stop-and-review point. Confirm the touched health, startup-writer, docs-publishing, and graceful-shutdown behavior matches the active note, inventory any remaining narrow proxy or rollout gaps, and leave a precise next seam without reviving Kubernetes, Helm, Terraform, autoscaling, or broad infra-as-code backlog.",
+      "acceptance_criteria": [
+        "The active deployment note accurately reflects the landed health, writer-role, docs-publishing, and graceful-shutdown contract for the touched paths.",
+        "Any remaining deployment or proxy gap is stated as a narrow next seam rather than a speculative platform program.",
+        "The wave closes with larger deployment-platform ambitions still explicitly deferred."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "note accuracy versus touched deployment artifacts and runtime behavior",
+          "explicit remaining rollout or proxy gap inventory",
+          "continued deferral of large deployment-platform topics"
+        ]
+      },
+      "out_of_scope": [
+        "reactivating Kubernetes, Helm, Terraform, or autoscaling work",
+        "broad ingress or edge-platform redesign",
+        "new backlog buckets without a concrete next seam"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md",
+        "../socialpredict/scripts/docker-compose-prod.yaml",
+        "../socialpredict/data/nginx/vhosts/prod/default.conf.template",
+        "../socialpredict/.github/workflows/deploy-to-staging.yml",
+        "../socialpredict/.github/workflows/deploy-to-production.yml"
+      ],
+      "working_dir": "../socialpredict",
+      "depends_on": [
+        "019de369-df09-74c0-a71f-e257b6fc59f1"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This is the WAVE08 stop-and-review point before any future deployment-platform discussion.",
+        "Keep the next seam concrete and tied to the existing runtime and proxy topology."
+      ]
+    }
+  ]
+}

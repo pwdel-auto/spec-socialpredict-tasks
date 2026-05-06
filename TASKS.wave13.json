@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "project": "socialpredict-backend-production-waves",
+  "task_registry": "lib/task-registry.json",
+  "task_archives": [
+    "lib/task-archives/socialpredict-pr-581-service-boundary-refactor.json"
+  ],
+  "tasks": [
+    {
+      "uid": "019de369-df09-7c64-9c85-726295a4323c",
+      "id": "WAVE13-JOBS-001",
+      "title": "WAVE13 Jobs: Extract one future async-safe candidate behind an idempotent service seam while keeping it synchronous",
+      "status": "pending",
+      "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md` as the binding context for this deferred WAVE13 background-jobs queue. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by choosing one clearly non-financial candidate already adjacent to the live codebase, expected to be a derived snapshot, export-like helper, or other recomputable side effect, and extract or tighten its service seam so it can be invoked without HTTP coupling while remaining synchronous in the current runtime. Do not add a jobs package, Redis queue, cron framework, or worker deployment role.",
+      "acceptance_criteria": [
+        "One clearly non-financial candidate operation is exposed through an owned service seam that can be invoked without HTTP coupling.",
+        "The chosen operation still runs synchronously in the current backend runtime after the refactor.",
+        "No queue, scheduler, worker, or async runtime infrastructure is introduced in this slice."
+      ],
+      "verification": {
+        "owner": "software-action-architecture-agent",
+        "sign_off": "required",
+        "focus": [
+          "small future-async seam for a non-financial candidate",
+          "continued synchronous ownership in the current runtime",
+          "avoidance of premature worker-platform buildout"
+        ]
+      },
+      "out_of_scope": [
+        "Redis, queue tables, or outbox rollout",
+        "moving bet, sell, or market-resolution flows off the request path",
+        "new jobs or workers package trees"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/handlers/cms/homepage",
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Choose a derived or recomputable candidate only; money-moving flows are explicitly non-targets.",
+        "The point is to preserve a future async seam without changing current runtime shape."
+      ]
+    },
+    {
+      "uid": "019de369-df09-79f9-83d5-515bbd142837",
+      "id": "WAVE13-JOBS-002",
+      "title": "WAVE13 Jobs: Prove idempotency or replay safety for the chosen candidate and keep financial flows synchronous",
+      "status": "pending",
+      "prompt": "After the candidate seam exists, add deterministic tests that prove the chosen operation can be retried or replayed safely in-process, and make the non-target boundary explicit for bet placement, sell settlement, market resolution, or other accounting-sensitive flows touched by the task. Do not add retry loops, dead-letter handling, background execution, or hidden async fallbacks.",
+      "acceptance_criteria": [
+        "The chosen candidate has deterministic tests proving its repeatability or idempotent behavior in-process.",
+        "The touched accounting-sensitive flows remain explicitly synchronous and out of scope for background execution.",
+        "The task improves future async readiness without introducing worker semantics or retry infrastructure."
+      ],
+      "verification": {
+        "owner": "software-action-test-reliability-agent",
+        "sign_off": "required",
+        "focus": [
+          "deterministic idempotency or replay-safety proof for the chosen candidate",
+          "explicit non-target boundary for accounting-sensitive flows",
+          "continued absence of background execution infrastructure"
+        ]
+      },
+      "out_of_scope": [
+        "dead-letter queues, retries, or lag-tracking systems",
+        "async offloading of any money-moving workflow",
+        "new worker deployment roles"
+      ],
+      "touched_paths": [
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/internal/domain/bets",
+        "../socialpredict/backend/internal/domain/markets"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-7c64-9c85-726295a4323c"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "Prefer repeatability tests close to the owning service over a generic async test harness.",
+        "Make the synchronous non-target boundary explicit for any touched financial path."
+      ]
+    },
+    {
+      "uid": "019de369-df09-7bcf-86ba-7be35c882531",
+      "id": "WAVE13-JOBS-003",
+      "title": "WAVE13 Jobs: Stop and review runtime-role prerequisites, failure visibility, and continued deferral",
+      "status": "pending",
+      "prompt": "Finish WAVE13 by updating the background-jobs draft or adjacent docs with the precise prerequisites still missing for any real worker or queue rollout: runtime roles, retry and dead-letter policy, lag and failure visibility, and one concrete next async seam if it remains justified. Keep queue tables, outbox rollout, scheduler frameworks, and Redis or worker platform work deferred.",
+      "acceptance_criteria": [
+        "The background-jobs draft or touched docs accurately describe the chosen candidate seam and the prerequisites still missing for any real async rollout.",
+        "Any next async seam is named concretely and remains explicitly non-financial.",
+        "Queue, worker, scheduler, and Redis platform work remain clearly deferred at the end of the wave."
+      ],
+      "verification": {
+        "owner": "software-action-verifier-agent",
+        "sign_off": "required",
+        "focus": [
+          "accuracy of the documented future-async prerequisites",
+          "explicit non-financial next seam selection if one remains justified",
+          "continued deferral of background-job platform work"
+        ]
+      },
+      "out_of_scope": [
+        "outbox, scheduler, or worker runtime implementation",
+        "queue tables or Redis infrastructure",
+        "new async backlog buckets without a concrete safe candidate"
+      ],
+      "touched_paths": [
+        "../socialpredict/README/PRODUCTION-NOTES/BACKEND/13-background-jobs.md",
+        "../socialpredict/backend/handlers/metrics",
+        "../socialpredict/backend/internal/domain/analytics",
+        "../socialpredict/backend/handlers/cms/homepage"
+      ],
+      "working_dir": "../socialpredict/backend",
+      "depends_on": [
+        "019de369-df09-79f9-83d5-515bbd142837"
+      ],
+      "attempts": 0,
+      "max_attempts": 3,
+      "sandbox": "workspace-write",
+      "approval": "never",
+      "profile": "",
+      "notes": [
+        "This stop-and-review point is part of the deferral posture, not a signal to activate workers next.",
+        "Keep the next seam tied to one safe candidate and its missing prerequisites."
+      ]
+    }
+  ]
+}
