@@ -10,7 +10,7 @@
       "uid": "019de369-df09-7b67-8f06-e98931e26caa",
       "id": "WAVE08-DEPLOY-001",
       "title": "WAVE08 Deploy: Wire image and compose health policy to backend-owned liveness and readiness",
-      "status": "pending",
+      "status": "done",
       "prompt": "Use `lib/design/design-plan.json` and `../socialpredict/README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md` as the binding context for WAVE08 deployment infrastructure. Treat upstream `main` at commit `051aac6b2fefa5634b8c98cc38caf52acf0043a9` as the reviewed baseline. Start by wiring the current backend Docker image and production compose topology to the backend-owned `/health` and `/readyz` contract instead of placeholder or implicit path checks. Keep backend-served docs publishing explicit where touched, preserve the current single backend binary shape, and do not introduce Kubernetes, Helm, Terraform, or a second deployment platform.",
       "acceptance_criteria": [
         "The touched backend image and production compose path consume the current `/health` and `/readyz` contract intentionally instead of relying on placeholder checks or root-path assumptions.",
@@ -39,7 +39,7 @@
       ],
       "working_dir": "../socialpredict",
       "depends_on": [],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -47,13 +47,28 @@
       "notes": [
         "Keep the backend binary as the source of truth for liveness, readiness, and docs-serving paths.",
         "Prefer the smallest deployment-artifact change that makes health consumption explicit."
-      ]
+      ],
+      "started_at": "2026-05-02T16:16:57.784242+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-7b67-8f06-e98931e26caa_20260502T161657Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-7b67-8f06-e98931e26caa_20260502T161657Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-7b67-8f06-e98931e26caa_20260502T161657Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-7b67-8f06-e98931e26caa_20260502T161657Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-7b67-8f06-e98931e26caa_20260502T161657Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019de97a-9502-7df2-bed7-7712e94dab63"
+      },
+      "finished_at": "2026-05-02T16:23:15.920819+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-7b67-8f06-e98931e26caa`  \ntask_id: `WAVE08-DEPLOY-001`  \nstatus: `completed`\n\nChanged:\n- `docker/backend/Dockerfile`: added image `HEALTHCHECK` against `/health`, requiring `live`.\n- `scripts/docker-compose-prod.yaml`: added production backend `/readyz` healthcheck, requiring `ready`; gated frontend and nginx on backend `service_healthy`.\n- `data/nginx/vhosts/prod/default.conf.template`: explicitly proxies `/health`, `/readyz`, `/swagger/`, and `/openapi.yaml` to backend.\n- `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`: updated deployment guidance to match the new liveness/readiness policy.\n\nChecks run:\n- `git diff --check` on touched files.\n- Node YAML parse of `scripts/docker-compose-prod.yaml`.\n- `go test ./server` with workspace-local Go caches.\n- Verifier reliability suite: `go test ./server -count=1` twice, OpenAPI validation, and `go vet ./server`.\n- Route/topology scans for health/docs ownership and forbidden platform expansion.\n\nFollow-ups:\n- `docker compose config` and `nginx -t` could not run because Docker/nginx CLIs are not installed in this environment; run those before production rollout."
     },
     {
       "uid": "019de369-df09-776f-8d91-c25d95bd455a",
       "id": "WAVE08-DEPLOY-002",
       "title": "WAVE08 Deploy: Make the startup-writer role explicit in the deployable topology",
-      "status": "pending",
+      "status": "done",
       "prompt": "After health policy is explicit, update the current compose or deployment artifacts so exactly one runtime path is responsible for `STARTUP_WRITER=true` and request-serving replicas are explicit non-writers. Keep the current one-binary deployment shape, preserve fail-closed startup behavior, and do not add DB advisory-lock infrastructure, leader-election code, or a broader platform control plane.",
       "acceptance_criteria": [
         "The touched deployment artifacts encode an explicit writer versus non-writer distinction instead of relying on implicit startup defaults.",
@@ -84,7 +99,7 @@
       "depends_on": [
         "019de369-df09-7b67-8f06-e98931e26caa"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -92,13 +107,28 @@
       "notes": [
         "Operational enforcement is the point of this slice; do not replace it with another code-path abstraction.",
         "Keep the exact-one-writer assumption explicit in touched deployment docs."
-      ]
+      ],
+      "started_at": "2026-05-02T16:23:16.014975+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-776f-8d91-c25d95bd455a_20260502T162316Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-776f-8d91-c25d95bd455a_20260502T162316Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-776f-8d91-c25d95bd455a_20260502T162316Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-776f-8d91-c25d95bd455a_20260502T162316Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-776f-8d91-c25d95bd455a_20260502T162316Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019de980-5a56-7680-973d-e977cb1acf69"
+      },
+      "finished_at": "2026-05-02T16:28:16.096310+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-776f-8d91-c25d95bd455a`  \ntask_id: `WAVE08-DEPLOY-002`  \nstatus: `completed`\n\nChanged:\n- `scripts/docker-compose-prod.yaml`: added explicit `backend-startup-writer` with `STARTUP_WRITER=true`; serving `backend` now sets `STARTUP_WRITER=false` and waits on writer readiness.\n- `.github/workflows/deploy-to-staging.yml`\n- `.github/workflows/deploy-to-production.yml`: dispatch payloads now name the writer/non-writer deployment contract.\n- `.env.example`: documents the production writer/non-writer posture.\n- `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`: documents the migration/startup-owned seed contract and \u201cscale only non-writer backend\u201d rule.\n\nChecks run:\n- `git diff --check`\n- Python assertions for compose writer/non-writer topology and workflow `client-payload` JSON parsing\n- `db-migration-agent` static sign-off: no blocking issues\n\nFollow-ups:\n- `docker compose config` could not be run because `docker` is not installed in this runner; run it in a Docker-enabled environment before deploy.\n- The requested custom `software-action-dispatcher-agent` type was unavailable, so I attempted it first, then used the repo\u2019s available `dispatcher-agent` fallback."
     },
     {
       "uid": "019de369-df09-74c0-a71f-e257b6fc59f1",
       "id": "WAVE08-DEPLOY-003",
       "title": "WAVE08 Deploy: Add graceful shutdown and rollout discipline to the current backend runtime",
-      "status": "pending",
+      "status": "done",
       "prompt": "With health and writer roles explicit, harden the current backend runtime and deployment contract for graceful shutdown. Make readiness close before shutdown, give the current server path an explicit drain window, and align any touched compose or operator docs with the actual serving contract. Keep the change in `main.go`, `server`, `internal/app/runtime`, and current deployment artifacts rather than inventing a worker or sidecar topology.",
       "acceptance_criteria": [
         "The touched runtime path stops advertising readiness before shutdown and gives the current server path an explicit, testable drain window.",
@@ -130,7 +160,7 @@
       "depends_on": [
         "019de369-df09-776f-8d91-c25d95bd455a"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -138,13 +168,28 @@
       "notes": [
         "Prefer closing readiness over adding special-case liveness behavior during shutdown.",
         "Keep the graceful-shutdown contract explicit in both code and touched operator-facing artifacts."
-      ]
+      ],
+      "started_at": "2026-05-02T16:28:16.177509+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-74c0-a71f-e257b6fc59f1_20260502T162816Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-74c0-a71f-e257b6fc59f1_20260502T162816Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-74c0-a71f-e257b6fc59f1_20260502T162816Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-74c0-a71f-e257b6fc59f1_20260502T162816Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-74c0-a71f-e257b6fc59f1_20260502T162816Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019de984-eec4-7550-880f-900169030b56"
+      },
+      "finished_at": "2026-05-02T16:39:19.320790+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-74c0-a71f-e257b6fc59f1`  \ntask_id: `WAVE08-DEPLOY-003`  \nstatus: `completed`\n\nImplemented graceful shutdown for the current backend path:\n- Added runtime-owned shutdown config with `BACKEND_READINESS_DRAIN_SECONDS` defaulting to `5s` and `BACKEND_SHUTDOWN_TIMEOUT_SECONDS` defaulting to `10s`.\n- Wired `main.go` to load shutdown config and pass it into `server.Start`.\n- Updated server shutdown order to close readiness, wait the readiness drain window, then call bounded `http.Server.Shutdown`.\n- Added focused tests for config defaults/overrides/invalid values and shutdown sequencing.\n- Updated production compose/docs to use `5s` readiness drain, `10s` shutdown timeout, and `20s` Docker `stop_grace_period`.\n\nfiles_changed:\n- `backend/internal/app/runtime/shutdown.go`\n- `backend/internal/app/runtime/shutdown_test.go`\n- `backend/main.go`\n- `backend/server/server.go`\n- `backend/server/server_test.go`\n- `scripts/docker-compose-prod.yaml`\n- `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`\n\nchecks_run:\n- `go test -count=1 ./internal/app/runtime ./server` twice\n- `run_boundary_checks.sh /workspace/socialpredict`\n- `run_quality_guardrails.sh /workspace/socialpredict HEAD~1`\n- `go test ./... -run TestOpenAPISpecValidates -count=1`\n- `git diff --check`\n- `software-action-test-reliability-agent` sign-off\n- `verifier-agent` final PASS\n\nfollow_ups:\n- No black-box signal-driven container shutdown test was run.\n- `docker compose config` could not run because Docker is unavailable; compose values were reviewed directly.\n- `BACKEND_PORT` remains parsed in `server`; architecture marked that as pre-existing cleanup, not a shutdown blocker."
     },
     {
       "uid": "019de369-df09-735b-be03-0039d90dc3fe",
       "id": "WAVE08-DEPLOY-004",
       "title": "WAVE08 Deploy: Stop and review remaining proxy or rollout gaps and deferred platform topics",
-      "status": "pending",
+      "status": "done",
       "prompt": "Finish WAVE08 with a deployment-specific stop-and-review point. Confirm the touched health, startup-writer, docs-publishing, and graceful-shutdown behavior matches the active note, inventory any remaining narrow proxy or rollout gaps, and leave a precise next seam without reviving Kubernetes, Helm, Terraform, autoscaling, or broad infra-as-code backlog.",
       "acceptance_criteria": [
         "The active deployment note accurately reflects the landed health, writer-role, docs-publishing, and graceful-shutdown contract for the touched paths.",
@@ -176,7 +221,7 @@
       "depends_on": [
         "019de369-df09-74c0-a71f-e257b6fc59f1"
       ],
-      "attempts": 0,
+      "attempts": 1,
       "max_attempts": 3,
       "sandbox": "workspace-write",
       "approval": "never",
@@ -184,7 +229,22 @@
       "notes": [
         "This is the WAVE08 stop-and-review point before any future deployment-platform discussion.",
         "Keep the next seam concrete and tied to the existing runtime and proxy topology."
-      ]
+      ],
+      "started_at": "2026-05-02T16:39:19.421535+00:00",
+      "runner_state": {
+        "segment": 1,
+        "event_file": "/workspace/log-socialpredict-tasks/.codex-runs/events/019de369-df09-735b-be03-0039d90dc3fe_20260502T163919Z_part01.ndjson",
+        "stderr_file": "/workspace/log-socialpredict-tasks/.codex-runs/stderr/019de369-df09-735b-be03-0039d90dc3fe_20260502T163919Z_part01.stderr.log",
+        "message_file": "/workspace/log-socialpredict-tasks/.codex-runs/messages/019de369-df09-735b-be03-0039d90dc3fe_20260502T163919Z_part01.txt",
+        "prompt_file": "/workspace/log-socialpredict-tasks/.codex-runs/prompts/019de369-df09-735b-be03-0039d90dc3fe_20260502T163919Z_part01.txt",
+        "context_file": "/workspace/log-socialpredict-tasks/.codex-runs/context/019de369-df09-735b-be03-0039d90dc3fe_20260502T163919Z_part01.ndjson",
+        "resume_pending": false,
+        "paused": false,
+        "session_id": "019de98f-0dfb-7af1-b0c1-cadc1ec1e67f"
+      },
+      "finished_at": "2026-05-02T16:43:15.957044+00:00",
+      "last_exit_code": 0,
+      "last_summary": "task_uid: `019de369-df09-735b-be03-0039d90dc3fe`  \ntask_id: `WAVE08-DEPLOY-004`  \nstatus: `completed`\n\nSpawned `software-action-dispatcher-agent` first, then completed verifier sign-off with `software-action-verifier-agent`.\n\nfiles_changed:\n- `README/PRODUCTION-NOTES/BACKEND/08-deployment-infrastructure.md`\n\nwhat_changed:\n- Closed WAVE08 with a deployment stop-and-review section.\n- Confirmed the note matches landed `/health`, `/readyz`, startup-writer, docs publishing, workflow payload, and graceful shutdown behavior.\n- Narrowed the remaining seam to downstream deploy/proxy rollout verification.\n- Kept Kubernetes, Helm, Terraform, autoscaling, service mesh, multi-cluster, and broad infra-as-code work explicitly deferred.\n\nchecks_run:\n- `git diff --check`\n- YAML parse for `scripts/docker-compose-prod.yaml` and both deploy workflows\n- `go test ./internal/app/runtime ./server`\n\nfollow_ups:\n- Verify downstream deploy playbooks apply the compose service split and nginx root-path probe/docs template together, then host-check `/health`, `/readyz`, `/openapi.yaml`, `/swagger`, and `/swagger/` against the non-writer backend service."
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "task": {
+    "uid": "019de369-df09-776f-8d91-c25d95bd455a",
+    "id": "WAVE08-DEPLOY-002",
+    "title": "Verify deployment startup-writer enforcement",
+    "working_dir": "/workspace/socialpredict"
+  },
+  "dispatcher_agent": "db-migration-agent",
+  "control_repo": "/workspace/spec-socialpredict-tasks",
+  "target_repo": "/workspace/socialpredict",
+  "report_dir": "/workspace/spec-socialpredict-tasks/.codex-reports/019de369-df09-776f-8d91-c25d95bd455a",
+  "created_at": "2026-05-02T16:26:54.692991+00:00",
+  "updated_at": "2026-05-02T16:26:54.692991+00:00",
+  "files": {
+    "summary": "/workspace/spec-socialpredict-tasks/.codex-reports/019de369-df09-776f-8d91-c25d95bd455a/summary.json",
+    "conversation": "/workspace/spec-socialpredict-tasks/.codex-reports/019de369-df09-776f-8d91-c25d95bd455a/conversation.ndjson",
+    "decisions": "/workspace/spec-socialpredict-tasks/.codex-reports/019de369-df09-776f-8d91-c25d95bd455a/decisions.ndjson"
+  }
+}
