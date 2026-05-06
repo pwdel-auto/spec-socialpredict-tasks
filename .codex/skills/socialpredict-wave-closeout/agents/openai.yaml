@@ -1,0 +1,4 @@
+interface:
+  display_name: "SocialPredict Wave Closeout"
+  short_description: "Close out SocialPredict wave runs"
+  default_prompt: "Close out the completed SocialPredict wave across the task, target, and log repos using only pwdel-auto origin remotes for write operations."

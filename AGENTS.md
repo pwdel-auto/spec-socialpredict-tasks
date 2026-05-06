@@ -404,6 +404,7 @@ as the navigation point for the committed workspace contents.
   - `socialpredict-go-vet`
   - `socialpredict-google-go-style-guide`
   - `socialpredict-openapi-navigation`
+  - `socialpredict-wave-closeout`
 
   Each skill directory contains:
   - `SKILL.md` as the entrypoint
