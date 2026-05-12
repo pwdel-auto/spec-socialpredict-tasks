@@ -9,3 +9,7 @@ __pycache__/
 .codex-runs/
 .codex-agent-runs
 .codex-scratch/
+TASKS*.json
+!TASKS.example.json
+TASKS.json.backup
+TASKS*.json.backup

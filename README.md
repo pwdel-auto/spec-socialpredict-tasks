@@ -15,16 +15,14 @@ The intended topology is:
 
 ## What Lives Here
 
-- `TASKS.json`
-  Machine-readable task queue and runner state.
-  Active tasks are `uid`-first: `uid` is the canonical identity, while `id` is
-  an optional human-readable label.
 - `TASKS.example.json`
-  Minimal schema example for defining new task waves.
+  Minimal schema example for defining new task waves. This is the only
+  checked-in root `TASKS*.json` file; active queues should be local or supplied
+  explicitly to the runner.
 - `lib/task-registry.json`
   Persistent UID-first registry plus historical display-ID lookup.
 - `lib/task-archives/`
-  Historical task-queue archives moved out of the active `TASKS.json`.
+  Historical task-queue archives moved out of root task files.
 - `codex-runner.sh`
   Queue runner that launches Codex, captures logs, and maintains canonical task
   reports. Its readable live terminal renderer shows UTC timestamps on each
@@ -56,12 +54,12 @@ When reusing this repo for a different task wave or PR, update these first:
 1. `AGENTS.md`
    Replace the current target-branch, target-focus, and repo-map details with
    the new active workspace context.
-2. `TASKS.json`
-   Replace the existing queue with the current task set. Use
-   `TASKS.example.json` as the schema reference, not as a policy source.
-   Keep historical completed queues in `lib/task-archives/` and reserve their
-   UIDs in `lib/task-registry.json`. The same registry also keeps the old
-   human-readable `id` values for lookup and optional collision avoidance.
+2. Active task queue
+   Create a local queue from `TASKS.example.json` or pass an explicit queue
+   path with `--tasks`. Keep historical completed queues in
+   `lib/task-archives/` and reserve their UIDs in `lib/task-registry.json`.
+   The same registry also keeps the old human-readable `id` values for lookup
+   and optional collision avoidance.
 3. `.codex/agents/` and `.codex/skills/`
    Review any scope assumptions before reuse. Several bundled assets still
    assume backend/API work, Go validation flows, OpenAPI checks, or specific
@@ -78,7 +76,7 @@ When reusing this repo for a different task wave or PR, update these first:
 Already reusable:
 
 - the two-repo control-repo/target-repo operating model
-- the `TASKS.json` queue format and runner flow
+- the TASKS-format queue contract and runner flow
 - the persistent task-ID registry and archive pattern
 - the `.codex` asset layout for project-scoped config, agents, and skills
 - the canonical report layout under the target repo
@@ -114,5 +112,5 @@ sed -n '1,220p' TASKS.example.json
 Then retarget the workspace for the current task wave and run the queue:
 
 ```bash
-./codex-runner.sh --once
+./codex-runner.sh --tasks path/to/TASKS.json --once
 ```

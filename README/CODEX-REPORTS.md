@@ -6,7 +6,7 @@ task journals into the target repo.
 ## Ownership Split
 
 - Control repo (`spec-socialpredict-tasks`):
-  - `TASKS.json`
+  - TASKS-format queue supplied with `--tasks`
 - Log repo (`../log-socialpredict-tasks`):
   - `.codex-runs/` raw event streams, stderr, prompt captures, runner state
   - `.codex-runs/agent-runs/` compatibility home for legacy
