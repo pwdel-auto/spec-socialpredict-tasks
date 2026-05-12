@@ -4,12 +4,11 @@
     "title": "Active Backend Modernization Slice: Configuration Ownership, Runtime Observability, Failure Recovery, Request-Boundary Security Hardening, Database Runtime Hardening, Legacy Model Decoupling, and API Contract Alignment",
     "status": "draft",
     "created_at": "2026-04-17T11:56:27Z",
-    "updated_at": "2026-05-01T11:34:28Z",
+    "updated_at": "2026-05-12T01:37:10Z",
     "source_context": {
         "task_repo": ".",
         "target_repo": "../socialpredict",
         "scope": [
-            "../socialpredict/backend/util/**",
             "../socialpredict/backend/setup/**",
             "../socialpredict/backend/internal/app/**",
             "../socialpredict/backend/internal/domain/**",
@@ -30,17 +29,22 @@
             "../socialpredict/backend/handlers/stats/**",
             "../socialpredict/backend/handlers/metrics/**",
             "../socialpredict/backend/handlers/admin/adduser.go",
-            "../socialpredict/backend/docs/API-ISSUES.md",
-            "../socialpredict/backend/docs/openapi.yaml"
+            "../socialpredict/backend/docs/openapi.yaml",
+            "../socialpredict/.github/workflows/**",
+            "../socialpredict/.github/actions/**",
+            "../socialpredict/scripts/install.sh",
+            "../socialpredict/scripts/lib/jwt_key.sh",
+            "../socialpredict/scripts/docker-compose-prod.yaml",
+            "../socialpredict/README/INFRA/**",
+            "../socialpredict/HostOps",
+            "../socialpredict/backend/internal/app/runtime/operational_status.go",
+            "../socialpredict/backend/internal/app/runtime/serving_probe.go",
+            "../socialpredict/backend/internal/app/runtime/shutdown.go",
+            "../socialpredict/backend/handlers/cms/homepage/**",
+            "../socialpredict/backend/seed/seed.go"
         ],
         "source_documents": [
-            "TASKS.json",
-            "TASKS.wave01.json",
-            "TASKS.wave02.json",
-            "../socialpredict/backend/docs/API-ISSUES.md",
             "../socialpredict/backend/docs/README.md",
-            "../socialpredict/backend/README/BACKEND/API/API-DESIGN-REPORT.md",
-            "../socialpredict/backend/README/BACKEND/API/API-DOCS.md",
             "../socialpredict/backend/internal/app/container.go",
             "../socialpredict/backend/internal/app/env/devloader.go",
             "../socialpredict/backend/internal/app/runtime/config.go",
@@ -115,7 +119,29 @@
             "../socialpredict/backend/handlers/authhttp/authhttp.go",
             "../socialpredict/backend/internal/domain/users/uniqueness.go",
             "../socialpredict/backend/internal/domain/analytics/repository.go",
-            "../socialpredict/backend/handlers/cms/homepage/repo.go"
+            "../socialpredict/backend/handlers/cms/homepage/repo.go",
+            "SocialPredict release v3.0.0 (f013e3d): Platform, API, and Deployment Hardening",
+            "SocialPredict release v3.0.1 (1c4af34): Production Deploy Runtime Fix",
+            "../socialpredict/.github/workflows/deploy-to-production.yml",
+            "../socialpredict/.github/workflows/deploy-to-staging.yml",
+            "../socialpredict/.github/workflows/docker.yml",
+            "../socialpredict/.github/actions/verify-public-readiness/action.yml",
+            "../socialpredict/.github/actions/wait-for-ansible-workflow/action.yml",
+            "../socialpredict/scripts/install.sh",
+            "../socialpredict/scripts/lib/jwt_key.sh",
+            "../socialpredict/scripts/docker-compose-prod.yaml",
+            "../socialpredict/README/INFRA/README-INFRA-PRODUCTION.md",
+            "../socialpredict/README/INFRA/README-INFRA-STAGING.md",
+            "../socialpredict/README/INFRA/README-INFRA-HOSTOPS.md",
+            "../socialpredict/HostOps",
+            "../socialpredict/backend/internal/app/runtime/operational_status.go",
+            "../socialpredict/backend/internal/app/runtime/serving_probe.go",
+            "../socialpredict/backend/internal/app/runtime/shutdown.go",
+            "../socialpredict/backend/handlers/cms/homepage/service.go",
+            "../socialpredict/backend/internal/domain/bets/bet_sell.go",
+            "../socialpredict/backend/internal/domain/bets/bet_support.go",
+            "../socialpredict/backend/internal/domain/markets/service_policies.go",
+            "../socialpredict/backend/internal/domain/markets/models.go"
         ],
         "related_task_uids": [
             "0f7f5441-86ad-4d5a-9814-f13990fefbe3",
@@ -154,11 +180,16 @@
         {
             "agent": "codex",
             "design_posture": "fowler",
-            "notes": "Used the Evans, Fowler, and Martin designer-agent reviews to reconcile current-state claims against /workspace/socialpredict main at 9b22484 and update stale design-plan assertions."
+            "notes": "Used the Evans, Fowler, and Martin designer-agent reviews to reconcile current-state claims against the then-current SocialPredict backend and update stale design-plan assertions; superseded by the v3.0.1 release-baseline refresh."
+        },
+        {
+            "agent": "codex",
+            "design_posture": "hybrid",
+            "notes": "Integrated the Evans, Fowler, and Martin designer-agent reviews against actual SocialPredict v3.0.0 and v3.0.1 code, including release/deployment workflows, production DB TLS defaults, outcome-label language, explicit bounded contexts, CMS/auth boundary violations, and remaining accounting transaction seams."
         }
     ],
     "summary": {
-        "one_sentence": "Refresh the SocialPredict backend design plan against the landed W01-W07 backend hardening baseline, with remaining work focused on legacy cleanup, clearer domain boundaries, transaction coverage outside place-bet, and production verification policy.",
+        "one_sentence": "Refresh the SocialPredict backend design plan against the SocialPredict v3.0.1 release baseline: v3.0.0 backend/platform hardening plus v3.0.1 production deploy runtime-default corrections, with remaining work focused on legacy cleanup, explicit bounded contexts, transaction coverage outside place-bet, auth/CMS boundary cleanup, and release-to-readiness feedback policy.",
         "business_outcomes": [
             "Reduce architectural fragility in a prediction market backend that is moving from hobby-grade operation toward professional reliability.",
             "Improve extraction readiness so high-availability and fault-tolerant deployment patterns remain achievable later without rewriting the active slice.",
@@ -167,13 +198,15 @@
             "Improve deploy, restart, and incident diagnosis by unifying runtime logging ownership, OpenTelemetry-aligned correlation, and health/readiness boundaries.",
             "Make multi-replica startup safer by clarifying migration and seed ownership, readiness semantics, and database-runtime lifecycle responsibilities before adding caching or other optimization layers.",
             "Make request-boundary security behavior more explicit across environments by clarifying rate limiting, auth failure ownership, JWT runtime expectations, and CORS or proxy assumptions.",
-            "Preserve fast boundary-local verification in the live backend and add source-of-truth DB/runtime checks only where SQLite cannot credibly model behavior."
+            "Preserve fast boundary-local verification in the live backend and add source-of-truth DB/runtime checks only where SQLite cannot credibly model behavior.",
+            "Make release and deployment feedback explicit by treating tagged image publication, Ansible dispatch, public readiness verification, and production rollback evidence as architecture concerns.",
+            "Keep packaged Docker production database topology explicit: local Docker Postgres uses `DB_REQUIRE_TLS=false`, while external production databases must make `DB_REQUIRE_TLS` and `DB_SSLMODE` deliberate operator choices."
         ],
-        "proposed_direction": "Treat the landed configuration, runtime observability, failure recovery, database-runtime, security, API-contract, and verification work as current code reality on socialpredict:main. Continue from that baseline by tightening remaining clean-architecture seams: auth transport leakage, misplaced persistence adapters, legacy route error shapes, setup/util compatibility bridges, sell/resolve transaction policy, and opt-in Postgres verification coverage."
+        "proposed_direction": "Treat SocialPredict v3.0.1 as the current design baseline: v3.0.0 landed the backend runtime, security, domain, repository, OpenAPI, and verification hardening; v3.0.1 corrected production deploy/runtime defaults without changing backend Go policy. Continue by tightening clean-architecture seams: auth transport leakage, misplaced persistence adapters, CMS content ownership, legacy route error shapes, setup/runtime compatibility bridges, sell/resolve transaction policy, release-to-readiness feedback, and opt-in Postgres verification coverage."
     },
     "problem": {
-        "statement": "The backend has now landed the cascading W01-W07 modernization baseline on socialpredict:main. Runtime DB configuration owns env normalization, pool sizing, connection lifetimes, SSL posture validation, readiness ping, and close behavior; startup mutation mode separates writer migrations/seeds from non-writer migration verification; startup mutation failure is fatal; request-boundary panic recovery, request correlation, shared 405/429/500 runtime failure writers, rate-limit JSON failures, trusted-proxy configuration, runtime security config, OpenAPI alignment, and targeted verification work are present. The design problem has shifted from adding those seams to accurately governing what remains: setup and util compatibility paths, transport-shaped auth service APIs, the CMS homepage repository under a handler tree, persistence/model leakage in internal/domain/users/uniqueness.go, the GORM analytics repository under internal/domain/analytics, mixed legacy handler error responses, process-global DB compatibility access, sell-position and resolve-market transaction/concurrency policy, and Postgres-backed checks that exist but remain opt-in and incomplete.",
-        "why_now": "The design plan had drifted behind the code after the seven-PR backend hardening cascade. If the plan continues to describe landed mechanisms as missing, future task planning will reopen solved problems and miss the real residual risks: transport leakage, misplaced adapters, legacy error contracts, operational enforcement of startup-writer policy, and source-of-truth verification gaps.",
+        "statement": "The backend has now landed the v3.0.1 release baseline. v3.0.0 established runtime DB configuration, pool and lifecycle management, SSL posture validation, readiness probes, startup writer/non-writer roles, request-boundary recovery, request correlation, shared runtime failure writers, rate-limit JSON failures, trusted-proxy configuration, runtime security config, OpenAPI alignment, domain/repository seams, and targeted verification. v3.0.1 changed production deployment/runtime defaults: packaged Docker production uses local Postgres with `DB_REQUIRE_TLS=false`, Traefik v3.6.1, and documented external-DB TLS review. The design problem has shifted from adding those seams to accurately governing what remains: setup/runtime compatibility paths, HTTP-shaped auth service APIs, CMS homepage service/repository placement under handlers, seed-to-handler coupling, persistence/model leakage in internal/domain/users/uniqueness.go and internal/domain/analytics/repository.go, mixed legacy handler error responses, process-global DB compatibility access, sell-position and resolve-market transaction/concurrency policy, release-to-readiness feedback, and Postgres-backed checks that remain opt-in and incomplete.",
+        "why_now": "The design plan had drifted behind the code after the v3.0.0/v3.0.1 release train. If the plan continues to describe landed mechanisms as missing or anchors on older wave commits, future task planning will reopen solved problems and miss the real residual risks: transport leakage, misplaced adapters, legacy error contracts, non-packaged startup-writer enforcement, external database TLS policy, release verification, and source-of-truth DB checks.",
         "out_of_scope": [
             "Full microservice decomposition or container rollout in this pass.",
             "Broad frontend or infrastructure redesign.",
@@ -230,29 +263,32 @@
         ]
     },
     "current_state": {
-        "shape": "As of socialpredict:main at merge commit 9b22484, the backend is a transitional monolith with several hardening seams already implemented. internal/app/runtime owns runtime DB/security/readiness/startup-mutator concerns; the server wires request-boundary security, runtime failure handling, docs, OpenAPI, and route families; domain code is mostly under internal domain packages, with repositories and adapters translating legacy models at the edges. Remaining current-state issues are narrower than the prior plan claimed: auth still exposes HTTP request-shaped service APIs and a JWT env fallback, some persistence adapters live in misleading packages, legacy route families still emit ad hoc errors, place-bet has a transaction and Postgres lock but sell/resolve flows still need explicit transaction policy, and real-Postgres verification exists but is env-gated rather than a default CI source of truth.",
+        "shape": "As of SocialPredict v3.0.1 at 1c4af34, with backend Go architecture primarily from v3.0.0 at f013e3d, the backend is a transitional monolith with several hardening seams implemented. internal/app/runtime owns runtime DB/security/readiness/startup-mutator/shutdown concerns; packaged production compose defines one startup-writer role and serving backend roles; the server wires request-boundary security, runtime failure handling, docs, OpenAPI, infra probes, and route families; domain code is mostly under internal domain packages, with repositories and adapters translating legacy models at the edges. Remaining current-state issues are narrower than earlier plan versions claimed: auth still exposes HTTP request-shaped service APIs, login HTTP handling, and JWT env fallback inside internal/service/auth; CMS homepage service and GORM persistence live under handlers and are imported by seed; some persistence adapters still live in misleading packages; legacy route families still emit ad hoc errors; place-bet has a transaction and Postgres lock but sell/resolve flows still need explicit transaction policy; and real-Postgres verification exists but is env-gated rather than a default CI source of truth.",
         "pain_points": [
-            "setup and util compatibility paths still need owner-by-owner retirement so they do not become new hidden boundaries.",
-            "internal/service/auth still accepts *http.Request in service-facing APIs and keeps JWT signing-key fallback state, even though HTTP failure translation has moved toward typed auth outcomes plus handlers/authhttp.",
-            "CMS homepage persistence lives under handlers/cms/homepage, internal/domain/analytics contains a GORM repository, and internal/domain/users/uniqueness.go imports GORM/models directly; these are now the concrete persistence-placement violations to track.",
+            "setup compatibility paths and runtime `SetDB`/`GetDB` compatibility access still need owner-by-owner retirement so they do not become new hidden boundaries; `backend/util` is no longer the current package-level owner.",
+            "internal/service/auth still accepts *http.Request in service-facing APIs, owns login HTTP handling, and keeps JWT signing-key fallback state, even though HTTP failure translation has moved toward typed auth outcomes plus handlers/authhttp.",
+            "CMS homepage service and persistence live under handlers/cms/homepage, seed imports that handler package, internal/domain/analytics contains a GORM repository, and internal/domain/users/uniqueness.go imports GORM/models directly; these are now the concrete dependency-direction violations to track.",
             "Request-boundary runtime failure handling exists, but legacy handlers still mix ReasonResponse, ad hoc JSON, and http.Error paths.",
-            "Startup writer mode exists, but production still needs an operational guarantee that exactly one writer performs shared startup mutations.",
+            "Packaged production compose/deploy now provides a startup-writer role, but non-compose topologies, accidental scale-out drift, and the lack of a DB-backed writer lock remain unresolved operational risks.",
             "Place-bet now has a transaction/unit-of-work seam and Postgres row-level locking; sell-position and market-resolution still need explicit transaction and concurrency policy.",
-            "Postgres-backed verification has started for startup and place-bet transaction behavior, but remains opt-in/env-gated and incomplete for other DB-truthful behaviors."
+            "Postgres-backed verification has started for startup and place-bet transaction behavior, but remains opt-in/env-gated and incomplete for other DB-truthful behaviors.",
+            "Production release/deploy workflows now wait for downstream deployment and verify public `/health` plus `/readyz`, but release confidence is still only as strong as those probe semantics and the coverage of production topology defaults."
         ],
         "constraints": [
             "The existing container and internal service pattern is real and should be extended rather than replaced.",
             "`backend/setup/setup.yaml` is the current source asset and should remain the source of truth during this slice.",
-            "W01-W07 backend hardening work is already landed on socialpredict:main and should be treated as design baseline, not reopened as greenfield debate.",
-            "The current backend still uses Gorilla Mux, GORM, and embedded assets; this slice should isolate those details better but not replace them.",
-            "Historical docs under `backend/README/BACKEND/API` are informative but not fully current.",
+            "SocialPredict v3.0.1 is the release baseline: v3.0.0 supplies the backend runtime/domain/API/security hardening and v3.0.1 supplies production deployment runtime-default corrections.",
+            "The current backend still uses Gorilla Mux, GORM, embedded assets, and packaged Docker compose; this slice should isolate those details better but not replace them.",
+            "`backend/docs` is the canonical API documentation location; older README/BACKEND/API and backend/README/BACKEND/API shadow docs have been removed and should not be treated as current truth.",
+            "The packaged production topology uses local Docker Postgres with `DB_REQUIRE_TLS=false`; external production databases must make TLS posture explicit through `DB_REQUIRE_TLS` and `DB_SSLMODE`.",
+            "Release-triggered deploy workflows and public readiness verification are now part of the operational architecture and should not be treated as unrelated documentation or CI detail.",
             "Long-term security-platform ideas are intentionally deferred until the runtime, failure, and auth boundary seams are clearer.",
             "Caching and Redis-related work are intentionally lower priority than runtime DB ownership and accounting-sensitive correctness.",
             "The active slice should not introduce a centralized `testing/` subsystem, shared `TestSuite` base architecture, or testcontainers-first rollout."
         ]
     },
     "target_state": {
-        "overview": "The active target remains an evolutionary monolith with explicit runtime seams and clearer business-domain language. Runtime/bootstrap owns DB configuration, pool and SSL posture, startup-writer mode, readiness, runtime diagnostic logging, request correlation, panic recovery, failure writers, and deployment-sensitive security settings. Application-policy configuration owns economics/frontend policy through immutable typed views. Request-boundary security owns validation, sanitization, rate limiting, forwarded-header trust, and security headers. Business domain slices own market, bet/position ledger, participant account, and analytics/reporting policy without treating HTTP or persistence models as native policy language. Repositories and adapter seams translate legacy models and hold transaction-scoped persistence. API/auth contract work maps typed outcomes to stable public reasons and OpenAPI. Verification remains package-local by default, with targeted Postgres checks for behavior SQLite cannot prove.",
+        "overview": "The active target remains an evolutionary monolith with explicit runtime seams, release/deploy feedback loops, and clearer business-domain language. Runtime/bootstrap owns DB configuration, pool and SSL posture, startup-writer mode, readiness, graceful shutdown, runtime diagnostic logging, request correlation, panic recovery, failure writers, and deployment-sensitive security settings. Release/deployment control owns tagged-image publication, Ansible dispatch/wait behavior, packaged compose topology, HostOps documentation, and public readiness verification. Application-policy configuration owns economics/frontend policy through immutable typed views. Request-boundary security owns validation, sanitization, rate limiting, forwarded-header trust, and security headers. Explicit bounded contexts own prediction markets, betting/position ledger behavior, participant accounts, analytics/reporting, and homepage content without treating HTTP or persistence models as native policy language. Repositories and adapter seams translate legacy models and hold transaction-scoped persistence. API/auth contract work maps typed outcomes to stable public reasons and OpenAPI. Verification remains package-local by default, with targeted Postgres checks for behavior SQLite cannot prove.",
         "boundaries": [
             {
                 "name": "Runtime Bootstrap and Infrastructure",
@@ -273,7 +309,9 @@
                     "Telemetry export wiring",
                     "Health/readiness wiring",
                     "Single-writer startup semantics for shared startup mutations",
-                    "Startup sequencing"
+                    "Startup sequencing",
+                    "Readiness drain and graceful shutdown",
+                    "Production DB TLS validation and runtime override handling"
                 ],
                 "does_not_own": [
                     "Business logic",
@@ -380,12 +418,14 @@
             {
                 "name": "Business Domain Slices",
                 "kind": "module",
-                "purpose": "Hold prediction-market, betting/position-ledger, participant-account, analytics/reporting, and business authorization policy without direct dependence on transport or persistence structs.",
+                "purpose": "Coordinate explicit bounded contexts for prediction markets, betting and position ledger behavior, participant accounts, analytics/reporting, and homepage content policy without direct dependence on transport or persistence structs.",
                 "owns": [
+                    "Cross-context application-policy coordination",
                     "Prediction market rules",
                     "Bet and position-ledger rules",
                     "Participant account and profile rules",
                     "Analytics and reporting policy",
+                    "Homepage content policy",
                     "Calculation policy",
                     "Authorization policy checks tied to business state"
                 ],
@@ -401,7 +441,165 @@
                     "Repository and Legacy Model Adapter Boundary",
                     "API and Auth Contract Boundary"
                 ],
-                "reason": "The live code is organized as several business-oriented domain slices rather than one pure bounded context; the design should preserve dependency direction while using domain language instead of a generic technical umbrella."
+                "reason": "The live code is organized as several business-oriented domain slices. The design now names those bounded contexts explicitly while keeping a shared umbrella for seams that coordinate across them."
+            },
+            {
+                "name": "Prediction Market Context",
+                "kind": "bounded_context",
+                "purpose": "Own market lifecycle language and rules, including creation, status, resolution eligibility, canonical outcomes, custom display labels, public market views, and market-specific projections.",
+                "owns": [
+                    "Market lifecycle",
+                    "Canonical outcome codes",
+                    "Outcome display labels",
+                    "Resolution eligibility",
+                    "Market search and overview policy",
+                    "Market probability projection policy"
+                ],
+                "does_not_own": [
+                    "Participant account balance mutation",
+                    "HTTP route parsing",
+                    "GORM persistence structs as policy language",
+                    "Release/deploy mechanics"
+                ],
+                "upstream_dependencies": [
+                    "Configuration Service Slice"
+                ],
+                "downstream_dependencies": [
+                    "Betting and Position Ledger Context",
+                    "Repository and Legacy Model Adapter Boundary"
+                ],
+                "reason": "The v3.0.1 code has a substantial internal/domain/markets service and policy surface; naming it as a context prevents market lifecycle rules from being hidden under generic business-domain language."
+            },
+            {
+                "name": "Betting and Position Ledger Context",
+                "kind": "bounded_context",
+                "purpose": "Own buy, sell, share, dust, sale ledger entry, and position-exposure policy for participant market activity.",
+                "owns": [
+                    "Buy-bet policy",
+                    "Sale ledger entry policy",
+                    "Position exposure calculations",
+                    "Share and dust calculations",
+                    "Place-bet unit-of-work policy"
+                ],
+                "does_not_own": [
+                    "Market lifecycle ownership",
+                    "Participant profile ownership",
+                    "HTTP DTOs",
+                    "Database transaction mechanics outside declared units of work"
+                ],
+                "upstream_dependencies": [
+                    "Prediction Market Context",
+                    "Participant Account Context",
+                    "Configuration Service Slice"
+                ],
+                "downstream_dependencies": [
+                    "Repository and Legacy Model Adapter Boundary"
+                ],
+                "reason": "The code treats buys, sells, positions, and market math as a distinct ledger-like policy area; design language should reflect that a sale is not simply another buy."
+            },
+            {
+                "name": "Participant Account Context",
+                "kind": "bounded_context",
+                "purpose": "Own participant identity, profile, account balance, transaction type vocabulary, password-change state, API keys, and user-facing account policy.",
+                "owns": [
+                    "Participant profile policy",
+                    "Account balance policy",
+                    "Transaction type vocabulary",
+                    "Must-change-password state",
+                    "API key uniqueness policy"
+                ],
+                "does_not_own": [
+                    "HTTP token extraction",
+                    "Market lifecycle policy",
+                    "GORM uniqueness helpers as domain policy",
+                    "Deployment-secret lifecycle"
+                ],
+                "upstream_dependencies": [
+                    "Configuration Service Slice"
+                ],
+                "downstream_dependencies": [
+                    "Repository and Legacy Model Adapter Boundary",
+                    "API and Auth Contract Boundary"
+                ],
+                "reason": "Participant account policy is central to financial correctness and auth behavior; keeping it explicit helps remove GORM and HTTP leakage from internal user services."
+            },
+            {
+                "name": "Analytics and Reporting Context",
+                "kind": "bounded_context",
+                "purpose": "Own derived reporting views such as financial snapshots, leaderboards, positions, system metrics, and analytics projections while treating persistence access as an adapter concern.",
+                "owns": [
+                    "Leaderboard policy",
+                    "Financial snapshot calculations",
+                    "Position reporting",
+                    "System metrics domain calculations"
+                ],
+                "does_not_own": [
+                    "Runtime health/readiness probes",
+                    "GORM repository placement inside domain policy",
+                    "Public API envelope ownership"
+                ],
+                "upstream_dependencies": [
+                    "Prediction Market Context",
+                    "Betting and Position Ledger Context",
+                    "Participant Account Context"
+                ],
+                "downstream_dependencies": [
+                    "Repository and Legacy Model Adapter Boundary"
+                ],
+                "reason": "Analytics/reporting is a supporting domain with its own language and derived views, but the current GORM repository under internal/domain/analytics needs containment or relocation."
+            },
+            {
+                "name": "Homepage Content Context",
+                "kind": "bounded_context",
+                "purpose": "Own homepage content retrieval and rendering policy separately from HTTP handlers, seed bootstrapping, and GORM persistence details.",
+                "owns": [
+                    "Homepage content policy",
+                    "Content rendering service semantics",
+                    "Content seed expectations"
+                ],
+                "does_not_own": [
+                    "HTTP transport mapping",
+                    "GORM persistence implementation",
+                    "Seed package imports from handler trees"
+                ],
+                "upstream_dependencies": [
+                    "Seed Bootstrap"
+                ],
+                "downstream_dependencies": [
+                    "Repository and Legacy Model Adapter Boundary",
+                    "API and Auth Contract Boundary"
+                ],
+                "reason": "The v3.0.1 code places homepage service and GORM repository under handlers and imports it from seed, which is a concrete clean-architecture violation that needs an explicit destination."
+            },
+            {
+                "name": "Release and Deployment Control",
+                "kind": "integration_boundary",
+                "purpose": "Own release-triggered image publication, production/staging deployment dispatch, downstream Ansible wait behavior, public readiness verification, packaged compose topology, and operator HostOps documentation.",
+                "owns": [
+                    "Release-triggered image publication",
+                    "Production deploy gating",
+                    "Staging deploy verification",
+                    "Ansible dispatch and wait contract",
+                    "External /health and /readyz verification",
+                    "Packaged Docker compose topology",
+                    "HostOps operator documentation",
+                    "Packaged production local-Postgres TLS override"
+                ],
+                "does_not_own": [
+                    "Business domain policy",
+                    "Backend request handling internals",
+                    "External database TLS policy for custom topologies",
+                    "Long-term orchestration platform design"
+                ],
+                "upstream_dependencies": [
+                    "Runtime Bootstrap and Infrastructure"
+                ],
+                "downstream_dependencies": [
+                    "Deployment workflows",
+                    "Ansible playbooks",
+                    "Public infrastructure"
+                ],
+                "reason": "v3.0.0 and v3.0.1 turned release/deploy behavior into a hard operational boundary; production correctness now depends on tagged releases, packaged runtime defaults, and public readiness feedback, not just backend code structure."
             },
             {
                 "name": "Repository and Legacy Model Adapter Boundary",
@@ -413,7 +611,10 @@
                     "Legacy-model containment",
                     "Adapter seams",
                     "Transaction-scoped persistence behavior where a use case explicitly requires it",
-                    "Relocation plan for GORM adapters currently under domain or handler package trees"
+                    "Relocation plan for GORM adapters currently under domain or handler package trees",
+                    "CMS homepage repository relocation from handler package trees",
+                    "Analytics GORM repository relocation or containment",
+                    "User uniqueness helper relocation away from domain policy"
                 ],
                 "does_not_own": [
                     "HTTP behavior",
@@ -438,13 +639,16 @@
                     "Auth-visible endpoint behavior",
                     "Must-change-password route semantics and exemptions",
                     "Route-by-route migration from plain-text failures to the shared reason vocabulary",
-                    "OpenAPI parity"
+                    "OpenAPI parity",
+                    "HTTP login adapter ownership",
+                    "Token extraction and request parsing at the transport edge"
                 ],
                 "does_not_own": [
                     "Runtime bootstrap",
                     "Panic recovery internals",
                     "Persistence translation",
-                    "Configuration singleton behavior"
+                    "Configuration singleton behavior",
+                    "HTTP request-shaped internal auth service APIs"
                 ],
                 "upstream_dependencies": [
                     "Business Domain Slices",
@@ -476,7 +680,7 @@
                     "Seed Bootstrap"
                 ],
                 "contract": "Schema changes and one-time startup mutations are treated as single-writer work rather than every-replica default behavior; request-serving replicas wait for safe startup state or remain unready.",
-                "notes": "Startup writer mode now exists through STARTUP_WRITER / SP_STARTUP_WRITER; the remaining design issue is operational enforcement or locking when two writers are accidentally enabled."
+                "notes": "Packaged production compose now defines a startup-writer backend and serving backend roles; the remaining design issue is enforcement for non-compose topologies, accidental scale-out drift, or whether a DB-backed advisory lock is needed."
             },
             {
                 "name": "Runtime Observability Seam",
@@ -547,7 +751,7 @@
                     "Runtime Bootstrap and Infrastructure"
                 ],
                 "contract": "Accounting-sensitive workflows explicitly define which writes must commit together, what concurrency protection they require, and where transaction scope begins and ends; compensation plus metrics are not treated as the primary correctness model.",
-                "notes": "Place-bet now has an explicit transaction/unit-of-work seam and Postgres row-level locking. Sell-position and market-resolution style flows remain the next transaction and concurrency-policy candidates."
+                "notes": "Place-bet now has an explicit transaction/unit-of-work seam and Postgres row-level locking. Sell-position currently credits sale value after creating a sale ledger entry, and market resolution updates market state before refunding or paying users; both remain transaction and concurrency-policy candidates."
             },
             {
                 "name": "Configuration Access Seam",
@@ -565,7 +769,7 @@
                     "Repository and Legacy Model Adapter Boundary"
                 ],
                 "contract": "Repositories and narrow adapters own conversion between legacy persistence models and internal domain-facing types.",
-                "notes": "This seam must be introduced before deep API/auth contract cleanup to avoid baking persistence-shaped behavior into public flows."
+                "notes": "This seam must contain concrete v3.0.1 leaks: internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, handlers/cms/homepage service/repo placement, and seed imports from handler package trees."
             },
             {
                 "name": "HTTP Envelope and Auth Semantics Seam",
@@ -585,7 +789,37 @@
                     "API and Auth Contract Boundary"
                 ],
                 "contract": "Authentication and authorization code returns typed internal outcomes that the HTTP boundary translates into stable public reasons, rather than letting an internal service type own route-visible status and message policy.",
-                "notes": "Typed auth failures plus handlers/authhttp are now the direction; the remaining violation is HTTP request-shaped auth service APIs and JWT fallback state inside internal/service/auth."
+                "notes": "Typed auth failures plus handlers/authhttp are now the direction; the remaining violations are HTTP request-shaped auth service APIs, login HTTP handling inside internal/service/auth, and JWT fallback state inside internal/service/auth."
+            },
+            {
+                "name": "Release-to-Readiness Feedback Seam",
+                "participants": [
+                    "Release and Deployment Control",
+                    "Runtime Bootstrap and Infrastructure",
+                    "HTTP Server Boundary"
+                ],
+                "contract": "GitHub releases publish tagged images, dispatch the production deployment path, wait for downstream deployment completion, and verify externally visible `/health` and `/readyz` before treating production as successfully released.",
+                "notes": "This seam is now present in v3.0.0/v3.0.1 release workflows; the remaining design concern is whether `/readyz` is strong enough to represent production readiness for every future deployment shape."
+            },
+            {
+                "name": "Production Database TLS Topology Seam",
+                "participants": [
+                    "Release and Deployment Control",
+                    "Runtime Bootstrap and Infrastructure"
+                ],
+                "contract": "Packaged Docker production installs write `DB_REQUIRE_TLS=false` for local in-container Postgres with `sslmode=disable`, while external production databases must set `DB_REQUIRE_TLS` and `DB_SSLMODE` deliberately.",
+                "notes": "v3.0.1 made this an explicit topology policy rather than a runtime bug; future external-DB work should not silently inherit the packaged local-DB override."
+            },
+            {
+                "name": "CMS Content Boundary Seam",
+                "participants": [
+                    "Homepage Content Context",
+                    "Repository and Legacy Model Adapter Boundary",
+                    "Seed Bootstrap",
+                    "API and Auth Contract Boundary"
+                ],
+                "contract": "Homepage content service/rendering policy belongs in an internal content/domain boundary, GORM persistence belongs in a repository adapter, seed bootstrapping depends on the internal boundary, and handlers keep only HTTP mapping.",
+                "notes": "The current v3.0.1 code violates this direction by keeping service and GORM repository under handlers/cms/homepage and importing that package from seed."
             }
         ],
         "ubiquitous_language": [
@@ -773,22 +1007,25 @@
             },
             {
                 "term": "Outcome",
-                "definition": "A valid market side such as yes/no or custom labels used by bets, shares, probability, and resolution policy.",
+                "definition": "Canonical market side code. Bets and projections use `YES` or `NO`; resolution may also use `N/A`. Display labels are not outcomes.",
                 "synonyms_to_avoid": [
+                    "display label",
                     "option string"
                 ],
                 "confused_with": [
+                    "Outcome Label",
                     "Resolution"
                 ]
             },
             {
                 "term": "Bet",
-                "definition": "A participant action that spends account balance to buy exposure to one outcome in a market.",
+                "definition": "A persisted participant market ledger entry. A buy bet spends account balance for exposure; a sale ledger entry records reduced exposure and sale credit.",
                 "synonyms_to_avoid": [
-                    "trade record when discussing domain rules"
+                    "only a buy action"
                 ],
                 "confused_with": [
-                    "Position"
+                    "Position",
+                    "Sale Ledger Entry"
                 ]
             },
             {
@@ -823,11 +1060,13 @@
             },
             {
                 "term": "Payout",
-                "definition": "Account-balance credit produced by market resolution or sale policy.",
+                "definition": "Account-balance credit produced by market resolution through a win or refund transaction, distinct from sale credit produced by selling exposure.",
                 "synonyms_to_avoid": [
-                    "refund unless policy says refund"
+                    "sale credit",
+                    "generic credit"
                 ],
                 "confused_with": [
+                    "Sale Credit",
                     "Potential value"
                 ]
             },
@@ -869,6 +1108,62 @@
                 ],
                 "confused_with": [
                     "Unauthorized"
+                ]
+            },
+            {
+                "term": "Outcome Label",
+                "definition": "User-facing display text for a canonical outcome, such as custom yes/no labels on a market. Labels do not replace canonical outcome codes in policy or persistence.",
+                "synonyms_to_avoid": [
+                    "outcome code"
+                ],
+                "confused_with": [
+                    "Outcome",
+                    "Resolution"
+                ]
+            },
+            {
+                "term": "Buy Bet",
+                "definition": "A participant action that spends account balance to buy exposure to one canonical outcome in a market.",
+                "synonyms_to_avoid": [
+                    "sale",
+                    "trade record"
+                ],
+                "confused_with": [
+                    "Bet",
+                    "Sale Ledger Entry"
+                ]
+            },
+            {
+                "term": "Sale Ledger Entry",
+                "definition": "A persisted negative market ledger entry created when a participant sells exposure, paired with a sale credit to the participant account.",
+                "synonyms_to_avoid": [
+                    "buy bet"
+                ],
+                "confused_with": [
+                    "Payout",
+                    "Sale Credit"
+                ]
+            },
+            {
+                "term": "Sale Credit",
+                "definition": "Account-balance credit produced by selling exposure before resolution, distinct from resolution payout or refund policy.",
+                "synonyms_to_avoid": [
+                    "payout"
+                ],
+                "confused_with": [
+                    "Payout",
+                    "Refund"
+                ]
+            },
+            {
+                "term": "Participant",
+                "definition": "A user acting in market, betting, account, or profile workflows. Participant language is preferred when discussing domain behavior rather than transport identity.",
+                "synonyms_to_avoid": [
+                    "HTTP user"
+                ],
+                "confused_with": [
+                    "Creator",
+                    "Admin"
                 ]
             }
         ],
@@ -1018,6 +1313,36 @@
                 "rule": "Users flagged with `mustChangePassword` may use login and change-password flows but should be blocked from other authenticated actions until the state is cleared.",
                 "owner_boundary": "API and Auth Contract Boundary",
                 "reason": "This is the locked auth decision for the active slice."
+            },
+            {
+                "rule": "Canonical outcome codes must remain distinct from user-facing outcome labels: bets and projections use `YES`/`NO`, while resolution may also use `N/A`.",
+                "owner_boundary": "Prediction Market Context",
+                "reason": "Custom labels are display language; treating them as policy codes would corrupt bet, projection, and resolution invariants."
+            },
+            {
+                "rule": "A buy bet must debit the participant account and persist the bet in one atomic unit of work with concurrency protection on the authoritative account balance.",
+                "owner_boundary": "Betting and Position Ledger Context",
+                "reason": "v3.0.0 implements this for place-bet through a repository unit of work and Postgres row-level locking; future changes must not regress it."
+            },
+            {
+                "rule": "A sale ledger entry and its participant sale credit must commit or roll back together once sell-position transaction policy is introduced.",
+                "owner_boundary": "Betting and Position Ledger Context",
+                "reason": "The current sell flow is accounting-sensitive and synchronous, but it does not yet have the same explicit transaction boundary as place-bet."
+            },
+            {
+                "rule": "Market resolution state changes and all win/refund account transactions must share an explicit transaction and concurrency policy before resolution is treated as DB-truthful under failure.",
+                "owner_boundary": "Prediction Market Context",
+                "reason": "The current resolution policy updates market state, then applies refunds or payouts; partial failure would create accounting drift without a declared unit of work."
+            },
+            {
+                "rule": "Participant account transaction types are participant-account vocabulary and must not be invented ad hoc by market, bet, or handler code.",
+                "owner_boundary": "Participant Account Context",
+                "reason": "Transaction type ownership keeps account-balance behavior stable across buys, sales, wins, refunds, and fees."
+            },
+            {
+                "rule": "Homepage content policy must not depend on handler package trees; seed, service, and repository code should point toward an internal content boundary and outward to HTTP adapters.",
+                "owner_boundary": "Homepage Content Context",
+                "reason": "The current seed-to-handler import and handler-owned GORM repository invert the desired dependency direction."
             }
         ],
         "patterns": [
@@ -1105,13 +1430,13 @@
         },
         {
             "id": "DP-003",
-            "title": "Treat util as a temporary mixed package to be decomposed by responsibility",
+            "title": "Treat former util responsibilities as owner-specific cleanup",
             "status": "accepted",
-            "context": "`backend/util` currently mixes infrastructure and domain-adjacent concerns.",
-            "decision": "Break util apart by owned concern rather than renaming or rebranding it as another generic helper package.",
+            "context": "`backend/util` is no longer a current package in the v3.0.1 release baseline, but former util-style responsibilities still exist as runtime `SetDB`/`GetDB` compatibility and GORM-backed uniqueness helpers in domain code.",
+            "decision": "Do not recreate a generic helper package; retire or move residual former-util responsibilities to their real owners as touched.",
             "consequences": [
-                "Infrastructure bootstrap code will get a real home.",
-                "User/domain-owned helpers can move toward more meaningful boundaries."
+                "Infrastructure bootstrap compatibility can be retired from runtime once callers no longer need global DB access.",
+                "User/domain-adjacent helpers can move toward repository or participant-account ownership instead of becoming a new utility boundary."
             ]
         },
         {
@@ -1272,10 +1597,11 @@
             "id": "DP-018",
             "title": "Treat shared startup mutations as single-writer work",
             "status": "accepted",
-            "context": "Startup writer mode now exists: writer instances run migrations and startup-owned seeds, while non-writers verify applied migrations before readiness. The remaining design concern is preventing accidental multiple writers in deployment or with an additional DB-backed mechanism.",
-            "decision": "Treat the current writer/non-writer startup mode as the baseline for shared startup mutations, and decide separately whether deployment policy, a dedicated job, or DB-backed locking should enforce exactly-one-writer behavior.",
+            "context": "Startup writer mode now exists: writer instances run migrations and startup-owned seeds, while non-writers verify applied migrations before readiness. Packaged production compose/deploy defines one startup-writer service and serving backend roles; non-packaged topologies still need an enforcement decision.",
+            "decision": "Treat the current writer/non-writer startup mode plus packaged compose/deploy role split as the baseline for shared startup mutations, and decide separately whether non-compose deployments need a dedicated job or DB-backed advisory lock to enforce exactly-one-writer behavior.",
             "consequences": [
                 "The design no longer treats every-replica migration/seed execution as current code reality.",
+                "Packaged production has an operational writer role, while custom topologies remain responsible for proving equivalent enforcement.",
                 "Migration failure and schema incompatibility remain startup safety concerns, but the next decision is enforcement strength rather than introducing the initial seam."
             ]
         },
@@ -1369,13 +1695,38 @@
         },
         {
             "id": "DP-027",
-            "title": "Ground design-plan current state in socialpredict main after W01-W07",
+            "title": "Ground design-plan current state in SocialPredict v3.0.1",
             "status": "accepted",
-            "context": "The design plan had stale current-state claims after the seven backend hardening PRs landed, including claims that DB runtime ownership, startup writer mode, request-boundary failure handling, rate-limit JSON failures, proxy-trust configuration, and Postgres verification were still absent.",
-            "decision": "Treat socialpredict:main at merge commit 9b22484 as the ground truth for current-state claims, and update the plan so future work starts from landed runtime/security/API/testing seams rather than re-planning them as missing work.",
+            "context": "The design plan had stale current-state claims after the v3.0.0/v3.0.1 release train, including an older 9b22484 baseline and incomplete treatment of release/deploy workflows, public readiness verification, shutdown, packaged compose topology, and production DB TLS defaults.",
+            "decision": "Treat SocialPredict v3.0.1 at 1c4af34 as the ground truth for current-state claims, with backend Go architecture primarily from v3.0.0 at f013e3d and v3.0.1 adding production deployment/runtime-default corrections.",
             "consequences": [
                 "Future task planning can focus on remaining concrete violations instead of stale gaps.",
+                "Release/deploy feedback loops and production topology defaults are part of the architecture baseline, not incidental scripts.",
                 "Designer-agent reviews remain useful as a periodic drift-control mechanism for this design artifact."
+            ]
+        },
+        {
+            "id": "DP-028",
+            "title": "Treat release-to-readiness feedback as an architecture boundary",
+            "status": "accepted",
+            "context": "v3.0.0 added release-gated production deploy wiring, downstream Ansible wait behavior, and external verification of public `/health` and `/readyz` after deployment.",
+            "decision": "Treat tagged release image publication, deployment dispatch/wait, and public readiness verification as a first-class integration boundary for production operations.",
+            "consequences": [
+                "Release confidence depends on both backend runtime probes and deployment workflow behavior.",
+                "Future changes to `/health`, `/readyz`, Docker images, or deploy workflows must be reviewed as architecture-affecting changes.",
+                "The design can distinguish local test success from externally verified production readiness."
+            ]
+        },
+        {
+            "id": "DP-029",
+            "title": "Treat packaged production local Postgres TLS override as deployment topology policy",
+            "status": "accepted",
+            "context": "v3.0.1 fixed production deployment by upgrading Traefik and making packaged Docker production installs write `DB_REQUIRE_TLS=false` for local in-container Postgres, while runtime DB config still supports TLS-required production posture through explicit env settings.",
+            "decision": "For the packaged Docker production topology, local Docker Postgres with `sslmode=disable` is allowed through `DB_REQUIRE_TLS=false`; any external production database must explicitly review and set `DB_REQUIRE_TLS` and `DB_SSLMODE`.",
+            "consequences": [
+                "The runtime no longer rejects the intended packaged local Docker database connection.",
+                "Operators replacing local Docker Postgres with an external database have an explicit TLS decision rather than inheriting local-compose defaults.",
+                "DB TLS posture is split between runtime validation and deployment topology policy instead of being hidden in either layer."
             ]
         }
     ],
@@ -1408,23 +1759,31 @@
             "depends_on": [
                 "W03 Failure Recovery and Translation Ownership"
             ],
-            "notes": "This wave should not create a new database/ or dal/ architecture; it should extend internal/app/runtime, the composition root, and existing repositories. Postgres-backed verification has already started for startup and place-bet behavior, so the next slice should add only narrow companions for uncovered DB-truthful invariants."
+            "notes": "This wave should not create a new database/ or dal/ architecture; it should extend internal/app/runtime, the composition root, and existing repositories. Packaged production now has a startup-writer role and local-Postgres TLS override, so the next slice should focus on non-compose writer enforcement, global DB compatibility retirement, sell/resolve transaction policy, and narrow Postgres companions for uncovered DB-truthful invariants."
         },
         {
             "name": "W05 Legacy Model Decoupling",
-            "objective": "Continue boundary-type and adapter work from the now-narrower ground truth: most internal domain code is decoupled from legacy models, but internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, and CMS homepage persistence placement still need cleanup.",
+            "objective": "Continue boundary-type and adapter work from the now-narrower ground truth: most internal domain code is decoupled from legacy models, but internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, CMS homepage service/repository placement, and seed-to-handler coupling still need cleanup.",
             "depends_on": [
                 "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction"
             ],
-            "notes": "This remains the main structural gate before broad API/auth contract cleanup."
+            "notes": "This remains the main structural gate before broad API/auth contract cleanup. Homepage content needs an internal content/domain destination, not only repository relocation."
         },
         {
             "name": "W06 Scoped API and Auth Alignment",
-            "objective": "Continue from typed auth failures, shared failure writers, route/spec alignment, and runtime security config by removing HTTP request-shaped auth service seams, tightening must-change-password behavior, and completing route-family error contract convergence.",
+            "objective": "Continue from typed auth failures, shared failure writers, route/spec alignment, and runtime security config by removing HTTP request-shaped auth service seams, moving login/token extraction to HTTP adapters, tightening must-change-password behavior, and completing route-family error contract convergence.",
             "depends_on": [
                 "W05 Legacy Model Decoupling"
             ],
-            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should remove HTTP request-shaped auth service seams, preserve the login/change-password mustChangePassword exceptions intentionally, track which routes still use PlainTextErrorResponse or ad hoc errors, avoid turning every business rejection into a telemetry error, and keep OpenAPI/route parity plus shared reason vocabulary checks as first-class exit criteria."
+            "notes": "This is a contract-alignment wave, not a public route redesign wave. It should remove HTTP request-shaped auth service seams and JWT env fallback from internal auth policy, preserve the login/change-password mustChangePassword exceptions intentionally, track which routes still use PlainTextErrorResponse or ad hoc errors, avoid turning every business rejection into a telemetry error, and keep OpenAPI/route parity plus shared reason vocabulary checks as first-class exit criteria."
+        },
+        {
+            "name": "W07 Release and Deployment Feedback Control",
+            "objective": "Preserve the landed v3.0.0/v3.0.1 release/deploy boundary: tagged images, production deploy gating, downstream Ansible wait behavior, public `/health` and `/readyz` verification, packaged compose startup roles, and local Docker Postgres TLS defaults.",
+            "depends_on": [
+                "W04 Database Runtime Ownership and Accounting-Sensitive Transaction Direction"
+            ],
+            "notes": "This is mostly a baseline governance workstream rather than a new implementation wave. Future changes should keep release/deploy checks aligned with runtime probe semantics and avoid silently applying packaged local-DB TLS defaults to external database topologies."
         }
     ],
     "risks": [
@@ -1520,8 +1879,8 @@
         },
         {
             "severity": "high",
-            "statement": "Startup writer mode exists, but accidental multiple writers or weak deployment policy can still race shared-state mutation during rollout.",
-            "mitigation": "Keep writer/non-writer startup mode as the current baseline and decide whether deployment policy, a dedicated job, or DB-backed locking should enforce exactly-one-writer behavior."
+            "statement": "Packaged compose/deploy now provides one startup-writer role, but non-compose topologies, accidental scale-out drift, or lack of DB-backed enforcement can still race shared-state mutation during rollout.",
+            "mitigation": "Treat packaged writer/non-writer compose roles as the baseline, and decide whether non-packaged deployment paths require a dedicated migration job or DB advisory lock before scaling startup writers."
         },
         {
             "severity": "high",
@@ -1547,12 +1906,27 @@
             "severity": "medium",
             "statement": "Building a centralized testing platform or testcontainers-first rollout too early can add flake, cost, and architectural noise before the active modernization slice has identified a concrete verification gap.",
             "mitigation": "Keep testing threaded through existing waves, defer heavier infrastructure to the future testing note, and require a specific uncovered behavior before adding new testing-platform machinery."
+        },
+        {
+            "severity": "medium",
+            "statement": "Applying the packaged local-Docker Postgres `DB_REQUIRE_TLS=false` default to an external production database would weaken the intended production TLS posture.",
+            "mitigation": "Keep v3.0.1 local-Postgres TLS override documented as topology-specific and require explicit `DB_REQUIRE_TLS`/`DB_SSLMODE` review for external databases."
+        },
+        {
+            "severity": "medium",
+            "statement": "Release workflows can report success while missing a production defect if `/health` and `/readyz` do not represent the runtime conditions operators actually depend on.",
+            "mitigation": "Keep release-to-readiness verification tied to explicit probe semantics and revisit `/readyz` conditions whenever runtime dependencies or deployment topology change."
+        },
+        {
+            "severity": "medium",
+            "statement": "Keeping homepage content service and repository code under handler package trees preserves outward dependency direction and makes seed depend on HTTP-layer packages.",
+            "mitigation": "Move homepage service/rendering policy to an internal content boundary, move GORM persistence to a repository adapter, and leave handlers with only transport mapping."
         }
     ],
     "open_questions": [
         {
-            "question": "What is the narrowest owned home for the non-bootstrap helpers currently in `backend/util`, especially API key generation and model/user-specific checks?",
-            "why_it_matters": "W01 can remove one junk drawer only to create another if those helpers are not assigned to real owners.",
+            "question": "What is the narrowest owned home for residual former-util responsibilities now that `backend/util` is gone, especially runtime `SetDB`/`GetDB` compatibility and GORM-backed user uniqueness helpers?",
+            "why_it_matters": "The package-level util boundary has been removed, but compatibility globals and misplaced GORM helpers can recreate the same hidden dependency direction under new package names.",
             "blocking": true
         },
         {
@@ -1616,8 +1990,8 @@
             "blocking": false
         },
         {
-            "question": "What production policy should govern the runtime-owned JWT signing-key setting and any later rotation expectations?",
-            "why_it_matters": "Runtime security config now owns JWT key validation, but legacy fallback helpers still exist and future rotation is not designed.",
+            "question": "What production policy should govern JWT signing-key rotation and secret lifecycle after install/runtime generation covers the initial key?",
+            "why_it_matters": "v3.0.0/v3.0.1 cover initial key generation and runtime injection, but rotation, revocation, and operator lifecycle remain separate policy decisions.",
             "blocking": false
         },
         {
@@ -1646,8 +2020,8 @@
             "blocking": false
         },
         {
-            "question": "Should startup writer mode be enforced only by deployment policy, by a dedicated migration/seed job, or by an additional DB-backed advisory lock?",
-            "why_it_matters": "The writer/non-writer code seam exists, but HA rollout safety still depends on preventing two accidental writers.",
+            "question": "For non-packaged or scaled-out topologies, should startup writer mode rely on deployment policy, a dedicated migration/seed job, or a DB-backed advisory lock?",
+            "why_it_matters": "Packaged compose/deploy now provides one writer role, but custom deployments still need an equivalent enforcement story before shared startup mutations are safe.",
             "blocking": true
         },
         {
@@ -1666,8 +2040,8 @@
             "blocking": false
         },
         {
-            "question": "Which DB pool, SSL/TLS, and connection-lifecycle settings should become the minimum production contract for `internal/app/runtime/db.go`?",
-            "why_it_matters": "The runtime DB seam already exists, but it still lacks an explicit production posture for connection management and deployment safety.",
+            "question": "For external production databases, what explicit `DB_REQUIRE_TLS` and `DB_SSLMODE` posture should replace the packaged local-Docker Postgres override?",
+            "why_it_matters": "v3.0.1 makes the packaged local Docker database topology explicit, so the remaining design choice is external DB TLS policy rather than the local-compose default.",
             "blocking": false
         },
         {
@@ -1699,18 +2073,28 @@
             "question": "Is the branch-prefix gating in `.github/workflows/backend.yml` an intentional long-term governance choice or simply CI debt to remove?",
             "why_it_matters": "The current workflow cannot become a durable architecture guard if backend unit and contract checks remain conditional on branch naming.",
             "blocking": false
+        },
+        {
+            "question": "Which release or deploy changes should require design-plan review because they alter public readiness, startup writer roles, DB TLS topology, or production verification semantics?",
+            "why_it_matters": "Release/deploy behavior is now architecture-affecting; without a review trigger, scripts and workflows can drift away from runtime and design assumptions.",
+            "blocking": false
+        },
+        {
+            "question": "What is the intended internal destination for homepage content policy so seed, repository, and HTTP code no longer depend on handler package trees?",
+            "why_it_matters": "CMS homepage currently violates dependency direction in a concrete way and needs an owned boundary before further content behavior grows there.",
+            "blocking": false
         }
     ],
     "next_steps": [
-        "Use the software-planner pass to translate this design into smaller queue slices without changing the architectural decisions above.",
+        "Use the software-planner pass to translate this v3.0.1-grounded design into smaller queue slices without changing the architectural decisions above.",
         "Back the next queue slice with the rewritten database-layer production note and keep the database-caching note explicitly deferred.",
-        "Add an ADR or equivalent design note for runtime security posture covering JWT signing-key presence, trusted-proxy assumptions, CORS defaults, and HSTS/TLS ownership.",
+        "Add or update ADR guidance for release-to-readiness feedback, packaged production local-Postgres TLS policy, and runtime security posture covering JWT signing-key lifecycle, trusted-proxy assumptions, CORS defaults, and HSTS/TLS ownership.",
         "Decide and document the explicit staging/production publishing path for backend-served docs such as `/swagger/` and `/openapi.yaml`, including whether access should be public, proxied, or restricted.",
-        "Document the landed startup-failure posture: startup mutation failure is fatal; writer mode runs migrations/seeds; non-writer mode verifies applied migrations; the remaining decision is exactly-one-writer enforcement.",
+        "Document the v3.0.1 startup-failure posture: packaged compose has one startup-writer role, startup mutation failure is fatal, writer mode runs migrations/seeds, non-writer mode verifies applied migrations, and the remaining decision is non-packaged exactly-one-writer enforcement.",
         "Treat place-bet as the landed first unit-of-work baseline, then define transaction and concurrency policy for sell-position and market-resolution style flows.",
-        "Inventory remaining raw GORM and misplaced adapter seams, prioritizing CMS homepage repository placement, internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, and global DB compatibility access.",
-        "Record the implemented internal/app/runtime/db.go production contract for pool sizing, connection lifetime, SSL mode validation, readiness ping, and close behavior, then decide only the remaining deployment defaults and shutdown guarantees.",
-        "Decide and document the owned destinations for the current `backend/util` responsibilities before implementation starts.",
+        "Inventory remaining raw GORM and misplaced adapter seams, prioritizing CMS homepage service/repository placement, seed imports from handler trees, internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, and global DB compatibility access.",
+        "Record the implemented internal/app/runtime/db.go production contract for pool sizing, connection lifetime, SSL mode validation, readiness ping, close behavior, readiness drain, and graceful shutdown, then decide only the remaining external-DB TLS and non-packaged deployment guarantees.",
+        "Decide the owned destinations for residual former-util responsibilities now that `backend/util` is gone, especially runtime `SetDB`/`GetDB` compatibility and user uniqueness helpers.",
         "Inventory current uses of `backend/security` and auth-path validation/sanitization so reusable request-boundary hardening is preserved without growing a second security subsystem.",
         "Document security.RequestBoundaryMiddleware as the canonical production request-boundary chain or explicitly justify any remaining logger.RequestLoggingMiddleware compatibility surface.",
         "Retire or confine compatibility-only logger wrappers and keep `backend/logger` as the sole runtime logging package without reintroducing `backend/logging`.",
@@ -1720,13 +2104,14 @@
         "Record the landed runtime/bootstrap versus application-policy configuration taxonomy in ADRs or equivalent guidance so later work does not re-open W01 design decisions casually.",
         "Retire remaining config compatibility bridges such as `ToSetup`/`FromSetup`, raw `setup.EconomicConfig` seams, and unnecessary `Current()` whole-tree consumers as later waves touch those paths.",
         "Define the narrowest policy views needed by stats, seed, analytics, bets, and market flows so `Current()` whole-tree access can be retired.",
-        "Inventory the now-specific legacy persistence leaks: internal/domain/users/uniqueness.go, internal/domain/analytics/repository.go, CMS homepage GORM repository placement, and any remaining model imports found by targeted search.",
-        "Decide which accounting-relevant economics values must be copied into durable workflow state for historical correctness.",
+        "Keep canonical outcome codes distinct from outcome display labels in market, bet, projection, resolution, client, and OpenAPI language.",
+        "Split auth token extraction and login HTTP handling into HTTP adapters so internal auth accepts context plus token/claims and injected key, not `*http.Request` or env fallback.",
+        "Move homepage content service/rendering policy to an internal content/domain boundary, move GORM persistence to an internal repository adapter, and leave handlers with only HTTP mapping.",
         "Inventory /v0 routes that still emit raw http.Error or ad hoc JSON now that 405 and 429 runtime failures use shared writers, then rank route families for W06 convergence.",
         "Draft the initial public `reason` vocabulary and route-family migration matrix for W06 so the API/auth cleanup does not improvise string contracts during implementation.",
         "Keep `README/PRODUCTION-NOTES/BACKEND/FUTURE/01-long-term-security-hardening.md` explicitly out of the active wave queue unless a later design decision reactivates part of it.",
-        "Add the rewritten testing notes, `backend.yml`, and the key runtime/OpenAPI/security test files to the design-plan source context so verification posture stays reviewable.",
-        "Define explicit verification exit criteria for W03, W04, and W06 before breaking those waves into delivery tasks.",
+        "Add the rewritten testing notes, `backend.yml`, deploy workflows, release verification actions, and key runtime/OpenAPI/security test files to the design-plan source context so verification posture stays reviewable.",
+        "Define explicit verification exit criteria for W03, W04, W06, and W07 before breaking those waves into delivery tasks.",
         "Inventory SQLite-backed tests that appear to cover DB semantics and mark which need a Postgres companion beyond the existing startup and place-bet transaction checks.",
         "Decide whether the existing env-gated Postgres checks should become a narrow CI job and which uncovered DB-specific invariant should be added next."
     ]
