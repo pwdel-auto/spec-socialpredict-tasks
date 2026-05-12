@@ -6,7 +6,7 @@ usage() {
 Usage:
   codex-runner.sh [options]
 
-Run queued `TASKS.json` work by repeatedly launching Codex in the selected
+Run queued TASKS-format JSON work by repeatedly launching Codex in the selected
 automation mode. The runner picks the next ready task, asks a dispatcher-led
 Codex session to execute it end-to-end, writes run artifacts under
 `../log-socialpredict-tasks/.codex-runs/` when that logs repo exists, captures Codex output into per-task log files there, folds legacy
@@ -16,7 +16,7 @@ checkpoint/resume long sessions before the active context window gets too full.
 Options:
   --control-repo PATH    Control repo root for runner assets. Default: current directory
   --repo PATH            Deprecated alias for --control-repo
-  --tasks PATH           Task file. Default: <repo>/TASKS.json
+  --tasks PATH           Task file. Default: <repo>/TASKS.json when present locally
   --logs-repo PATH       Path to the logs repo checkout. Default: ../log-socialpredict-tasks
                          when that repo exists beside the control repo.
   --runs-dir PATH        Run artifact directory override. Default: <logs-repo>/.codex-runs
@@ -29,7 +29,7 @@ Options:
                          disable. Default: 70
                          This is percent used, not percent remaining. The
                          default keeps about 30% headroom for summaries,
-                         TASKS.json checkpointing, and resume prompts in
+                         task-file checkpointing, and resume prompts in
                          long-running dispatcher sessions.
   --context-poll SECONDS Poll interval for context telemetry. Default: 15
   --context-soft-threshold PCT
@@ -58,13 +58,14 @@ Options:
   --help                 Show this help
 
 Task file:
-  The runner expects TASKS.json, not TASKS.md. JSON is easier to validate,
-  update, and consume from automation. A companion TASKS.md can still exist
-  for humans, but TASKS.json should be the machine-readable source of truth.
+  The runner expects a TASKS-format JSON file, not TASKS.md. JSON is easier to
+  validate, update, and consume from automation. A companion TASKS.md can still
+  exist for humans, but the JSON queue should be the machine-readable source of
+  truth. Use TASKS.example.json as the schema seed when creating a fresh queue.
   During execution the runner updates task status, attempts, summaries, and
-  runner checkpoint metadata in TASKS.json. Before starting, the runner also
-  validates active task UIDs against the persistent task registry when one is
-  configured.
+  runner checkpoint metadata in the task JSON file. Before starting, the
+  runner also validates active task UIDs against the persistent task registry
+  when one is configured.
 
 Logs:
   The runner writes logs under --runs-dir (default: <logs-repo>/.codex-runs

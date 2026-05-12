@@ -11,8 +11,9 @@ used in this workspace.
 - TARGET repo (`../socialpredict`)
   Sibling application checkout where Codex reads, edits, and validates code.
 - Execution flow
-  `codex-runner.sh` reads `TASKS.json`, launches Codex from the TASK repo, and
-  Codex uses TASK repo guidance while operating on the TARGET repo.
+  `codex-runner.sh` reads a supplied TASKS-format JSON queue, launches Codex
+  from the TASK repo, and Codex uses TASK repo guidance while operating on the
+  TARGET repo.
 - Current TARGET branch for structural reference
   `main`
 
@@ -283,23 +284,18 @@ as the navigation point for the committed workspace contents.
 - `AGENTS.md`
   This workspace table of contents.
 
-- `TASKS.json`
-  Live machine-readable task backlog and runner state for the workspace.
-  Active tasks are `uid`-first: `uid` is canonical, and `id` is a human-facing
-  label.
-
 - `TASKS.example.json`
-  Small example showing the expected task schema.
+  Small example showing the expected task schema. This is the only checked-in
+  root `TASKS*.json` file; active queues should be local or passed explicitly
+  to `codex-runner.sh`.
 
 - `lib/task-registry.json`
   Persistent UID-first registry plus the historical display-ID lookup index.
 
-- `TASKS.json.backup`
-  Backup snapshot of the task file.
-
 - `codex-runner.sh`
-  Task runner that polls `TASKS.json`, launches Codex for ready tasks, and
-  writes run artifacts under the logs repo `../log-socialpredict-tasks/.codex-runs/`.
+  Task runner that polls a supplied TASKS-format JSON queue, launches Codex for
+  ready tasks, and writes run artifacts under the logs repo
+  `../log-socialpredict-tasks/.codex-runs/`.
 
 - `agent-assets`
   Repo-root wrapper for installing or inspecting this repo's managed Codex
@@ -442,8 +438,7 @@ as the navigation point for the committed workspace contents.
   Canonical JSON Schema that all design-plan outputs must satisfy.
 
 - `lib/task-archives/`
-  Historical task-queue archives that have been moved out of the active
-  `TASKS.json`.
+  Historical task-queue archives that have been moved out of root task files.
 
 - `prompts/codex-runner/`
   Human-readable initial-task and checkpoint-resume prompt templates consumed
